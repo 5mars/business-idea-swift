@@ -6,13 +6,35 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0D796D182F576B3B005CE115 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 0D796D172F576B3B005CE115 /* Auth */; };
+		0D796D1A2F576B3B005CE115 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 0D796D192F576B3B005CE115 /* Functions */; };
+		0D796D1C2F576B3B005CE115 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 0D796D1B2F576B3B005CE115 /* PostgREST */; };
+		0D796D1E2F576B3B005CE115 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 0D796D1D2F576B3B005CE115 /* Realtime */; };
+		0D796D202F576B3B005CE115 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 0D796D1F2F576B3B005CE115 /* Storage */; };
+		0D796D222F576B3B005CE115 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 0D796D212F576B3B005CE115 /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		0D25206F2F57455E00219D62 /* note-ai-app-test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "note-ai-app-test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		0D796D242F576BBD005CE115 /* Exceptions for "note-ai-app-test" folder in "note-ai-app-test" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 0D25206E2F57455E00219D62 /* note-ai-app-test */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0D2520712F57455E00219D62 /* note-ai-app-test */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0D796D242F576BBD005CE115 /* Exceptions for "note-ai-app-test" folder in "note-ai-app-test" target */,
+			);
 			path = "note-ai-app-test";
 			sourceTree = "<group>";
 		};
@@ -23,6 +45,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0D796D1C2F576B3B005CE115 /* PostgREST in Frameworks */,
+				0D796D1A2F576B3B005CE115 /* Functions in Frameworks */,
+				0D796D222F576B3B005CE115 /* Supabase in Frameworks */,
+				0D796D182F576B3B005CE115 /* Auth in Frameworks */,
+				0D796D202F576B3B005CE115 /* Storage in Frameworks */,
+				0D796D1E2F576B3B005CE115 /* Realtime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +93,12 @@
 			);
 			name = "note-ai-app-test";
 			packageProductDependencies = (
+				0D796D172F576B3B005CE115 /* Auth */,
+				0D796D192F576B3B005CE115 /* Functions */,
+				0D796D1B2F576B3B005CE115 /* PostgREST */,
+				0D796D1D2F576B3B005CE115 /* Realtime */,
+				0D796D1F2F576B3B005CE115 /* Storage */,
+				0D796D212F576B3B005CE115 /* Supabase */,
 			);
 			productName = "note-ai-app-test";
 			productReference = 0D25206F2F57455E00219D62 /* note-ai-app-test.app */;
@@ -94,6 +128,9 @@
 			);
 			mainGroup = 0D2520662F57455E00219D62;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0D796D162F576B3B005CE115 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0D2520702F57455E00219D62 /* Products */;
 			projectDirPath = "";
@@ -246,10 +283,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VMFBV25WD2;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "note-ai-app-test/Info.plist";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone permission to record your voice notes";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "We need speech recognition to transcribe your recordings";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -288,10 +329,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VMFBV25WD2;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "note-ai-app-test/Info.plist";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone permission to record your voice notes";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "We need speech recognition to transcribe your recordings";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -345,6 +390,50 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0D796D162F576B3B005CE115 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0D796D172F576B3B005CE115 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0D796D162F576B3B005CE115 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		0D796D192F576B3B005CE115 /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0D796D162F576B3B005CE115 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		0D796D1B2F576B3B005CE115 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0D796D162F576B3B005CE115 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		0D796D1D2F576B3B005CE115 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0D796D162F576B3B005CE115 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		0D796D1F2F576B3B005CE115 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0D796D162F576B3B005CE115 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		0D796D212F576B3B005CE115 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0D796D162F576B3B005CE115 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0D2520672F57455E00219D62 /* Project object */;
 }
