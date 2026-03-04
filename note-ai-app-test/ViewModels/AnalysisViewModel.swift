@@ -2,8 +2,6 @@
 //  AnalysisViewModel.swift
 //  note-ai-app-test
 //
-//  Created by Claude on 2026-03-03.
-//
 
 import Foundation
 import Combine
@@ -17,7 +15,14 @@ class AnalysisViewModel: ObservableObject {
     private let aiService = AIAnalysisService()
     private let supabase = SupabaseService.shared
 
+    init() {}
+
+    init(preloadedAnalysis: SWOTAnalysis) {
+        self.analysis = preloadedAnalysis
+    }
+
     func loadAnalysis(transcriptionId: UUID) async {
+        guard analysis == nil else { return }
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }

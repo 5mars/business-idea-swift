@@ -116,6 +116,22 @@ struct NoteRowView: View {
     let note: VoiceNote
     let viewModel: NotesViewModel
 
+    private func timeAgo(_ date: Date) -> String {
+        let s = Int(Date().timeIntervalSince(date))
+        if s < 60              { return "just now" }
+        let m = s / 60
+        if m < 60              { return "\(m)m ago" }
+        let h = m / 60
+        if h < 24              { return "\(h)h ago" }
+        let d = h / 24
+        if d < 7               { return "\(d)d ago" }
+        let w = d / 7
+        if w < 5               { return "\(w)w ago" }
+        let mo = d / 30
+        if mo < 12             { return "\(mo)mo ago" }
+        return "\(d / 365)y ago"
+    }
+
     var body: some View {
         HStack(spacing: 14) {
             // Icon
@@ -143,7 +159,7 @@ struct NoteRowView: View {
                         .foregroundColor(.brand.opacity(0.7))
                         .labelStyle(.titleAndIcon)
 
-                    Text(note.createdAt, style: .relative)
+                    Text(timeAgo(note.createdAt))
                         .font(.system(size: 12))
                         .foregroundColor(.textSec)
                 }

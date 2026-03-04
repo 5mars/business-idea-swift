@@ -18,8 +18,18 @@ struct NoteDetailView: View {
     @State private var editedTranscriptionText = ""
     @State private var isEditingTranscript = false
     @State private var hasUnsavedChanges = false
+    @State private var swotAnalysis: SWOTAnalysis?
+    @State private var isLoadingSWOT = false
+    @State private var noteTitle: String
+    @State private var editedTitle = ""
+    @State private var isEditingTitle = false
 
     private let supabase = SupabaseService.shared
+
+    init(note: VoiceNote) {
+        self.note = note
+        _noteTitle = State(initialValue: note.title)
+    }
 
     var body: some View {
         ZStack {
@@ -40,22 +50,70 @@ struct NoteDetailView: View {
                                 .foregroundColor(.white)
                         }
 
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(note.title)
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.textPri)
+                        if isEditingTitle {
+                            VStack(alignment: .leading, spacing: 8) {
+                                TextField("Idea name", text: $editedTitle)
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.textPri)
+                                    .tint(.brand)
+                                    .submitLabel(.done)
+                                    .onSubmit { Task { await saveTitleEdit() } }
 
-                            HStack(spacing: 12) {
-                                Label(formatDuration(note.duration), systemImage: "clock")
+                                HStack {
+                                    Button("Cancel") {
+                                        isEditingTitle = false
+                                    }
                                     .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(.brand.opacity(0.8))
-
-                                Text(note.createdAt, style: .date)
-                                    .font(.system(size: 13))
                                     .foregroundColor(.textSec)
+
+                                    Spacer()
+
+                                    Button {
+                                        Task { await saveTitleEdit() }
+                                    } label: {
+                                        Text("Save")
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 14)
+                                            .padding(.vertical, 6)
+                                            .background(editedTitle.trimmingCharacters(in: .whitespaces).isEmpty ? Color.gray.opacity(0.3) : Color.brand)
+                                            .cornerRadius(10)
+                                    }
+                                    .disabled(editedTitle.trimmingCharacters(in: .whitespaces).isEmpty)
+                                }
+                            }
+                            Spacer()
+                        } else {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(noteTitle)
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.textPri)
+                                    .lineLimit(2)
+
+                                HStack(spacing: 12) {
+                                    Label(formatDuration(note.duration), systemImage: "clock")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.brand.opacity(0.8))
+
+                                    Text(note.createdAt, style: .date)
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.textSec)
+                                }
+                            }
+                            Spacer()
+
+                            Button {
+                                editedTitle = noteTitle
+                                isEditingTitle = true
+                            } label: {
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(.brand)
+                                    .padding(8)
+                                    .background(Color.brand.opacity(0.08))
+                                    .clipShape(Circle())
                             }
                         }
-                        Spacer()
                     }
                     .cardStyle()
 
@@ -91,7 +149,6 @@ struct NoteDetailView: View {
                             .disabled(audioPlayer.isLoading)
 
                             VStack(spacing: 8) {
-                                // Progress bar
                                 GeometryReader { geo in
                                     ZStack(alignment: .leading) {
                                         Capsule()
@@ -218,14 +275,28 @@ struct NoteDetailView: View {
                                     .background(Color.brand.opacity(0.04))
                                     .cornerRadius(12)
 
-                                GradientButton(
-                                    title: "Generate SWOT Analysis",
-                                    gradient: LinearGradient(
-                                        colors: [.brand, .brandLight],
-                                        startPoint: .leading, endPoint: .trailing
-                                    )
-                                ) {
-                                    showingSWOTAnalysis = true
+                                // SWOT section — auto-shows preview if already stored
+                                if let analysis = swotAnalysis {
+                                    SWOTPreviewCard(analysis: analysis)
+                                        .onTapGesture { showingSWOTAnalysis = true }
+                                } else if isLoadingSWOT {
+                                    HStack(spacing: 8) {
+                                        ProgressView().tint(.brand).scaleEffect(0.8)
+                                        Text("Loading analysis...")
+                                            .font(.system(size: 13))
+                                            .foregroundColor(.textSec)
+                                    }
+                                    .padding(.vertical, 4)
+                                } else {
+                                    GradientButton(
+                                        title: "Generate SWOT Analysis",
+                                        gradient: LinearGradient(
+                                            colors: [.brand, .brandLight],
+                                            startPoint: .leading, endPoint: .trailing
+                                        )
+                                    ) {
+                                        showingSWOTAnalysis = true
+                                    }
                                 }
                             }
                         } else {
@@ -264,10 +335,15 @@ struct NoteDetailView: View {
         .toolbarBackground(Color.appBg, for: .navigationBar)
         .sheet(isPresented: $showingSWOTAnalysis) {
             if let transcription = transcription {
-                SWOTAnalysisView(transcription: transcription)
+                SWOTAnalysisView(transcription: transcription, preloadedAnalysis: swotAnalysis)
             }
         }
-        .task { await loadTranscription() }
+        .task {
+            await loadTranscription()
+            if let t = transcription {
+                Task { await loadSWOTAnalysis(transcriptionId: t.id) }
+            }
+        }
         .onDisappear { audioPlayer.stop() }
     }
 
@@ -323,6 +399,24 @@ struct NoteDetailView: View {
         }
     }
 
+    private func loadSWOTAnalysis(transcriptionId: UUID) async {
+        isLoadingSWOT = true
+        defer { isLoadingSWOT = false }
+        swotAnalysis = try? await supabase.fetchSWOTAnalysis(transcriptionId: transcriptionId)
+    }
+
+    private func saveTitleEdit() async {
+        let trimmed = editedTitle.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        do {
+            try await supabase.updateVoiceNoteTitle(id: note.id, title: trimmed)
+            noteTitle = trimmed
+            isEditingTitle = false
+        } catch {
+            errorMessage = "Failed to save title: \(error.localizedDescription)"
+        }
+    }
+
     private func saveTranscriptionEdit() async {
         guard let transcription = transcription else { return }
 
@@ -348,6 +442,85 @@ struct NoteDetailView: View {
         let minutes = Int(duration) / 60
         let seconds = Int(duration) % 60
         return String(format: "%d:%02d", minutes, seconds)
+    }
+}
+
+// MARK: - SWOT Preview Card
+
+struct SWOTPreviewCard: View {
+    let analysis: SWOTAnalysis
+
+    var body: some View {
+        VStack(spacing: 14) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chart.bar.xaxis")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.brand)
+                        Text("SWOT Analysis")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.textPri)
+                    }
+                    Text("Tap to view full analysis")
+                        .font(.system(size: 12))
+                        .foregroundColor(.textSec)
+                }
+
+                Spacer()
+
+                if let score = analysis.viabilityScore {
+                    VStack(spacing: 2) {
+                        Text("\(score)")
+                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .foregroundColor(viabilityColor(score))
+                        Text("Viability")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.textSec)
+                    }
+                }
+            }
+
+            // S / W / O / T count row
+            HStack(spacing: 0) {
+                quadrantCount("S", count: analysis.resolvedStrengths.count, color: .brandGreen)
+                quadrantCount("W", count: analysis.resolvedWeaknesses.count, color: .brandRed)
+                quadrantCount("O", count: analysis.resolvedOpportunities.count, color: .brandBlue)
+                quadrantCount("T", count: analysis.resolvedThreats.count, color: .brandOrange)
+            }
+            .padding(.vertical, 8)
+            .background(Color.brand.opacity(0.04))
+            .cornerRadius(12)
+        }
+        .padding(16)
+        .background(Color.cardBg)
+        .cornerRadius(16)
+        .shadow(color: Color.brand.opacity(0.10), radius: 12, x: 0, y: 4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.brand.opacity(0.12), lineWidth: 1)
+        )
+    }
+
+    private func quadrantCount(_ letter: String, count: Int, color: Color) -> some View {
+        VStack(spacing: 4) {
+            Text("\(count)")
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundColor(color)
+            Text(letter)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(.textSec)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func viabilityColor(_ score: Int) -> Color {
+        switch score {
+        case 0..<40:  return .brandRed
+        case 40..<60: return .brandOrange
+        case 60..<80: return .brandAmber
+        default:      return .brandGreen
+        }
     }
 }
 
