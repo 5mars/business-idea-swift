@@ -2,8 +2,6 @@
 //  SWOTAnalysisView.swift
 //  note-ai-app-test
 //
-//  Created by Claude on 2026-03-03.
-//
 
 import SwiftUI
 
@@ -15,193 +13,264 @@ struct SWOTAnalysisView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    if viewModel.isLoading {
-                        VStack(spacing: 15) {
-                            ProgressView()
-                                .scaleEffect(1.5)
+            ZStack {
+                Color.appBg.ignoresSafeArea()
 
-                            Text("Analyzing your business idea...")
-                                .font(.headline)
-
-                            Text("This may take a few seconds")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .padding(.top, 100)
-                    } else if let analysis = viewModel.analysis {
-                        // Summary Section
-                        if let summary = analysis.summary {
-                            VStack(alignment: .leading, spacing: 10) {
-                                Label("Summary", systemImage: "doc.text")
-                                    .font(.headline)
-
-                                Text(summary)
-                                    .font(.body)
-                                    .padding()
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(Color.blue.opacity(0.1))
-                                    .cornerRadius(12)
-                            }
-                            .padding(.horizontal)
-                        }
-
-                        // SWOT Grid
-                        VStack(spacing: 15) {
-                            HStack(spacing: 15) {
-                                SWOTQuadrantView(
-                                    title: "Strengths",
-                                    items: analysis.strengths,
-                                    color: .green,
-                                    icon: "checkmark.circle.fill"
-                                )
-
-                                SWOTQuadrantView(
-                                    title: "Weaknesses",
-                                    items: analysis.weaknesses,
-                                    color: .red,
-                                    icon: "xmark.circle.fill"
-                                )
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 20) {
+                        if viewModel.isLoading {
+                            analyzingView
+                        } else if let analysis = viewModel.analysis {
+                            // Summary
+                            if let summary = analysis.summary {
+                                summaryCard(summary)
                             }
 
-                            HStack(spacing: 15) {
-                                SWOTQuadrantView(
-                                    title: "Opportunities",
-                                    items: analysis.opportunities,
-                                    color: .blue,
-                                    icon: "arrow.up.circle.fill"
-                                )
-
-                                SWOTQuadrantView(
-                                    title: "Threats",
-                                    items: analysis.threats,
-                                    color: .orange,
-                                    icon: "exclamationmark.triangle.fill"
-                                )
-                            }
-                        }
-                        .padding(.horizontal)
-
-                        // Timestamp
-                        Text("Generated \(analysis.createdAt, style: .relative)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .padding()
-                    } else if viewModel.errorMessage != nil {
-                        VStack(spacing: 20) {
-                            Image(systemName: "exclamationmark.triangle")
-                                .font(.system(size: 60))
-                                .foregroundColor(.orange)
-
-                            if let error = viewModel.errorMessage {
-                                Text(error)
-                                    .font(.body)
-                                    .foregroundColor(.secondary)
-                                    .multilineTextAlignment(.center)
-                                    .padding()
-                            }
-
-                            Button {
-                                Task {
-                                    await viewModel.generateAnalysis(transcription: transcription)
+                            // SWOT 2x2 grid
+                            VStack(spacing: 14) {
+                                HStack(spacing: 14) {
+                                    SWOTQuadrantView(
+                                        title: "Strengths",
+                                        items: analysis.strengths,
+                                        gradient: .swotStrength,
+                                        iconName: "checkmark.circle.fill"
+                                    )
+                                    SWOTQuadrantView(
+                                        title: "Weaknesses",
+                                        items: analysis.weaknesses,
+                                        gradient: .swotWeakness,
+                                        iconName: "xmark.circle.fill"
+                                    )
                                 }
-                            } label: {
-                                Label("Try Again", systemImage: "arrow.clockwise")
-                                    .padding()
-                                    .background(Color.blue)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(10)
-                            }
-                        }
-                        .padding()
-                    } else {
-                        VStack(spacing: 20) {
-                            Image(systemName: "chart.bar.doc.horizontal")
-                                .font(.system(size: 60))
-                                .foregroundColor(.blue)
 
-                            Text("Ready to analyze")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-
-                            Text("Generate a SWOT analysis for this business idea")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-
-                            Button {
-                                Task {
-                                    await viewModel.generateAnalysis(transcription: transcription)
+                                HStack(spacing: 14) {
+                                    SWOTQuadrantView(
+                                        title: "Opportunities",
+                                        items: analysis.opportunities,
+                                        gradient: .swotOpportunity,
+                                        iconName: "arrow.up.circle.fill"
+                                    )
+                                    SWOTQuadrantView(
+                                        title: "Threats",
+                                        items: analysis.threats,
+                                        gradient: .swotThreat,
+                                        iconName: "exclamationmark.triangle.fill"
+                                    )
                                 }
-                            } label: {
-                                Label("Generate Analysis", systemImage: "sparkles")
-                                    .font(.headline)
-                                    .padding()
-                                    .frame(maxWidth: .infinity)
-                                    .background(Color.blue)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(12)
                             }
-                            .padding(.horizontal)
+
+                            Text("Generated \(analysis.createdAt, style: .relative) ago")
+                                .font(.system(size: 12))
+                                .foregroundColor(.textSec)
+                                .padding(.bottom, 8)
+
+                        } else if viewModel.errorMessage != nil {
+                            errorView
+                        } else {
+                            readyView
                         }
-                        .padding()
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 16)
                 }
             }
             .navigationTitle("SWOT Analysis")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.appBg, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
+                    Button("Done") { dismiss() }
+                        .tint(.brand)
+                        .fontWeight(.semibold)
                 }
             }
-            .task {
-                await viewModel.loadAnalysis(transcriptionId: transcription.id)
+            .task { await viewModel.loadAnalysis(transcriptionId: transcription.id) }
+        }
+    }
+
+    // MARK: - States
+
+    private var analyzingView: some View {
+        VStack(spacing: 20) {
+            Spacer().frame(height: 60)
+
+            ZStack {
+                Circle()
+                    .fill(Color.brand.opacity(0.08))
+                    .frame(width: 100, height: 100)
+
+                ProgressView()
+                    .tint(.brand)
+                    .scaleEffect(1.4)
             }
+
+            Text("Analyzing your idea...")
+                .font(.system(size: 19, weight: .semibold, design: .rounded))
+                .foregroundColor(.textPri)
+
+            Text("Claude AI is thinking")
+                .font(.system(size: 14))
+                .foregroundColor(.textSec)
+
+            Spacer().frame(height: 60)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func summaryCard(_ summary: String) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(LinearGradient.brand)
+                        .frame(width: 32, height: 32)
+                    Image(systemName: "doc.text.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+                Text("Summary")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.textPri)
+            }
+
+            Text(summary)
+                .font(.system(size: 15))
+                .foregroundColor(.textPri)
+                .lineSpacing(4)
+        }
+        .cardStyle()
+    }
+
+    private var readyView: some View {
+        VStack(spacing: 20) {
+            Spacer().frame(height: 40)
+
+            ZStack {
+                Circle()
+                    .fill(Color.brand.opacity(0.1))
+                    .frame(width: 100, height: 100)
+
+                Image(systemName: "sparkles")
+                    .font(.system(size: 38))
+                    .foregroundStyle(LinearGradient(
+                        colors: [.brand, .brandLight],
+                        startPoint: .top, endPoint: .bottom
+                    ))
+            }
+
+            Text("Ready to analyze")
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundColor(.textPri)
+
+            Text("Generate a SWOT analysis for\nthis business idea")
+                .font(.system(size: 15))
+                .foregroundColor(.textSec)
+                .multilineTextAlignment(.center)
+                .lineSpacing(3)
+
+            GradientButton(title: "Generate Analysis") {
+                Task { await viewModel.generateAnalysis(transcription: transcription) }
+            }
+            .padding(.horizontal, 32)
+            .padding(.top, 8)
+
+            Spacer().frame(height: 40)
+        }
+    }
+
+    private var errorView: some View {
+        VStack(spacing: 20) {
+            Spacer().frame(height: 40)
+
+            ZStack {
+                Circle()
+                    .fill(Color.brandOrange.opacity(0.1))
+                    .frame(width: 90, height: 90)
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 36))
+                    .foregroundColor(.brandOrange)
+            }
+
+            if let error = viewModel.errorMessage {
+                Text(error)
+                    .font(.system(size: 15))
+                    .foregroundColor(.textSec)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+            }
+
+            GradientButton(
+                title: "Try Again",
+                gradient: LinearGradient(
+                    colors: [.brandOrange, .brandAmber],
+                    startPoint: .leading, endPoint: .trailing
+                )
+            ) {
+                Task { await viewModel.generateAnalysis(transcription: transcription) }
+            }
+            .padding(.horizontal, 40)
+
+            Spacer().frame(height: 40)
         }
     }
 }
 
+// MARK: - SWOT Quadrant Card
+
 struct SWOTQuadrantView: View {
     let title: String
     let items: [String]
-    let color: Color
-    let icon: String
+    let gradient: LinearGradient
+    let iconName: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: icon)
-                    .foregroundColor(color)
+        VStack(alignment: .leading, spacing: 0) {
+            // Gradient header
+            HStack(spacing: 8) {
+                Image(systemName: iconName)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.white)
+
                 Text(title)
-                    .font(.headline)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.white)
             }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(gradient)
 
+            // Items
             VStack(alignment: .leading, spacing: 8) {
-                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
-                    HStack(alignment: .top, spacing: 8) {
-                        Circle()
-                            .fill(color)
-                            .frame(width: 6, height: 6)
-                            .padding(.top, 6)
+                if items.isEmpty {
+                    Text("None identified")
+                        .font(.system(size: 13))
+                        .foregroundColor(.textSec)
+                        .italic()
+                        .padding(.top, 4)
+                } else {
+                    ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                        HStack(alignment: .top, spacing: 8) {
+                            Circle()
+                                .fill(gradient)
+                                .frame(width: 5, height: 5)
+                                .padding(.top, 5)
 
-                        Text(item)
-                            .font(.subheadline)
-                            .fixedSize(horizontal: false, vertical: true)
+                            Text(item)
+                                .font(.system(size: 13))
+                                .foregroundColor(.textPri)
+                                .lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                 }
             }
-
-            Spacer()
+            .padding(14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(color.opacity(0.1))
-        .cornerRadius(12)
+        .background(Color.cardBg)
+        .cornerRadius(16)
+        .shadow(color: Color.brand.opacity(0.08), radius: 10, x: 0, y: 4)
     }
 }
 

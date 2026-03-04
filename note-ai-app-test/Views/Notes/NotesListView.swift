@@ -2,8 +2,6 @@
 //  NotesListView.swift
 //  note-ai-app-test
 //
-//  Created by Claude on 2026-03-03.
-//
 
 import SwiftUI
 
@@ -11,100 +9,162 @@ struct NotesListView: View {
     @StateObject private var viewModel = NotesViewModel()
 
     var body: some View {
-        NavigationStack {
+        ZStack {
+            Color.appBg.ignoresSafeArea()
+
             Group {
                 if viewModel.isLoading && viewModel.notes.isEmpty {
-                    ProgressView("Loading notes...")
+                    loadingView
                 } else if viewModel.notes.isEmpty {
-                    VStack(spacing: 20) {
-                        Image(systemName: "mic.slash")
-                            .font(.system(size: 60))
-                            .foregroundColor(.gray)
-
-                        Text("No recordings yet")
-                            .font(.title2)
-                            .foregroundColor(.secondary)
-
-                        Text("Tap the Record tab to create your first voice note")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
+                    emptyStateView
                 } else {
-                    List {
-                        ForEach(viewModel.notes) { note in
-                            NavigationLink(destination: NoteDetailView(note: note)) {
-                                NoteRowView(note: note, viewModel: viewModel)
-                            }
-                        }
-                        .onDelete { indexSet in
-                            for index in indexSet {
-                                let note = viewModel.notes[index]
-                                Task {
-                                    await viewModel.deleteNote(note)
-                                }
-                            }
-                        }
-                    }
-                    .refreshable {
-                        await viewModel.fetchNotes()
-                    }
+                    notesList
                 }
-            }
-            .navigationTitle("Voice Notes")
-            .toolbar {
-                if !viewModel.notes.isEmpty {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        EditButton()
-                    }
-                }
-            }
-            .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("OK") {
-                    viewModel.errorMessage = nil
-                }
-            } message: {
-                if let error = viewModel.errorMessage {
-                    Text(error)
-                }
-            }
-            .task {
-                await viewModel.fetchNotes()
             }
         }
+        .navigationTitle("Voice Notes")
+        .toolbarBackground(Color.appBg, for: .navigationBar)
+        .toolbar {
+            if !viewModel.notes.isEmpty {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    EditButton()
+                        .tint(.brand)
+                }
+            }
+        }
+        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button("OK") { viewModel.errorMessage = nil }
+        } message: {
+            if let error = viewModel.errorMessage { Text(error) }
+        }
+        .task { await viewModel.fetchNotes() }
+    }
+
+    // MARK: - Loading
+
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .tint(.brand)
+                .scaleEffect(1.2)
+            Text("Loading notes...")
+                .font(.system(size: 15))
+                .foregroundColor(.textSec)
+        }
+    }
+
+    // MARK: - Empty State
+
+    private var emptyStateView: some View {
+        VStack(spacing: 20) {
+            ZStack {
+                Circle()
+                    .fill(Color.brand.opacity(0.08))
+                    .frame(width: 110, height: 110)
+
+                Image(systemName: "mic.slash.fill")
+                    .font(.system(size: 44))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.brand.opacity(0.4), Color.brandLight.opacity(0.3)],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    )
+            }
+
+            Text("No recordings yet")
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                .foregroundColor(.textPri)
+
+            Text("Tap the Record tab to create\nyour first voice note")
+                .font(.system(size: 15))
+                .foregroundColor(.textSec)
+                .multilineTextAlignment(.center)
+                .lineSpacing(3)
+        }
+        .padding(.horizontal, 40)
+    }
+
+    // MARK: - Notes List
+
+    private var notesList: some View {
+        List {
+            ForEach(viewModel.notes) { note in
+                NavigationLink(destination: NoteDetailView(note: note)) {
+                    NoteRowView(note: note, viewModel: viewModel)
+                }
+                .listRowBackground(Color.appBg)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+            }
+            .onDelete { indexSet in
+                for index in indexSet {
+                    let note = viewModel.notes[index]
+                    Task { await viewModel.deleteNote(note) }
+                }
+            }
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .refreshable { await viewModel.fetchNotes() }
     }
 }
+
+// MARK: - Note Row Card
 
 struct NoteRowView: View {
     let note: VoiceNote
     let viewModel: NotesViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(note.title)
-                .font(.headline)
+        HStack(spacing: 14) {
+            // Icon
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(LinearGradient.brand)
+                    .frame(width: 48, height: 48)
 
-            HStack {
                 Image(systemName: "waveform")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                Text(viewModel.formatDuration(note.duration))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                Spacer()
-
-                Text(note.createdAt, style: .relative)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
             }
+            .shadow(color: Color.brand.opacity(0.3), radius: 6, x: 0, y: 3)
+
+            // Info
+            VStack(alignment: .leading, spacing: 5) {
+                Text(note.title)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.textPri)
+                    .lineLimit(1)
+
+                HStack(spacing: 10) {
+                    Label(viewModel.formatDuration(note.duration), systemImage: "clock")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.brand.opacity(0.7))
+                        .labelStyle(.titleAndIcon)
+
+                    Text(note.createdAt, style: .relative)
+                        .font(.system(size: 12))
+                        .foregroundColor(.textSec)
+                }
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(Color.textSec.opacity(0.4))
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color.cardBg)
+        .cornerRadius(18)
+        .shadow(color: Color.brand.opacity(0.07), radius: 12, x: 0, y: 4)
     }
 }
 
 #Preview {
-    NotesListView()
+    NavigationStack {
+        NotesListView()
+    }
 }

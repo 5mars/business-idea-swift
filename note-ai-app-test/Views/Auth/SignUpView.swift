@@ -2,8 +2,6 @@
 //  SignUpView.swift
 //  note-ai-app-test
 //
-//  Created by Claude on 2026-03-03.
-//
 
 import SwiftUI
 
@@ -14,86 +12,129 @@ struct SignUpView: View {
     @State private var password = ""
     @State private var confirmPassword = ""
 
+    private var passwordsMatch: Bool { password == confirmPassword }
+    private var canSubmit: Bool { !email.isEmpty && !password.isEmpty && passwordsMatch }
+
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                // Header
-                VStack(spacing: 10) {
-                    Image(systemName: "person.circle.fill")
-                        .font(.system(size: 60))
-                        .foregroundColor(.blue)
+        ZStack {
+            Color.appBg.ignoresSafeArea()
 
-                    Text("Create Account")
-                        .font(.title)
-                        .fontWeight(.bold)
-                }
-                .padding(.top, 40)
+            // Decorative blob
+            Circle()
+                .fill(Color.brandLight.opacity(0.12))
+                .frame(width: 280, height: 280)
+                .offset(x: 140, y: -60)
+                .blur(radius: 50)
+                .ignoresSafeArea()
 
-                Spacer()
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    Spacer().frame(height: 48)
 
-                // Sign Up Form
-                VStack(spacing: 15) {
-                    TextField("Email", text: $email)
-                        .textFieldStyle(.roundedBorder)
+                    // Header
+                    VStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(LinearGradient.brand)
+                                .frame(width: 80, height: 80)
+                                .shadow(color: Color.brand.opacity(0.35), radius: 16, x: 0, y: 6)
+
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 30, weight: .semibold))
+                                .foregroundColor(.white)
+                        }
+
+                        Text("Create Account")
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundColor(.textPri)
+
+                        Text("Join Voice SWOT today")
+                            .font(.system(size: 15))
+                            .foregroundColor(.textSec)
+                    }
+
+                    Spacer().frame(height: 40)
+
+                    // Form card
+                    VStack(spacing: 14) {
+                        AppTextField(
+                            placeholder: "Email",
+                            text: $email,
+                            keyboardType: .emailAddress
+                        )
                         .textContentType(.emailAddress)
-                        .autocapitalization(.none)
-                        .keyboardType(.emailAddress)
 
-                    SecureField("Password", text: $password)
-                        .textFieldStyle(.roundedBorder)
+                        AppTextField(
+                            placeholder: "Password",
+                            text: $password,
+                            isSecure: true
+                        )
                         .textContentType(.newPassword)
 
-                    SecureField("Confirm Password", text: $confirmPassword)
-                        .textFieldStyle(.roundedBorder)
+                        AppTextField(
+                            placeholder: "Confirm Password",
+                            text: $confirmPassword,
+                            isSecure: true
+                        )
                         .textContentType(.newPassword)
 
-                    if let errorMessage = authViewModel.errorMessage {
-                        Text(errorMessage)
-                            .font(.caption)
-                            .foregroundColor(.red)
-                            .multilineTextAlignment(.center)
-                    }
+                        // Validation feedback
+                        if !password.isEmpty && !confirmPassword.isEmpty && !passwordsMatch {
+                            HStack(spacing: 6) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .font(.system(size: 13))
+                                Text("Passwords do not match")
+                                    .font(.system(size: 13))
+                            }
+                            .foregroundColor(.brandRed)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
 
-                    if !password.isEmpty && password != confirmPassword {
-                        Text("Passwords do not match")
-                            .font(.caption)
-                            .foregroundColor(.red)
-                    }
+                        if !password.isEmpty && !confirmPassword.isEmpty && passwordsMatch {
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 13))
+                                Text("Passwords match")
+                                    .font(.system(size: 13))
+                            }
+                            .foregroundColor(.brandGreen)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
 
-                    Button {
-                        Task {
-                            await authViewModel.signUp(email: email, password: password)
-                            if authViewModel.isAuthenticated {
-                                dismiss()
+                        if let errorMessage = authViewModel.errorMessage {
+                            HStack(spacing: 6) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .font(.system(size: 13))
+                                Text(errorMessage)
+                                    .font(.system(size: 13))
+                            }
+                            .foregroundColor(.brandRed)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        GradientButton(
+                            title: "Create Account",
+                            isLoading: authViewModel.isLoading,
+                            isDisabled: !canSubmit
+                        ) {
+                            Task {
+                                await authViewModel.signUp(email: email, password: password)
+                                if authViewModel.isAuthenticated { dismiss() }
                             }
                         }
-                    } label: {
-                        if authViewModel.isLoading {
-                            ProgressView()
-                                .tint(.white)
-                        } else {
-                            Text("Sign Up")
-                                .fontWeight(.semibold)
-                        }
+                        .padding(.top, 4)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                    .disabled(authViewModel.isLoading || email.isEmpty || password.isEmpty || password != confirmPassword)
-                }
-                .padding(.horizontal)
+                    .cardStyle()
+                    .padding(.horizontal, 24)
 
-                Spacer()
-            }
-            .padding()
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .disabled(authViewModel.isLoading)
+                    Spacer().frame(height: 24)
+
+                    Button("Cancel") { dismiss() }
+                        .font(.system(size: 15))
+                        .foregroundColor(.textSec)
+                        .disabled(authViewModel.isLoading)
+
+                    Spacer().frame(height: 40)
                 }
             }
         }

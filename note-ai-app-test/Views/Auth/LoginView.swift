@@ -2,8 +2,6 @@
 //  LoginView.swift
 //  note-ai-app-test
 //
-//  Created by Claude on 2026-03-03.
-//
 
 import SwiftUI
 
@@ -12,83 +10,133 @@ struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var showSignUp = false
+    @State private var appeared = false
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                Spacer()
+        ZStack {
+            // Background
+            Color.appBg.ignoresSafeArea()
 
-                // App Icon/Logo
-                Image(systemName: "mic.circle.fill")
-                    .font(.system(size: 80))
-                    .foregroundColor(.blue)
+            // Decorative blobs
+            GeometryReader { geo in
+                Circle()
+                    .fill(Color.brand.opacity(0.12))
+                    .frame(width: 300, height: 300)
+                    .offset(x: geo.size.width * 0.5, y: -80)
+                    .blur(radius: 60)
 
-                Text("Voice SWOT")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+                Circle()
+                    .fill(Color.brandPink.opacity(0.1))
+                    .frame(width: 240, height: 240)
+                    .offset(x: -60, y: geo.size.height * 0.65)
+                    .blur(radius: 50)
+            }
+            .ignoresSafeArea()
 
-                Text("Record ideas, analyze instantly")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    Spacer().frame(height: 60)
 
-                Spacer()
+                    // Logo + title
+                    VStack(spacing: 16) {
+                        ZStack {
+                            Circle()
+                                .fill(LinearGradient.brand)
+                                .frame(width: 96, height: 96)
+                                .shadow(color: Color.brand.opacity(0.4), radius: 20, x: 0, y: 8)
 
-                // Login Form
-                VStack(spacing: 15) {
-                    TextField("Email", text: $email)
-                        .textFieldStyle(.roundedBorder)
+                            Image(systemName: "mic.fill")
+                                .font(.system(size: 38, weight: .semibold))
+                                .foregroundColor(.white)
+                        }
+                        .scaleEffect(appeared ? 1 : 0.6)
+                        .opacity(appeared ? 1 : 0)
+
+                        Text("Voice SWOT")
+                            .font(.system(size: 34, weight: .bold, design: .rounded))
+                            .foregroundColor(.textPri)
+
+                        Text("Record ideas, analyze instantly")
+                            .font(.system(size: 16))
+                            .foregroundColor(.textSec)
+                    }
+                    .offset(y: appeared ? 0 : 20)
+                    .opacity(appeared ? 1 : 0)
+
+                    Spacer().frame(height: 48)
+
+                    // Form card
+                    VStack(spacing: 14) {
+                        AppTextField(
+                            placeholder: "Email",
+                            text: $email,
+                            keyboardType: .emailAddress
+                        )
                         .textContentType(.emailAddress)
-                        .autocapitalization(.none)
-                        .keyboardType(.emailAddress)
 
-                    SecureField("Password", text: $password)
-                        .textFieldStyle(.roundedBorder)
+                        AppTextField(
+                            placeholder: "Password",
+                            text: $password,
+                            isSecure: true
+                        )
                         .textContentType(.password)
 
-                    if let errorMessage = authViewModel.errorMessage {
-                        Text(errorMessage)
-                            .font(.caption)
-                            .foregroundColor(.red)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    Button {
-                        Task {
-                            await authViewModel.signIn(email: email, password: password)
+                        if let errorMessage = authViewModel.errorMessage {
+                            HStack(spacing: 8) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .font(.system(size: 13))
+                                Text(errorMessage)
+                                    .font(.system(size: 13))
+                            }
+                            .foregroundColor(.brandRed)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 2)
                         }
-                    } label: {
-                        if authViewModel.isLoading {
-                            ProgressView()
-                                .tint(.white)
-                        } else {
-                            Text("Sign In")
-                                .fontWeight(.semibold)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                    .disabled(authViewModel.isLoading || email.isEmpty || password.isEmpty)
 
+                        GradientButton(
+                            title: "Sign In",
+                            isLoading: authViewModel.isLoading,
+                            isDisabled: email.isEmpty || password.isEmpty
+                        ) {
+                            Task { await authViewModel.signIn(email: email, password: password) }
+                        }
+                        .padding(.top, 4)
+                    }
+                    .cardStyle()
+                    .padding(.horizontal, 24)
+                    .offset(y: appeared ? 0 : 30)
+                    .opacity(appeared ? 1 : 0)
+
+                    Spacer().frame(height: 24)
+
+                    // Sign up link
                     Button {
                         showSignUp = true
                     } label: {
-                        Text("Don't have an account? Sign Up")
-                            .font(.subheadline)
+                        HStack(spacing: 4) {
+                            Text("Don't have an account?")
+                                .foregroundColor(.textSec)
+                            Text("Sign Up")
+                                .foregroundColor(.brand)
+                                .fontWeight(.semibold)
+                        }
+                        .font(.system(size: 15))
                     }
                     .disabled(authViewModel.isLoading)
-                }
-                .padding(.horizontal)
+                    .opacity(appeared ? 1 : 0)
 
-                Spacer()
+                    Spacer().frame(height: 40)
+                }
             }
-            .padding()
-            .sheet(isPresented: $showSignUp) {
-                SignUpView()
-                    .environmentObject(authViewModel)
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.75).delay(0.1)) {
+                appeared = true
             }
+        }
+        .sheet(isPresented: $showSignUp) {
+            SignUpView()
+                .environmentObject(authViewModel)
         }
     }
 }
