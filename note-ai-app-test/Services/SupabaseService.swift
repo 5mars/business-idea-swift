@@ -200,4 +200,55 @@ class SupabaseService {
 
         return response.first
     }
+
+    // MARK: - Action Items
+
+    func createActionItems(_ items: [PersistedActionItem]) async throws {
+        guard !items.isEmpty else { return }
+        try await client
+            .from("action_items")
+            .upsert(items)
+            .execute()
+    }
+
+    func fetchActionItems(analysisId: UUID) async throws -> [PersistedActionItem] {
+        let response: [PersistedActionItem] = try await client
+            .from("action_items")
+            .select()
+            .eq("analysis_id", value: analysisId)
+            .order("created_at", ascending: true)
+            .execute()
+            .value
+        return response
+    }
+
+    func toggleActionItem(id: UUID, isCompleted: Bool) async throws {
+        struct TogglePayload: Encodable {
+            let is_completed: Bool
+            let completed_at: Date?
+
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                try container.encode(is_completed, forKey: .is_completed)
+                if let date = completed_at {
+                    try container.encode(date, forKey: .completed_at)
+                } else {
+                    try container.encodeNil(forKey: .completed_at)
+                }
+            }
+
+            enum CodingKeys: String, CodingKey {
+                case is_completed, completed_at
+            }
+        }
+
+        try await client
+            .from("action_items")
+            .update(TogglePayload(
+                is_completed: isCompleted,
+                completed_at: isCompleted ? Date() : nil
+            ))
+            .eq("id", value: id)
+            .execute()
+    }
 }

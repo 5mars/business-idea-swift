@@ -53,6 +53,35 @@ class AIAnalysisService: ObservableObject {
         )
 
         try await supabase.createSWOTAnalysis(analysis)
+
+        // Flatten all actions across quadrants and persist them
+        let quadrantMap: [(items: [SWOTItem], quadrant: String)] = [
+            (response.strengths,    "strength"),
+            (response.weaknesses,   "weakness"),
+            (response.opportunities, "opportunity"),
+            (response.threats,      "threat")
+        ]
+        var persistedActions: [PersistedActionItem] = []
+        let now = Date()
+        for (items, quadrant) in quadrantMap {
+            for item in items {
+                for action in (item.actions ?? []) {
+                    persistedActions.append(PersistedActionItem(
+                        id: UUID(),
+                        analysisId: analysis.id,
+                        swotItemId: item.id,
+                        quadrant: quadrant,
+                        text: action.text,
+                        timeEstimate: action.timeEstimate,
+                        isCompleted: false,
+                        completedAt: nil,
+                        createdAt: now
+                    ))
+                }
+            }
+        }
+        try? await supabase.createActionItems(persistedActions)
+
         return analysis
     }
 }

@@ -41,12 +41,11 @@ struct NoteDetailView: View {
                     // Note header card
                     HStack(spacing: 14) {
                         ZStack {
-                            RoundedRectangle(cornerRadius: 14)
+                            RoundedRectangle(cornerRadius: 16)
                                 .fill(LinearGradient.brand)
-                                .frame(width: 56, height: 56)
-                                .shadow(color: Color.brand.opacity(0.35), radius: 10, x: 0, y: 4)
+                                .frame(width: 60, height: 60)
                             Image(systemName: "waveform.circle.fill")
-                                .font(.system(size: 24, weight: .semibold))
+                                .font(.system(size: 26, weight: .semibold))
                                 .foregroundColor(.white)
                         }
 
@@ -115,12 +114,13 @@ struct NoteDetailView: View {
                             }
                         }
                     }
-                    .cardStyle()
+                    .heroCard(color: Color(hex: "F0FAFA"))
+                    .cardEntrance(delay: 0.0)
 
                     // Audio playback card
                     VStack(spacing: 16) {
                         HStack {
-                            Text("Playback")
+                            Text("Hit Play")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.textPri)
                             Spacer()
@@ -133,26 +133,27 @@ struct NoteDetailView: View {
                                 ZStack {
                                     Circle()
                                         .fill(LinearGradient.brand)
-                                        .frame(width: 52, height: 52)
-                                        .shadow(color: Color.brand.opacity(0.35), radius: 8, x: 0, y: 4)
+                                        .frame(width: 56, height: 56)
 
                                     if audioPlayer.isLoading {
                                         ProgressView().tint(.white).scaleEffect(0.8)
                                     } else {
                                         Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
-                                            .font(.system(size: 18, weight: .semibold))
+                                            .font(.system(size: 20, weight: .semibold))
                                             .foregroundColor(.white)
                                             .offset(x: audioPlayer.isPlaying ? 0 : 2)
+                                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: audioPlayer.isPlaying)
                                     }
                                 }
                             }
+                            .buttonStyle(PlayfulButtonStyle())
                             .disabled(audioPlayer.isLoading)
 
                             VStack(spacing: 8) {
                                 GeometryReader { geo in
                                     ZStack(alignment: .leading) {
                                         Capsule()
-                                            .fill(Color.brand.opacity(0.1))
+                                            .fill(Color.black.opacity(0.08))
                                             .frame(height: 6)
 
                                         Capsule()
@@ -161,6 +162,7 @@ struct NoteDetailView: View {
                                                 width: max(6, geo.size.width * CGFloat(audioPlayer.progress)),
                                                 height: 6
                                             )
+                                            .animation(.linear(duration: 0.5), value: audioPlayer.progress)
                                     }
                                 }
                                 .frame(height: 6)
@@ -169,6 +171,7 @@ struct NoteDetailView: View {
                                     Text(formatDuration(audioPlayer.currentTime))
                                         .font(.system(size: 12, weight: .medium, design: .monospaced))
                                         .foregroundColor(.textSec)
+                                        .contentTransition(.numericText())
 
                                     Spacer()
 
@@ -180,6 +183,7 @@ struct NoteDetailView: View {
                         }
                     }
                     .cardStyle()
+                    .cardEntrance(delay: 0.09)
 
                     // Transcription card
                     VStack(alignment: .leading, spacing: 16) {
@@ -193,7 +197,7 @@ struct NoteDetailView: View {
                                         .font(.system(size: 13, weight: .semibold))
                                         .foregroundColor(.brand)
                                 }
-                                Text("Transcription")
+                                Text("What You Said")
                                     .font(.system(size: 15, weight: .semibold))
                                     .foregroundColor(.textPri)
                             }
@@ -202,8 +206,10 @@ struct NoteDetailView: View {
 
                             if transcription != nil && !isEditingTranscript {
                                 Button {
-                                    isEditingTranscript = true
-                                    editedTranscriptionText = transcription?.text ?? ""
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                                        isEditingTranscript = true
+                                        editedTranscriptionText = transcription?.text ?? ""
+                                    }
                                 } label: {
                                     Label("Edit", systemImage: "pencil")
                                         .font(.system(size: 13, weight: .medium))
@@ -213,13 +219,14 @@ struct NoteDetailView: View {
                                         .background(Color.brand.opacity(0.08))
                                         .cornerRadius(20)
                                 }
+                                .buttonStyle(PlayfulButtonStyle())
                             }
                         }
 
                         if isLoadingTranscription {
                             HStack(spacing: 10) {
                                 ProgressView().tint(.brand).scaleEffect(0.9)
-                                Text("Transcribing with Whisper AI...")
+                                Text("Catching every word...")
                                     .font(.system(size: 14))
                                     .foregroundColor(.textSec)
                             }
@@ -229,7 +236,7 @@ struct NoteDetailView: View {
                                 TextEditor(text: $editedTranscriptionText)
                                     .frame(minHeight: 150)
                                     .padding(12)
-                                    .background(Color.brand.opacity(0.04))
+                                    .background(Color.black.opacity(0.04))
                                     .cornerRadius(12)
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 12)
@@ -240,15 +247,19 @@ struct NoteDetailView: View {
                                     .onChange(of: editedTranscriptionText) { oldValue, newValue in
                                         hasUnsavedChanges = newValue != transcription.text
                                     }
+                                    .transition(.opacity.combined(with: .move(edge: .top)))
 
                                 HStack {
                                     Button("Cancel") {
-                                        isEditingTranscript = false
-                                        hasUnsavedChanges = false
-                                        editedTranscriptionText = transcription.text
+                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                                            isEditingTranscript = false
+                                            hasUnsavedChanges = false
+                                            editedTranscriptionText = transcription.text
+                                        }
                                     }
                                     .font(.system(size: 15, weight: .medium))
                                     .foregroundColor(.textSec)
+                                    .buttonStyle(PlayfulButtonStyle())
 
                                     Spacer()
 
@@ -262,7 +273,9 @@ struct NoteDetailView: View {
                                             .padding(.vertical, 9)
                                             .background(hasUnsavedChanges ? Color.brand : Color.gray.opacity(0.3))
                                             .cornerRadius(12)
+                                            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: hasUnsavedChanges)
                                     }
+                                    .buttonStyle(PlayfulButtonStyle())
                                     .disabled(!hasUnsavedChanges)
                                 }
                             } else {
@@ -272,47 +285,35 @@ struct NoteDetailView: View {
                                     .lineSpacing(4)
                                     .padding(14)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(Color.brand.opacity(0.04))
+                                    .background(Color.black.opacity(0.04))
                                     .cornerRadius(12)
-
-                                // SWOT section — auto-shows preview if already stored
-                                if let analysis = swotAnalysis {
-                                    SWOTPreviewCard(analysis: analysis)
-                                        .onTapGesture { showingSWOTAnalysis = true }
-                                } else if isLoadingSWOT {
-                                    HStack(spacing: 8) {
-                                        ProgressView().tint(.brand).scaleEffect(0.8)
-                                        Text("Loading analysis...")
-                                            .font(.system(size: 13))
-                                            .foregroundColor(.textSec)
-                                    }
-                                    .padding(.vertical, 4)
-                                } else {
-                                    GradientButton(
-                                        title: "Generate SWOT Analysis",
-                                        gradient: LinearGradient(
-                                            colors: [.brand, .brandLight],
-                                            startPoint: .leading, endPoint: .trailing
-                                        )
-                                    ) {
-                                        showingSWOTAnalysis = true
-                                    }
-                                }
+                                    .transition(.opacity)
                             }
                         } else {
                             VStack(spacing: 14) {
-                                Text("No transcription yet")
+                                Text("Still raw audio")
                                     .font(.system(size: 15))
                                     .foregroundColor(.textSec)
                                     .italic()
 
-                                GradientButton(title: "Transcribe Audio") {
+                                GradientButton(title: "Turn it into text") {
                                     Task { await loadTranscription() }
                                 }
                             }
                         }
                     }
                     .cardStyle()
+                    .cardEntrance(delay: 0.18)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isEditingTranscript)
+
+                    // Analysis card — shown when transcription exists and not editing
+                    if transcription != nil && !isEditingTranscript {
+                        analysisActionCard
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .bottom).combined(with: .opacity),
+                                removal: .opacity
+                            ))
+                    }
 
                     if let error = errorMessage {
                         HStack(spacing: 8) {
@@ -324,13 +325,14 @@ struct NoteDetailView: View {
                         .foregroundColor(.brandRed)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 4)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
             }
         }
-        .navigationTitle("Recording Details")
+        .navigationTitle("The Pitch")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Color.appBg, for: .navigationBar)
         .sheet(isPresented: $showingSWOTAnalysis) {
@@ -345,6 +347,140 @@ struct NoteDetailView: View {
             }
         }
         .onDisappear { audioPlayer.stop() }
+    }
+
+    // MARK: - Analysis Action Card
+
+    @ViewBuilder
+    private var analysisActionCard: some View {
+        if isLoadingSWOT {
+            HStack(spacing: 12) {
+                ProgressView().tint(.brand)
+                Text("Loading analysis...")
+                    .font(.system(size: 14))
+                    .foregroundColor(.textSec)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .cardStyle(padding: 20)
+        } else if let analysis = swotAnalysis {
+            // Analysis exists — prominent CTA card
+            VStack(spacing: 20) {
+                // Header row
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.brand.opacity(0.12))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "chart.bar.xaxis")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.brand)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Lab Results")
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundColor(.textPri)
+                        Text("Your idea's been stress-tested")
+                            .font(.system(size: 12))
+                            .foregroundColor(.textSec)
+                    }
+                    Spacer()
+                    if let score = analysis.viabilityScore {
+                        VStack(spacing: 0) {
+                            Text("\(score)")
+                                .font(.system(size: 28, weight: .black, design: .rounded))
+                                .foregroundColor(viabilityColor(score))
+                                .contentTransition(.numericText())
+                            Text("/ 100")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(.textSec)
+                        }
+                    }
+                }
+
+                // S W O T count pills
+                HStack(spacing: 8) {
+                    quadrantPill("S", count: analysis.resolvedStrengths.count, color: .brandGreen)
+                    quadrantPill("W", count: analysis.resolvedWeaknesses.count, color: .brandRed)
+                    quadrantPill("O", count: analysis.resolvedOpportunities.count, color: .brandBlue)
+                    quadrantPill("T", count: analysis.resolvedThreats.count, color: .brandOrange)
+                }
+
+                // Big CTA button
+                Button {
+                    showingSWOTAnalysis = true
+                } label: {
+                    HStack(spacing: 10) {
+                        Text("See the full breakdown")
+                            .font(.system(size: 17, weight: .bold))
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 15, weight: .bold))
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 58)
+                    .background(LinearGradient.brand)
+                    .cornerRadius(20)
+                }
+                .buttonStyle(PlayfulButtonStyle())
+            }
+            .cardStyle()
+            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: analysis.viabilityScore)
+        } else {
+            // No analysis yet — playful generate CTA
+            VStack(spacing: 18) {
+                ZStack {
+                    Circle()
+                        .fill(Color.brand.opacity(0.1))
+                        .frame(width: 64, height: 64)
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 26, weight: .semibold))
+                        .foregroundColor(.brand)
+                        .symbolEffect(.pulse)
+                }
+
+                VStack(spacing: 6) {
+                    Text("Put it to the test")
+                        .font(.system(size: 19, weight: .bold, design: .rounded))
+                        .foregroundColor(.textPri)
+                    Text("Drop it in The Lab and we'll\nbreak it down for you")
+                        .font(.system(size: 14))
+                        .foregroundColor(.textSec)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                }
+
+                GradientButton(title: "🔬  Run it through The Lab") {
+                    showingSWOTAnalysis = true
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .cardStyle()
+        }
+    }
+
+    private func quadrantPill(_ letter: String, count: Int, color: Color) -> some View {
+        VStack(spacing: 4) {
+            Text("\(count)")
+                .font(.system(size: 20, weight: .black, design: .rounded))
+                .foregroundColor(color)
+                .contentTransition(.numericText())
+            Text(letter)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(color.opacity(0.7))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(color.opacity(0.1))
+        .cornerRadius(16)
+    }
+
+    private func viabilityColor(_ score: Int) -> Color {
+        switch score {
+        case 0..<40:  return .brandRed
+        case 40..<60: return .brandOrange
+        case 60..<80: return .brandAmber
+        default:      return .brandGreen
+        }
     }
 
     // MARK: - Private Methods
@@ -400,9 +536,12 @@ struct NoteDetailView: View {
     }
 
     private func loadSWOTAnalysis(transcriptionId: UUID) async {
-        isLoadingSWOT = true
-        defer { isLoadingSWOT = false }
-        swotAnalysis = try? await supabase.fetchSWOTAnalysis(transcriptionId: transcriptionId)
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { isLoadingSWOT = true }
+        let result = try? await supabase.fetchSWOTAnalysis(transcriptionId: transcriptionId)
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+            swotAnalysis = result
+            isLoadingSWOT = false
+        }
     }
 
     private func saveTitleEdit() async {
@@ -445,84 +584,6 @@ struct NoteDetailView: View {
     }
 }
 
-// MARK: - SWOT Preview Card
-
-struct SWOTPreviewCard: View {
-    let analysis: SWOTAnalysis
-
-    var body: some View {
-        VStack(spacing: 14) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "chart.bar.xaxis")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.brand)
-                        Text("SWOT Analysis")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(.textPri)
-                    }
-                    Text("Tap to view full analysis")
-                        .font(.system(size: 12))
-                        .foregroundColor(.textSec)
-                }
-
-                Spacer()
-
-                if let score = analysis.viabilityScore {
-                    VStack(spacing: 2) {
-                        Text("\(score)")
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
-                            .foregroundColor(viabilityColor(score))
-                        Text("Viability")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.textSec)
-                    }
-                }
-            }
-
-            // S / W / O / T count row
-            HStack(spacing: 0) {
-                quadrantCount("S", count: analysis.resolvedStrengths.count, color: .brandGreen)
-                quadrantCount("W", count: analysis.resolvedWeaknesses.count, color: .brandRed)
-                quadrantCount("O", count: analysis.resolvedOpportunities.count, color: .brandBlue)
-                quadrantCount("T", count: analysis.resolvedThreats.count, color: .brandOrange)
-            }
-            .padding(.vertical, 8)
-            .background(Color.brand.opacity(0.04))
-            .cornerRadius(12)
-        }
-        .padding(16)
-        .background(Color.cardBg)
-        .cornerRadius(16)
-        .shadow(color: Color.brand.opacity(0.10), radius: 12, x: 0, y: 4)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.brand.opacity(0.12), lineWidth: 1)
-        )
-    }
-
-    private func quadrantCount(_ letter: String, count: Int, color: Color) -> some View {
-        VStack(spacing: 4) {
-            Text("\(count)")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
-                .foregroundColor(color)
-            Text(letter)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(.textSec)
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private func viabilityColor(_ score: Int) -> Color {
-        switch score {
-        case 0..<40:  return .brandRed
-        case 40..<60: return .brandOrange
-        case 60..<80: return .brandAmber
-        default:      return .brandGreen
-        }
-    }
-}
 
 #Preview {
     NavigationStack {

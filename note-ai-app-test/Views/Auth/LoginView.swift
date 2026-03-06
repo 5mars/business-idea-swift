@@ -20,16 +20,16 @@ struct LoginView: View {
             // Decorative blobs
             GeometryReader { geo in
                 Circle()
-                    .fill(Color.brand.opacity(0.12))
+                    .fill(Color.brand.opacity(0.18))
                     .frame(width: 300, height: 300)
                     .offset(x: geo.size.width * 0.5, y: -80)
-                    .blur(radius: 60)
+                    .blur(radius: 80)
 
                 Circle()
-                    .fill(Color.brandPink.opacity(0.1))
+                    .fill(Color.brandPink.opacity(0.15))
                     .frame(width: 240, height: 240)
                     .offset(x: -60, y: geo.size.height * 0.65)
-                    .blur(radius: 50)
+                    .blur(radius: 80)
             }
             .ignoresSafeArea()
 
@@ -43,7 +43,6 @@ struct LoginView: View {
                             Circle()
                                 .fill(LinearGradient.brand)
                                 .frame(width: 96, height: 96)
-                                .shadow(color: Color.brand.opacity(0.4), radius: 20, x: 0, y: 8)
 
                             Image(systemName: "mic.fill")
                                 .font(.system(size: 38, weight: .semibold))
