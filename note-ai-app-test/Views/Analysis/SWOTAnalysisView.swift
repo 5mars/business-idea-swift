@@ -63,29 +63,21 @@ struct SWOTAnalysisView: View {
         ViabilityGaugeView(score: analysis.viabilityScore ?? 0)
             .cardEntrance(delay: 0.05)
 
-        // 2. Game Plan checklist
-        GamePlanCard(
-            analysis: analysis,
-            actionItems: viewModel.actionItems,
-            onToggle: { id, completed in await viewModel.toggleAction(id: id, isCompleted: completed) }
-        )
-        .cardEntrance(delay: 0.10)
-
-        // 3. Quadrant Summary Grid
+        // 2. Quadrant Summary Grid
         QuadrantSummaryGrid(analysis: analysis)
+            .cardEntrance(delay: 0.10)
+
+        // 3. Category Overview Bar Chart
+        CategoryOverviewChart(analysis: analysis)
             .cardEntrance(delay: 0.15)
 
-        // 4. Category Overview Bar Chart
-        CategoryOverviewChart(analysis: analysis)
-            .cardEntrance(delay: 0.20)
-
-        // 5. Market Intelligence
+        // 4. Market Intelligence
         if let insights = analysis.marketInsights {
             MarketIntelligenceSection(insights: insights, context: analysis.marketContext)
-                .cardEntrance(delay: 0.26)
+                .cardEntrance(delay: 0.20)
         }
 
-        // 6. Item Score Details per quadrant
+        // 5. Item Score Details per quadrant
         QuadrantItemChart(
             title: "The Wins",
             items: analysis.resolvedStrengths,
@@ -93,7 +85,7 @@ struct SWOTAnalysisView: View {
             gradient: .swotStrength,
             iconName: "checkmark.circle.fill"
         )
-        .cardEntrance(delay: 0.32)
+        .cardEntrance(delay: 0.26)
 
         QuadrantItemChart(
             title: "Opportunities",
@@ -102,7 +94,7 @@ struct SWOTAnalysisView: View {
             gradient: .swotOpportunity,
             iconName: "arrow.up.circle.fill"
         )
-        .cardEntrance(delay: 0.38)
+        .cardEntrance(delay: 0.32)
 
         QuadrantItemChart(
             title: "Weaknesses",
@@ -111,7 +103,7 @@ struct SWOTAnalysisView: View {
             gradient: .swotWeakness,
             iconName: "xmark.circle.fill"
         )
-        .cardEntrance(delay: 0.44)
+        .cardEntrance(delay: 0.38)
 
         QuadrantItemChart(
             title: "Watch Out",
@@ -120,25 +112,17 @@ struct SWOTAnalysisView: View {
             gradient: .swotThreat,
             iconName: "exclamationmark.triangle.fill"
         )
-        .cardEntrance(delay: 0.50)
+        .cardEntrance(delay: 0.44)
 
-        // 7. Recommendations
-        if let recs = analysis.recommendations, !recs.isEmpty {
-            RecommendationsSection(recommendations: recs)
-                .cardEntrance(delay: 0.56)
-        }
-
-        // Footer — summary + timestamp
-        if let summary = analysis.summary {
-            summaryCard(summary)
-                .cardEntrance(delay: 0.60)
-        }
+        // 6. Action Plan CTA
+        actionPlanCTA(analysis)
+            .cardEntrance(delay: 0.50)
 
         Text("Cooked up \(analysis.createdAt, style: .relative) ago")
             .font(.system(size: 12))
             .foregroundColor(.textSec)
             .padding(.bottom, 8)
-            .cardEntrance(delay: 0.64)
+            .cardEntrance(delay: 0.56)
     }
 
     // MARK: - States
@@ -276,54 +260,48 @@ struct SWOTAnalysisView: View {
         }
     }
 
-    private func summaryCard(_ summary: String) -> some View {
-        SummaryCard(summary: summary)
-    }
-}
-
-// MARK: - Summary Card
-
-private struct SummaryCard: View {
-    let summary: String
-    @State private var isExpanded = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Button {
-                withAnimation(.spring(response: 0.38, dampingFraction: 0.75)) {
-                    isExpanded.toggle()
+    private func actionPlanCTA(_ analysis: SWOTAnalysis) -> some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(Color.brandPink.opacity(0.12))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.brandPink)
                 }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Turn this into action")
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .foregroundColor(.textPri)
+                    Text("Get a micro-action plan you can start right now")
+                        .font(.system(size: 13))
+                        .foregroundColor(.textSec)
+                }
+                Spacer()
+            }
+
+            Button {
+                dismiss()
             } label: {
                 HStack(spacing: 8) {
-                    ZStack {
-                        Circle()
-                            .fill(LinearGradient.brand)
-                            .frame(width: 32, height: 32)
-                        Image(systemName: "doc.text.fill")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.white)
-                    }
-                    Text("TL;DR")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.textPri)
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.textSec)
-                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                        .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isExpanded)
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: 14))
+                    Text("Get your action plan")
+                        .font(.system(size: 16, weight: .bold))
                 }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 54)
+                .background(LinearGradient.record)
+                .cornerRadius(18)
             }
-            .buttonStyle(.plain)
-
-            Text(summary)
-                .font(.system(size: 15))
-                .foregroundColor(.textPri)
-                .lineSpacing(4)
-                .lineLimit(isExpanded ? nil : 3)
+            .buttonStyle(PlayfulButtonStyle())
         }
         .cardStyle()
     }
+
 }
 
 // MARK: - Viability Gauge
@@ -808,68 +786,6 @@ struct QuadrantItemChart: View {
     }
 }
 
-// MARK: - Recommendations
-
-struct RecommendationsSection: View {
-    let recommendations: [String]
-
-    @State private var isExpanded = false
-    private let previewCount = 2
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Button {
-                withAnimation(.spring(response: 0.38, dampingFraction: 0.75)) {
-                    isExpanded.toggle()
-                }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "lightbulb.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.brandAmber)
-                    Text("What To Do Next")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.textPri)
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.textSec)
-                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                        .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isExpanded)
-                }
-            }
-            .buttonStyle(.plain)
-
-            let visible = isExpanded ? recommendations : Array(recommendations.prefix(previewCount))
-            VStack(alignment: .leading, spacing: 12) {
-                ForEach(Array(visible.enumerated()), id: \.offset) { index, rec in
-                    HStack(alignment: .top, spacing: 12) {
-                        Text("\(index + 1)")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(width: 22, height: 22)
-                            .background(LinearGradient.brand)
-                            .clipShape(Circle())
-
-                        Text(rec)
-                            .font(.system(size: 14))
-                            .foregroundColor(.textPri)
-                            .lineSpacing(3)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-
-            if !isExpanded && recommendations.count > previewCount {
-                Text("+\(recommendations.count - previewCount) more")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.brand.opacity(0.7))
-            }
-        }
-        .cardStyle()
-    }
-}
-
 // MARK: - Quadrant Summary Grid
 
 struct QuadrantSummaryGrid: View {
@@ -954,165 +870,6 @@ struct QuadrantMiniCard: View {
         .padding(16)
         .background(background)
         .cornerRadius(20)
-    }
-}
-
-// MARK: - Game Plan Card
-
-struct GamePlanCard: View {
-    let analysis: SWOTAnalysis
-    let actionItems: [PersistedActionItem]
-    let onToggle: (UUID, Bool) async -> Void
-
-    @State private var isExpanded = true
-    private let collapsedCount = 3
-
-    private var allItems: [SWOTItem] {
-        analysis.resolvedStrengths + analysis.resolvedOpportunities +
-        analysis.resolvedWeaknesses + analysis.resolvedThreats
-    }
-
-    private func score(for action: PersistedActionItem) -> Int {
-        allItems.first(where: { $0.id == action.swotItemId })?.score ?? 0
-    }
-
-    private var sortedActions: [PersistedActionItem] {
-        actionItems.sorted { score(for: $0) > score(for: $1) }
-    }
-
-    private var completedCount: Int { actionItems.filter(\.isCompleted).count }
-    private var totalCount: Int { actionItems.count }
-    private var progress: Double { totalCount > 0 ? Double(completedCount) / Double(totalCount) : 0 }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            // Header
-            Button {
-                withAnimation(.spring(response: 0.38, dampingFraction: 0.75)) {
-                    isExpanded.toggle()
-                }
-            } label: {
-                HStack(spacing: 8) {
-                    Text("⚡")
-                        .font(.system(size: 16))
-                    Text("Your Game Plan")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.textPri)
-                    Spacer()
-                    if totalCount > 0 {
-                        Text("\(completedCount) / \(totalCount) done")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.textSec)
-                            .contentTransition(.numericText())
-                            .animation(.spring(response: 0.35), value: completedCount)
-                    }
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.textSec)
-                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                        .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isExpanded)
-                }
-            }
-            .buttonStyle(.plain)
-
-            // Progress bar
-            if totalCount > 0 {
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(Color.black.opacity(0.08)).frame(height: 4)
-                        Capsule()
-                            .fill(LinearGradient.brand)
-                            .frame(width: max(0, geo.size.width * CGFloat(progress)), height: 4)
-                            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progress)
-                    }
-                }
-                .frame(height: 4)
-            }
-
-            if actionItems.isEmpty {
-                Text("Generate an analysis to get your action plan")
-                    .font(.system(size: 13))
-                    .foregroundColor(.textSec)
-                    .italic()
-            } else if completedCount == totalCount {
-                Text("You're cooking — all actions checked off")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.brandGreen)
-                    .padding(.vertical, 4)
-            } else {
-                let displayed = isExpanded ? sortedActions : Array(sortedActions.prefix(collapsedCount))
-                VStack(spacing: 10) {
-                    ForEach(displayed) { action in
-                        ActionRow(action: action) {
-                            Task { await onToggle(action.id, !action.isCompleted) }
-                        }
-                    }
-                }
-                if !isExpanded && sortedActions.count > collapsedCount {
-                    Text("+\(sortedActions.count - collapsedCount) more")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.brand.opacity(0.7))
-                }
-            }
-        }
-        .padding(18)
-        .background(Color.cardDarkBlue)
-        .cornerRadius(20)
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.black.opacity(0.07), lineWidth: 1.5)
-        )
-    }
-}
-
-private struct ActionRow: View {
-    let action: PersistedActionItem
-    let onTap: () -> Void
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Button(action: onTap) {
-                ZStack {
-                    Circle()
-                        .strokeBorder(
-                            action.isCompleted ? Color.brand : Color.black.opacity(0.2),
-                            lineWidth: 2
-                        )
-                        .frame(width: 24, height: 24)
-                        .background(
-                            Circle().fill(action.isCompleted ? Color.brand : Color.clear)
-                        )
-                    if action.isCompleted {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.white)
-                    }
-                }
-            }
-            .buttonStyle(PlayfulButtonStyle())
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(action.text)
-                    .font(.system(size: 13))
-                    .foregroundColor(action.isCompleted ? .textSec : .textPri)
-                    .strikethrough(action.isCompleted, color: .textSec)
-                    .lineLimit(3)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                if let estimate = action.timeEstimate {
-                    Text(estimate)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.brand.opacity(0.7))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color.brand.opacity(0.1))
-                        .clipShape(Capsule())
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .opacity(action.isCompleted ? 0.45 : 1)
-            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: action.isCompleted)
-        }
     }
 }
 

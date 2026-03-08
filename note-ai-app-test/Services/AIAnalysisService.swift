@@ -48,41 +48,96 @@ class AIAnalysisService: ObservableObject {
             threatItems: response.threats,
             viabilityScore: response.viabilityScore,
             marketContext: response.marketContext,
-            marketInsights: response.marketInsights,
-            recommendations: response.recommendations
+            marketInsights: response.marketInsights
         )
 
         try await supabase.createSWOTAnalysis(analysis)
 
-        // Flatten all actions across quadrants and persist them
-        let quadrantMap: [(items: [SWOTItem], quadrant: String)] = [
-            (response.strengths,    "strength"),
-            (response.weaknesses,   "weakness"),
-            (response.opportunities, "opportunity"),
-            (response.threats,      "threat")
-        ]
-        var persistedActions: [PersistedActionItem] = []
-        let now = Date()
-        for (items, quadrant) in quadrantMap {
-            for item in items {
-                for action in (item.actions ?? []) {
-                    persistedActions.append(PersistedActionItem(
-                        id: UUID(),
-                        analysisId: analysis.id,
-                        swotItemId: item.id,
-                        quadrant: quadrant,
-                        text: action.text,
-                        timeEstimate: action.timeEstimate,
-                        isCompleted: false,
-                        completedAt: nil,
-                        createdAt: now
-                    ))
-                }
+        return analysis
+    }
+
+    // MARK: - Action Plan Generation
+
+    func generateAndSaveActionPlan(analysis: SWOTAnalysis, transcriptionText: String) async throws -> (ActionPlan, [MicroAction]) {
+        guard let userId = try await supabase.getCurrentUser()?.id else {
+            throw NSError(domain: "AIAnalysisService", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+
+        struct ActionPlanRequest: Encodable {
+            let analysisId: String
+            let transcriptionText: String
+            let swotSummary: String
+            let strengths: [String]
+            let weaknesses: [String]
+            let opportunities: [String]
+            let threats: [String]
+            let viabilityScore: Int
+
+            enum CodingKeys: String, CodingKey {
+                case analysisId = "analysis_id"
+                case transcriptionText = "transcription_text"
+                case swotSummary = "swot_summary"
+                case strengths, weaknesses, opportunities, threats
+                case viabilityScore = "viability_score"
             }
         }
-        try? await supabase.createActionItems(persistedActions)
 
-        return analysis
+        let requestBody = ActionPlanRequest(
+            analysisId: analysis.id.uuidString,
+            transcriptionText: transcriptionText,
+            swotSummary: analysis.summary ?? "",
+            strengths: analysis.resolvedStrengths.map(\.point),
+            weaknesses: analysis.resolvedWeaknesses.map(\.point),
+            opportunities: analysis.resolvedOpportunities.map(\.point),
+            threats: analysis.resolvedThreats.map(\.point),
+            viabilityScore: analysis.viabilityScore ?? 50
+        )
+
+        let response: ActionPlanResponse = try await supabase.client.functions
+            .invoke(
+                "generate-action-plan",
+                options: FunctionInvokeOptions(
+                    body: requestBody
+                )
+            )
+
+        let now = Date()
+        let planId = UUID()
+        let totalMinutes = response.actions.reduce(0) { $0 + $1.timeEstimateMinutes }
+
+        let plan = ActionPlan(
+            id: planId,
+            analysisId: analysis.id,
+            userId: userId,
+            title: response.title,
+            summary: response.summary,
+            totalEstimateMinutes: totalMinutes,
+            createdAt: now
+        )
+
+        let microActions = response.actions.map { item in
+            MicroAction(
+                id: UUID(),
+                actionPlanId: planId,
+                text: item.text,
+                doneCriteria: item.doneCriteria,
+                timeEstimateMinutes: item.timeEstimateMinutes,
+                priority: item.priority,
+                quadrant: item.quadrant,
+                template: item.template,
+                isCompleted: false,
+                completedAt: nil,
+                isCommitted: false,
+                committedAt: nil,
+                scheduledFor: nil,
+                createdAt: now
+            )
+        }
+
+        try await supabase.createActionPlan(plan)
+        try await supabase.createMicroActions(microActions)
+
+        return (plan, microActions)
     }
 }
 
@@ -96,6 +151,5 @@ struct SWOTAnalysisResponse: Codable {
     let viabilityScore: Int
     let marketContext: String
     let marketInsights: MarketInsights
-    let recommendations: [String]
     let summary: String?
 }

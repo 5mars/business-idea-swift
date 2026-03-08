@@ -29,7 +29,8 @@ class SupabaseService {
     func signUp(email: String, password: String) async throws -> User {
         let response = try await client.auth.signUp(
             email: email,
-            password: password
+            password: password,
+            redirectTo: URL(string: "noteai://auth-callback")
         )
 
         return User(
@@ -201,28 +202,58 @@ class SupabaseService {
         return response.first
     }
 
-    // MARK: - Action Items
+    // MARK: - Action Plans
 
-    func createActionItems(_ items: [PersistedActionItem]) async throws {
-        guard !items.isEmpty else { return }
+    func createActionPlan(_ plan: ActionPlan) async throws {
         try await client
-            .from("action_items")
-            .upsert(items)
+            .from("action_plans")
+            .insert(plan)
             .execute()
     }
 
-    func fetchActionItems(analysisId: UUID) async throws -> [PersistedActionItem] {
-        let response: [PersistedActionItem] = try await client
-            .from("action_items")
+    func fetchActionPlan(analysisId: UUID) async throws -> ActionPlan? {
+        let response: [ActionPlan] = try await client
+            .from("action_plans")
             .select()
             .eq("analysis_id", value: analysisId)
-            .order("created_at", ascending: true)
+            .execute()
+            .value
+        return response.first
+    }
+
+    func fetchAllActionPlans(userId: UUID) async throws -> [ActionPlan] {
+        let response: [ActionPlan] = try await client
+            .from("action_plans")
+            .select()
+            .eq("user_id", value: userId)
+            .order("created_at", ascending: false)
             .execute()
             .value
         return response
     }
 
-    func toggleActionItem(id: UUID, isCompleted: Bool) async throws {
+    // MARK: - Micro Actions
+
+    func createMicroActions(_ actions: [MicroAction]) async throws {
+        guard !actions.isEmpty else { return }
+        try await client
+            .from("micro_actions")
+            .insert(actions)
+            .execute()
+    }
+
+    func fetchMicroActions(actionPlanId: UUID) async throws -> [MicroAction] {
+        let response: [MicroAction] = try await client
+            .from("micro_actions")
+            .select()
+            .eq("action_plan_id", value: actionPlanId)
+            .order("priority", ascending: true)
+            .execute()
+            .value
+        return response
+    }
+
+    func toggleMicroAction(id: UUID, isCompleted: Bool) async throws {
         struct TogglePayload: Encodable {
             let is_completed: Bool
             let completed_at: Date?
@@ -243,11 +274,97 @@ class SupabaseService {
         }
 
         try await client
-            .from("action_items")
+            .from("micro_actions")
             .update(TogglePayload(
                 is_completed: isCompleted,
                 completed_at: isCompleted ? Date() : nil
             ))
+            .eq("id", value: id)
+            .execute()
+    }
+
+    func commitMicroAction(id: UUID, scheduledFor: Date?) async throws {
+        struct CommitPayload: Encodable {
+            let is_committed: Bool
+            let committed_at: Date?
+            let scheduled_for: Date?
+
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                try container.encode(is_committed, forKey: .is_committed)
+                if let date = committed_at {
+                    try container.encode(date, forKey: .committed_at)
+                } else {
+                    try container.encodeNil(forKey: .committed_at)
+                }
+                if let date = scheduled_for {
+                    try container.encode(date, forKey: .scheduled_for)
+                } else {
+                    try container.encodeNil(forKey: .scheduled_for)
+                }
+            }
+
+            enum CodingKeys: String, CodingKey {
+                case is_committed, committed_at, scheduled_for
+            }
+        }
+
+        try await client
+            .from("micro_actions")
+            .update(CommitPayload(
+                is_committed: true,
+                committed_at: Date(),
+                scheduled_for: scheduledFor
+            ))
+            .eq("id", value: id)
+            .execute()
+    }
+
+    // MARK: - Commitments
+
+    func createCommitment(_ commitment: Commitment) async throws {
+        try await client
+            .from("commitments")
+            .insert(commitment)
+            .execute()
+    }
+
+    func fetchActiveCommitment(userId: UUID) async throws -> Commitment? {
+        let response: [Commitment] = try await client
+            .from("commitments")
+            .select()
+            .eq("user_id", value: userId)
+            .eq("status", value: "active")
+            .order("created_at", ascending: false)
+            .limit(1)
+            .execute()
+            .value
+        return response.first
+    }
+
+    func updateCommitmentStatus(id: UUID, status: String, completedAt: Date? = nil) async throws {
+        struct StatusPayload: Encodable {
+            let status: String
+            let completed_at: Date?
+
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                try container.encode(status, forKey: .status)
+                if let date = completed_at {
+                    try container.encode(date, forKey: .completed_at)
+                } else {
+                    try container.encodeNil(forKey: .completed_at)
+                }
+            }
+
+            enum CodingKeys: String, CodingKey {
+                case status, completed_at
+            }
+        }
+
+        try await client
+            .from("commitments")
+            .update(StatusPayload(status: status, completed_at: completedAt))
             .eq("id", value: id)
             .execute()
     }

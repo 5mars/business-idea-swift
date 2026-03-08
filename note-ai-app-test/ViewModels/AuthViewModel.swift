@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import Supabase
 
 @MainActor
 class AuthViewModel: ObservableObject {
@@ -17,10 +18,32 @@ class AuthViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private let supabase = SupabaseService.shared
+    private var authStateTask: Task<Void, Never>?
 
     init() {
         Task {
             await checkAuthStatus()
+        }
+        listenForAuthChanges()
+    }
+
+    private func listenForAuthChanges() {
+        authStateTask = Task {
+            for await (event, session) in supabase.client.auth.authStateChanges {
+                guard !Task.isCancelled else { break }
+                switch event {
+                case .signedIn, .tokenRefreshed:
+                    if let user = session?.user {
+                        currentUser = User(id: user.id, email: user.email, createdAt: user.createdAt)
+                        isAuthenticated = true
+                    }
+                case .signedOut:
+                    currentUser = nil
+                    isAuthenticated = false
+                default:
+                    break
+                }
+            }
         }
     }
 

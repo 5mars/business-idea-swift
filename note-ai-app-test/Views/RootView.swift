@@ -87,6 +87,13 @@ struct MainTabView: View {
                 Label("Record", systemImage: "mic.fill")
             }
 
+            NavigationStack {
+                ActionsTabView()
+            }
+            .tabItem {
+                Label("Actions", systemImage: "bolt.fill")
+            }
+
             ProfileView()
                 .tabItem {
                     Label("Profile", systemImage: "person.fill")

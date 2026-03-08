@@ -90,11 +90,8 @@ class RecordingViewModel: ObservableObject {
                 return nil
             }
 
-            print("🔐 User authenticated - ID: \(user.id)")
-
             // Upload audio file
             let audioURL = try await supabase.uploadAudioFile(userId: user.id, fileURL: fileURL)
-            print("✅ Audio uploaded to: \(audioURL)")
 
             // Create voice note record
             let voiceNote = VoiceNote(
@@ -109,10 +106,7 @@ class RecordingViewModel: ObservableObject {
                 analysisId: nil
             )
 
-            print("📝 Creating voice note with user_id: \(voiceNote.userId)")
-
             try await supabase.createVoiceNote(voiceNote)
-            print("✅ Voice note saved successfully!")
 
             // Clean up local file
             AudioFileManager.deleteFile(at: fileURL)
@@ -120,8 +114,6 @@ class RecordingViewModel: ObservableObject {
 
             return voiceNote
         } catch {
-            print("❌ Error saving recording: \(error)")
-            print("❌ Error details: \(String(describing: error))")
             errorMessage = "Failed to save recording: \(error.localizedDescription)"
             return nil
         }

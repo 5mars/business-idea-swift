@@ -23,6 +23,10 @@ struct NoteDetailView: View {
     @State private var noteTitle: String
     @State private var editedTitle = ""
     @State private var isEditingTitle = false
+    @State private var actionPlan: ActionPlan?
+    @State private var actionPlanProgress: (completed: Int, total: Int)?
+    @State private var isGeneratingPlan = false
+    @State private var isTranscriptionExpanded = false
 
     private let supabase = SupabaseService.shared
 
@@ -35,7 +39,7 @@ struct NoteDetailView: View {
         ZStack {
             Color.appBg.ignoresSafeArea()
 
-            ScrollView(showsIndicators: false) {
+            ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 16) {
 
                     // Note header card
@@ -117,77 +121,14 @@ struct NoteDetailView: View {
                     .heroCard(color: Color(hex: "F0FAFA"))
                     .cardEntrance(delay: 0.0)
 
-                    // Audio playback card
-                    VStack(spacing: 16) {
-                        HStack {
-                            Text("Hit Play")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(.textPri)
-                            Spacer()
-                        }
-
-                        HStack(spacing: 16) {
-                            Button {
-                                Task { await togglePlayback() }
-                            } label: {
-                                ZStack {
-                                    Circle()
-                                        .fill(LinearGradient.brand)
-                                        .frame(width: 56, height: 56)
-
-                                    if audioPlayer.isLoading {
-                                        ProgressView().tint(.white).scaleEffect(0.8)
-                                    } else {
-                                        Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
-                                            .font(.system(size: 20, weight: .semibold))
-                                            .foregroundColor(.white)
-                                            .offset(x: audioPlayer.isPlaying ? 0 : 2)
-                                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: audioPlayer.isPlaying)
-                                    }
-                                }
-                            }
-                            .buttonStyle(PlayfulButtonStyle())
-                            .disabled(audioPlayer.isLoading)
-
-                            VStack(spacing: 8) {
-                                GeometryReader { geo in
-                                    ZStack(alignment: .leading) {
-                                        Capsule()
-                                            .fill(Color.black.opacity(0.08))
-                                            .frame(height: 6)
-
-                                        Capsule()
-                                            .fill(LinearGradient.brand)
-                                            .frame(
-                                                width: max(6, geo.size.width * CGFloat(audioPlayer.progress)),
-                                                height: 6
-                                            )
-                                            .animation(.linear(duration: 0.5), value: audioPlayer.progress)
-                                    }
-                                }
-                                .frame(height: 6)
-
-                                HStack {
-                                    Text(formatDuration(audioPlayer.currentTime))
-                                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                        .foregroundColor(.textSec)
-                                        .contentTransition(.numericText())
-
-                                    Spacer()
-
-                                    Text(formatDuration(note.duration))
-                                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                        .foregroundColor(.textSec)
-                                }
-                            }
-                        }
-                    }
-                    .cardStyle()
-                    .cardEntrance(delay: 0.09)
-
-                    // Transcription card
+                    // What You Said — collapsible card with audio player + transcription
                     VStack(alignment: .leading, spacing: 16) {
-                        HStack {
+                        // Header with collapse toggle
+                        Button {
+                            withAnimation(.spring(response: 0.38, dampingFraction: 0.75)) {
+                                isTranscriptionExpanded.toggle()
+                            }
+                        } label: {
                             HStack(spacing: 8) {
                                 ZStack {
                                     Circle()
@@ -200,119 +141,191 @@ struct NoteDetailView: View {
                                 Text("What You Said")
                                     .font(.system(size: 15, weight: .semibold))
                                     .foregroundColor(.textPri)
-                            }
 
-                            Spacer()
+                                Spacer()
 
-                            if transcription != nil && !isEditingTranscript {
-                                Button {
-                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                                        isEditingTranscript = true
-                                        editedTranscriptionText = transcription?.text ?? ""
+                                if transcription != nil && !isEditingTranscript && isTranscriptionExpanded {
+                                    Button {
+                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                                            isEditingTranscript = true
+                                            editedTranscriptionText = transcription?.text ?? ""
+                                        }
+                                    } label: {
+                                        Label("Edit", systemImage: "pencil")
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundColor(.brand)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 6)
+                                            .background(Color.brand.opacity(0.08))
+                                            .cornerRadius(20)
                                     }
-                                } label: {
-                                    Label("Edit", systemImage: "pencil")
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundColor(.brand)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(Color.brand.opacity(0.08))
-                                        .cornerRadius(20)
+                                    .buttonStyle(PlayfulButtonStyle())
                                 }
-                                .buttonStyle(PlayfulButtonStyle())
+
+                                Image(systemName: "chevron.down")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(.textSec)
+                                    .rotationEffect(.degrees(isTranscriptionExpanded ? 180 : 0))
+                                    .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isTranscriptionExpanded)
                             }
                         }
+                        .buttonStyle(.plain)
 
-                        if isLoadingTranscription {
-                            HStack(spacing: 10) {
-                                ProgressView().tint(.brand).scaleEffect(0.9)
-                                Text("Catching every word...")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.textSec)
-                            }
-                            .padding(.vertical, 8)
-                        } else if let transcription = transcription {
-                            if isEditingTranscript {
-                                TextEditor(text: $editedTranscriptionText)
-                                    .frame(minHeight: 150)
-                                    .padding(12)
-                                    .background(Color.black.opacity(0.04))
-                                    .cornerRadius(12)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color.brand.opacity(0.35), lineWidth: 1.5)
-                                    )
-                                    .font(.system(size: 15))
-                                    .tint(.brand)
-                                    .onChange(of: editedTranscriptionText) { oldValue, newValue in
-                                        hasUnsavedChanges = newValue != transcription.text
-                                    }
-                                    .transition(.opacity.combined(with: .move(edge: .top)))
+                        if isTranscriptionExpanded {
+                            // Audio player
+                            HStack(spacing: 16) {
+                                Button {
+                                    Task { await togglePlayback() }
+                                } label: {
+                                    ZStack {
+                                        Circle()
+                                            .fill(LinearGradient.brand)
+                                            .frame(width: 48, height: 48)
 
-                                HStack {
-                                    Button("Cancel") {
-                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                                            isEditingTranscript = false
-                                            hasUnsavedChanges = false
-                                            editedTranscriptionText = transcription.text
+                                        if audioPlayer.isLoading {
+                                            ProgressView().tint(.white).scaleEffect(0.8)
+                                        } else {
+                                            Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
+                                                .font(.system(size: 18, weight: .semibold))
+                                                .foregroundColor(.white)
+                                                .offset(x: audioPlayer.isPlaying ? 0 : 2)
+                                                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: audioPlayer.isPlaying)
                                         }
                                     }
-                                    .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(.textSec)
-                                    .buttonStyle(PlayfulButtonStyle())
+                                }
+                                .buttonStyle(PlayfulButtonStyle())
+                                .disabled(audioPlayer.isLoading)
 
-                                    Spacer()
+                                VStack(spacing: 8) {
+                                    GeometryReader { geo in
+                                        ZStack(alignment: .leading) {
+                                            Capsule()
+                                                .fill(Color.black.opacity(0.08))
+                                                .frame(height: 5)
 
-                                    Button {
-                                        Task { await saveTranscriptionEdit() }
-                                    } label: {
-                                        Text("Save Changes")
-                                            .font(.system(size: 15, weight: .semibold))
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 16)
-                                            .padding(.vertical, 9)
-                                            .background(hasUnsavedChanges ? Color.brand : Color.gray.opacity(0.3))
-                                            .cornerRadius(12)
-                                            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: hasUnsavedChanges)
+                                            Capsule()
+                                                .fill(LinearGradient.brand)
+                                                .frame(
+                                                    width: max(5, geo.size.width * CGFloat(audioPlayer.progress)),
+                                                    height: 5
+                                                )
+                                                .animation(.linear(duration: 0.5), value: audioPlayer.progress)
+                                        }
                                     }
-                                    .buttonStyle(PlayfulButtonStyle())
-                                    .disabled(!hasUnsavedChanges)
+                                    .frame(height: 5)
+
+                                    HStack {
+                                        Text(formatDuration(audioPlayer.currentTime))
+                                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                            .foregroundColor(.textSec)
+                                            .contentTransition(.numericText())
+
+                                        Spacer()
+
+                                        Text(formatDuration(note.duration))
+                                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                            .foregroundColor(.textSec)
+                                    }
+                                }
+                            }
+
+                            // Transcription content
+                            if isLoadingTranscription {
+                                HStack(spacing: 10) {
+                                    ProgressView().tint(.brand).scaleEffect(0.9)
+                                    Text("Catching every word...")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.textSec)
+                                }
+                                .padding(.vertical, 8)
+                            } else if let transcription = transcription {
+                                if isEditingTranscript {
+                                    TextEditor(text: $editedTranscriptionText)
+                                        .frame(minHeight: 150)
+                                        .padding(12)
+                                        .background(Color.black.opacity(0.04))
+                                        .cornerRadius(12)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Color.brand.opacity(0.35), lineWidth: 1.5)
+                                        )
+                                        .font(.system(size: 15))
+                                        .tint(.brand)
+                                        .onChange(of: editedTranscriptionText) { oldValue, newValue in
+                                            hasUnsavedChanges = newValue != transcription.text
+                                        }
+                                        .transition(.opacity.combined(with: .move(edge: .top)))
+
+                                    HStack {
+                                        Button("Cancel") {
+                                            withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                                                isEditingTranscript = false
+                                                hasUnsavedChanges = false
+                                                editedTranscriptionText = transcription.text
+                                            }
+                                        }
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundColor(.textSec)
+                                        .buttonStyle(PlayfulButtonStyle())
+
+                                        Spacer()
+
+                                        Button {
+                                            Task { await saveTranscriptionEdit() }
+                                        } label: {
+                                            Text("Save Changes")
+                                                .font(.system(size: 15, weight: .semibold))
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 16)
+                                                .padding(.vertical, 9)
+                                                .background(hasUnsavedChanges ? Color.brand : Color.gray.opacity(0.3))
+                                                .cornerRadius(12)
+                                                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: hasUnsavedChanges)
+                                        }
+                                        .buttonStyle(PlayfulButtonStyle())
+                                        .disabled(!hasUnsavedChanges)
+                                    }
+                                } else {
+                                    Text(transcription.text)
+                                        .font(.system(size: 15))
+                                        .foregroundColor(.textPri)
+                                        .lineSpacing(4)
+                                        .padding(14)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(Color.black.opacity(0.04))
+                                        .cornerRadius(12)
+                                        .transition(.opacity)
                                 }
                             } else {
-                                Text(transcription.text)
-                                    .font(.system(size: 15))
-                                    .foregroundColor(.textPri)
-                                    .lineSpacing(4)
-                                    .padding(14)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(Color.black.opacity(0.04))
-                                    .cornerRadius(12)
-                                    .transition(.opacity)
-                            }
-                        } else {
-                            VStack(spacing: 14) {
-                                Text("Still raw audio")
-                                    .font(.system(size: 15))
-                                    .foregroundColor(.textSec)
-                                    .italic()
+                                VStack(spacing: 14) {
+                                    Text("Still raw audio")
+                                        .font(.system(size: 15))
+                                        .foregroundColor(.textSec)
+                                        .italic()
 
-                                GradientButton(title: "Turn it into text") {
-                                    Task { await loadTranscription() }
+                                    GradientButton(title: "Turn it into text") {
+                                        Task { await loadTranscription() }
+                                    }
                                 }
                             }
                         }
                     }
                     .cardStyle()
-                    .cardEntrance(delay: 0.18)
+                    .cardEntrance(delay: 0.09)
+                    .animation(.spring(response: 0.38, dampingFraction: 0.75), value: isTranscriptionExpanded)
                     .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isEditingTranscript)
 
-                    // Analysis card — shown when transcription exists and not editing
+                    // Cards shown when transcription exists and not editing
                     if transcription != nil && !isEditingTranscript {
+                        // Action plan card — top priority
+                        if swotAnalysis != nil {
+                            actionPlanCard
+                                .transition(.opacity)
+                        }
+
+                        // Lab Results card
                         analysisActionCard
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .bottom).combined(with: .opacity),
-                                removal: .opacity
-                            ))
+                            .transition(.opacity)
                     }
 
                     if let error = errorMessage {
@@ -343,7 +356,10 @@ struct NoteDetailView: View {
         .task {
             await loadTranscription()
             if let t = transcription {
-                Task { await loadSWOTAnalysis(transcriptionId: t.id) }
+                await loadSWOTAnalysis(transcriptionId: t.id)
+                if let analysis = swotAnalysis {
+                    await loadActionPlan(analysisId: analysis.id)
+                }
             }
         }
         .onDisappear { audioPlayer.stop() }
@@ -397,6 +413,18 @@ struct NoteDetailView: View {
                     }
                 }
 
+                // TL;DR summary
+                if let summary = analysis.summary, !summary.isEmpty {
+                    Text(summary)
+                        .font(.system(size: 14))
+                        .foregroundColor(.textSec)
+                        .lineSpacing(3)
+                        .padding(14)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.black.opacity(0.04))
+                        .cornerRadius(12)
+                }
+
                 // S W O T count pills
                 HStack(spacing: 8) {
                     quadrantPill("S", count: analysis.resolvedStrengths.count, color: .brandGreen)
@@ -424,7 +452,6 @@ struct NoteDetailView: View {
                 .buttonStyle(PlayfulButtonStyle())
             }
             .cardStyle()
-            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: analysis.viabilityScore)
         } else {
             // No analysis yet — playful generate CTA
             VStack(spacing: 18) {
@@ -483,7 +510,123 @@ struct NoteDetailView: View {
         }
     }
 
+    // MARK: - Action Plan Card
+
+    @ViewBuilder
+    private var actionPlanCard: some View {
+        if isGeneratingPlan {
+            HStack(spacing: 12) {
+                ProgressView().tint(.brandPink)
+                Text("Cooking up your action plan...")
+                    .font(.system(size: 14))
+                    .foregroundColor(.textSec)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .cardStyle(padding: 20)
+        } else if let plan = actionPlan, let progress = actionPlanProgress {
+            // Existing plan — show progress
+            VStack(spacing: 14) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .stroke(Color.brand.opacity(0.15), lineWidth: 3.5)
+                            .frame(width: 40, height: 40)
+                        Circle()
+                            .trim(from: 0, to: progress.total > 0 ? Double(progress.completed) / Double(progress.total) : 0)
+                            .stroke(Color.brand, style: StrokeStyle(lineWidth: 3.5, lineCap: .round))
+                            .frame(width: 40, height: 40)
+                            .rotationEffect(.degrees(-90))
+                        Text("\(progress.completed)")
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundColor(.brand)
+                            .contentTransition(.numericText())
+                    }
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(plan.title)
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(.textPri)
+                            .lineLimit(1)
+                        Text("\(progress.completed)/\(progress.total) actions done")
+                            .font(.system(size: 13))
+                            .foregroundColor(.textSec)
+                            .contentTransition(.numericText())
+                    }
+                    Spacer()
+                }
+
+                NavigationLink {
+                    ActionPlanDetailView(planId: plan.id, analysisId: plan.analysisId)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "bolt.fill")
+                            .font(.system(size: 13))
+                        Text("Continue")
+                            .font(.system(size: 15, weight: .bold))
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .background(LinearGradient.record)
+                    .cornerRadius(16)
+                }
+                .buttonStyle(PlayfulButtonStyle())
+            }
+            .cardStyle()
+        } else {
+            // No plan yet — generate CTA
+            VStack(spacing: 14) {
+                HStack(spacing: 10) {
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.brandPink)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Ready to act?")
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundColor(.textPri)
+                        Text("Get a step-by-step plan you can start right now")
+                            .font(.system(size: 13))
+                            .foregroundColor(.textSec)
+                    }
+                    Spacer()
+                }
+
+                GradientButton(title: "Get your action plan", gradient: .record) {
+                    Task { await generateActionPlan() }
+                }
+            }
+            .cardStyle()
+        }
+    }
+
     // MARK: - Private Methods
+
+    private func generateActionPlan() async {
+        guard let analysis = swotAnalysis, let transcription = transcription else { return }
+
+        isGeneratingPlan = true
+        defer { isGeneratingPlan = false }
+
+        do {
+            let aiService = AIAnalysisService()
+            let (plan, actions) = try await aiService.generateAndSaveActionPlan(
+                analysis: analysis,
+                transcriptionText: transcription.text
+            )
+            actionPlan = plan
+            actionPlanProgress = (completed: 0, total: actions.count)
+        } catch {
+            errorMessage = "Failed to generate plan: \(error.localizedDescription)"
+        }
+    }
+
+    private func loadActionPlan(analysisId: UUID) async {
+        if let plan = try? await supabase.fetchActionPlan(analysisId: analysisId) {
+            let actions = (try? await supabase.fetchMicroActions(actionPlanId: plan.id)) ?? []
+            actionPlan = plan
+            actionPlanProgress = (completed: actions.filter(\.isCompleted).count, total: actions.count)
+        }
+    }
 
     private func togglePlayback() async {
         if audioPlayer.isPlaying {
@@ -536,12 +679,10 @@ struct NoteDetailView: View {
     }
 
     private func loadSWOTAnalysis(transcriptionId: UUID) async {
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { isLoadingSWOT = true }
+        isLoadingSWOT = true
         let result = try? await supabase.fetchSWOTAnalysis(transcriptionId: transcriptionId)
-        withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-            swotAnalysis = result
-            isLoadingSWOT = false
-        }
+        swotAnalysis = result
+        isLoadingSWOT = false
     }
 
     private func saveTitleEdit() async {

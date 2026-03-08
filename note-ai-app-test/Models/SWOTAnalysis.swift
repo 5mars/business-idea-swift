@@ -5,19 +5,6 @@
 
 import Foundation
 
-// MARK: - ActionItem (embedded in SWOTItem JSONB)
-
-struct ActionItem: Identifiable, Codable, Hashable {
-    var id: UUID = UUID()   // not encoded — purely for SwiftUI ForEach stability
-    let text: String
-    let timeEstimate: String?
-
-    enum CodingKeys: String, CodingKey {
-        case text
-        case timeEstimate = "time_estimate"
-    }
-}
-
 // MARK: - SWOTItem
 
 struct SWOTItem: Identifiable, Codable, Hashable {
@@ -26,20 +13,18 @@ struct SWOTItem: Identifiable, Codable, Hashable {
     let detail: String?       // rich 3–5 sentence explanation
     let score: Int            // 0–100
     let category: String
-    let actions: [ActionItem]? // micro-actions per point
 
     enum CodingKeys: String, CodingKey {
-        case id, point, detail, score, category, actions
+        case id, point, detail, score, category
     }
 
-    // Convenience init for legacy rows (no detail/actions)
+    // Convenience init for legacy rows (no detail)
     init(point: String, score: Int, category: String) {
         self.id = UUID()
         self.point = point
         self.detail = nil
         self.score = score
         self.category = category
-        self.actions = nil
     }
 
     init(from decoder: Decoder) throws {
@@ -50,33 +35,6 @@ struct SWOTItem: Identifiable, Codable, Hashable {
         self.detail = try? container.decode(String.self, forKey: .detail)
         self.score = try container.decode(Int.self, forKey: .score)
         self.category = try container.decode(String.self, forKey: .category)
-        self.actions = try? container.decode([ActionItem].self, forKey: .actions)
-    }
-}
-
-// MARK: - PersistedActionItem (maps to action_items table)
-
-struct PersistedActionItem: Identifiable, Codable {
-    let id: UUID
-    let analysisId: UUID
-    let swotItemId: UUID
-    let quadrant: String      // "strength" | "weakness" | "opportunity" | "threat"
-    let text: String
-    let timeEstimate: String?
-    var isCompleted: Bool
-    var completedAt: Date?
-    let createdAt: Date
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case analysisId   = "analysis_id"
-        case swotItemId   = "swot_item_id"
-        case quadrant
-        case text
-        case timeEstimate = "time_estimate"
-        case isCompleted  = "is_completed"
-        case completedAt  = "completed_at"
-        case createdAt    = "created_at"
     }
 }
 
@@ -119,7 +77,6 @@ struct SWOTAnalysis: Identifiable, Codable {
     let viabilityScore: Int?
     let marketContext: String?
     let marketInsights: MarketInsights?
-    let recommendations: [String]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -137,7 +94,6 @@ struct SWOTAnalysis: Identifiable, Codable {
         case viabilityScore   = "viability_score"
         case marketContext    = "market_context"
         case marketInsights   = "market_insights"
-        case recommendations
     }
 
     // MARK: - Computed helpers (Charts fall back to score=50 for legacy rows)
