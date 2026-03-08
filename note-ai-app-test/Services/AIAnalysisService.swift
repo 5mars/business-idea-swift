@@ -2,8 +2,6 @@
 //  AIAnalysisService.swift
 //  note-ai-app-test
 //
-//  Created by Claude on 2026-03-03.
-//
 
 import Foundation
 import Supabase
@@ -21,7 +19,6 @@ class AIAnalysisService: ObservableObject {
         errorMessage = nil
         defer { isAnalyzing = false }
 
-        // Call Supabase Edge Function
         let response: SWOTAnalysisResponse = try await supabase.client.functions
             .invoke(
                 "analyze-swot",
@@ -34,33 +31,125 @@ class AIAnalysisService: ObservableObject {
     }
 
     func generateAndSaveSWOTAnalysis(transcriptionId: UUID, transcriptionText: String) async throws -> SWOTAnalysis {
-        // Generate analysis via Edge Function
         let response = try await analyzeTranscription(transcriptionText)
 
-        // Create SWOT analysis record
         let analysis = SWOTAnalysis(
             id: UUID(),
             transcriptionId: transcriptionId,
-            strengths: response.strengths,
-            weaknesses: response.weaknesses,
-            opportunities: response.opportunities,
-            threats: response.threats,
+            strengths: [],
+            weaknesses: [],
+            opportunities: [],
+            threats: [],
             summary: response.summary,
-            createdAt: Date()
+            createdAt: Date(),
+            strengthItems: response.strengths,
+            weaknessItems: response.weaknesses,
+            opportunityItems: response.opportunities,
+            threatItems: response.threats,
+            viabilityScore: response.viabilityScore,
+            marketContext: response.marketContext,
+            marketInsights: response.marketInsights
         )
 
-        // Save to database
         try await supabase.createSWOTAnalysis(analysis)
 
         return analysis
     }
+
+    // MARK: - Action Plan Generation
+
+    func generateAndSaveActionPlan(analysis: SWOTAnalysis, transcriptionText: String) async throws -> (ActionPlan, [MicroAction]) {
+        guard let userId = try await supabase.getCurrentUser()?.id else {
+            throw NSError(domain: "AIAnalysisService", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+
+        struct ActionPlanRequest: Encodable {
+            let analysisId: String
+            let transcriptionText: String
+            let swotSummary: String
+            let strengths: [String]
+            let weaknesses: [String]
+            let opportunities: [String]
+            let threats: [String]
+            let viabilityScore: Int
+
+            enum CodingKeys: String, CodingKey {
+                case analysisId = "analysis_id"
+                case transcriptionText = "transcription_text"
+                case swotSummary = "swot_summary"
+                case strengths, weaknesses, opportunities, threats
+                case viabilityScore = "viability_score"
+            }
+        }
+
+        let requestBody = ActionPlanRequest(
+            analysisId: analysis.id.uuidString,
+            transcriptionText: transcriptionText,
+            swotSummary: analysis.summary ?? "",
+            strengths: analysis.resolvedStrengths.map(\.point),
+            weaknesses: analysis.resolvedWeaknesses.map(\.point),
+            opportunities: analysis.resolvedOpportunities.map(\.point),
+            threats: analysis.resolvedThreats.map(\.point),
+            viabilityScore: analysis.viabilityScore ?? 50
+        )
+
+        let response: ActionPlanResponse = try await supabase.client.functions
+            .invoke(
+                "generate-action-plan",
+                options: FunctionInvokeOptions(
+                    body: requestBody
+                )
+            )
+
+        let now = Date()
+        let planId = UUID()
+        let totalMinutes = response.actions.reduce(0) { $0 + $1.timeEstimateMinutes }
+
+        let plan = ActionPlan(
+            id: planId,
+            analysisId: analysis.id,
+            userId: userId,
+            title: response.title,
+            summary: response.summary,
+            totalEstimateMinutes: totalMinutes,
+            createdAt: now
+        )
+
+        let microActions = response.actions.map { item in
+            MicroAction(
+                id: UUID(),
+                actionPlanId: planId,
+                text: item.text,
+                doneCriteria: item.doneCriteria,
+                timeEstimateMinutes: item.timeEstimateMinutes,
+                priority: item.priority,
+                quadrant: item.quadrant,
+                template: item.template,
+                isCompleted: false,
+                completedAt: nil,
+                isCommitted: false,
+                committedAt: nil,
+                scheduledFor: nil,
+                createdAt: now
+            )
+        }
+
+        try await supabase.createActionPlan(plan)
+        try await supabase.createMicroActions(microActions)
+
+        return (plan, microActions)
+    }
 }
 
-// Response structure from Edge Function
+// MARK: - Edge Function Response (camelCase — matches GPT-4o JSON output)
+
 struct SWOTAnalysisResponse: Codable {
-    let strengths: [String]
-    let weaknesses: [String]
-    let opportunities: [String]
-    let threats: [String]
+    let strengths: [SWOTItem]
+    let weaknesses: [SWOTItem]
+    let opportunities: [SWOTItem]
+    let threats: [SWOTItem]
+    let viabilityScore: Int
+    let marketContext: String
+    let marketInsights: MarketInsights
     let summary: String?
 }

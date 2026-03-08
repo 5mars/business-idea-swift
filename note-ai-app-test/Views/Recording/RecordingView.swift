@@ -16,6 +16,24 @@ struct RecordingView: View {
             Color.appBg.ignoresSafeArea()
 
             VStack(spacing: 0) {
+                // Status pill
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(statusDotColor)
+                        .frame(width: 8, height: 8)
+                        .shadow(color: statusDotColor.opacity(0.6), radius: 4, x: 0, y: 0)
+                    Text(statusLabel)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.textPri)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.cardSurface)
+                .clipShape(Capsule())
+                .padding(.top, 8)
+                .animation(.easeInOut(duration: 0.3), value: viewModel.isRecording)
+                .animation(.easeInOut(duration: 0.3), value: viewModel.recordingFileURL != nil)
+
                 Spacer()
 
                 // Visualization area
@@ -61,14 +79,6 @@ struct RecordingView: View {
                     )
                     .animation(.easeInOut(duration: 0.3), value: viewModel.isRecording)
                     .contentTransition(.numericText())
-
-                Spacer().frame(height: 8)
-
-                // Status label
-                Text(statusLabel)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(.textSec)
-                    .animation(.easeInOut, value: viewModel.isRecording)
 
                 Spacer()
 
@@ -118,10 +128,6 @@ struct RecordingView: View {
                         }
                     } else {
                         // Idle record button
-                        Circle()
-                            .stroke(Color.brand.opacity(0.2), lineWidth: 3)
-                            .frame(width: 108, height: 108)
-
                         Button {
                             Task { await viewModel.startRecording() }
                         } label: {
@@ -129,13 +135,13 @@ struct RecordingView: View {
                                 Circle()
                                     .fill(LinearGradient.brand)
                                     .frame(width: 88, height: 88)
-                                    .shadow(color: Color.brand.opacity(0.45), radius: 22, x: 0, y: 8)
 
                                 Image(systemName: "mic.fill")
                                     .font(.system(size: 32, weight: .semibold))
                                     .foregroundColor(.white)
                             }
                         }
+                        .buttonStyle(PlayfulButtonStyle())
                         .disabled(viewModel.isSaving)
                     }
                 }
@@ -157,7 +163,7 @@ struct RecordingView: View {
                         }
                     } else if viewModel.recordingFileURL != nil {
                         GradientButton(
-                            title: "Save Recording",
+                            title: "Lock it in",
                             isLoading: viewModel.isSaving
                         ) {
                             showingSaveDialog = true
@@ -167,12 +173,12 @@ struct RecordingView: View {
                         Button {
                             viewModel.cancelRecording()
                         } label: {
-                            Text("Discard")
+                            Text("Scratch that")
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(.brandRed)
                         }
                     } else {
-                        Text("Tap the button to start")
+                        Text("Tap the mic, start talking")
                             .font(.system(size: 14))
                             .foregroundColor(Color.textSec.opacity(0.6))
                     }
@@ -191,7 +197,7 @@ struct RecordingView: View {
                 if viewModel.isSaving {
                     HStack(spacing: 8) {
                         ProgressView().tint(.brand).scaleEffect(0.8)
-                        Text("Saving recording...")
+                        Text("Locking it in...")
                             .font(.system(size: 14))
                             .foregroundColor(.textSec)
                     }
@@ -200,9 +206,9 @@ struct RecordingView: View {
                 Spacer().frame(height: 48)
             }
         }
-        .navigationTitle("Record")
+        .navigationTitle("Drop an Idea")
         .navigationBarTitleDisplayMode(.inline)
-        .alert("Save Recording", isPresented: $showingSaveDialog) {
+        .alert("Name Your Idea", isPresented: $showingSaveDialog) {
             TextField("Title", text: $recordingTitle)
             Button("Save") {
                 Task {
@@ -214,14 +220,20 @@ struct RecordingView: View {
             }
             Button("Cancel", role: .cancel) { recordingTitle = "" }
         } message: {
-            Text("Give your recording a title")
+            Text("What are we calling this one?")
         }
     }
 
     private var statusLabel: String {
-        if viewModel.isRecording { return "Recording..." }
-        if viewModel.recordingFileURL != nil { return "Recording complete" }
-        return "Ready to record"
+        if viewModel.isRecording { return "Catching your thoughts..." }
+        if viewModel.recordingFileURL != nil { return "Locked in!" }
+        return "Mic check"
+    }
+
+    private var statusDotColor: Color {
+        if viewModel.isRecording { return .brandPink }
+        if viewModel.recordingFileURL != nil { return .brandGreen }
+        return .textSec
     }
 
     private func formatDuration(_ duration: TimeInterval) -> String {

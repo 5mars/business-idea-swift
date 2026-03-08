@@ -14,24 +14,17 @@ struct NotesListView: View {
 
             Group {
                 if viewModel.isLoading && viewModel.notes.isEmpty {
-                    loadingView
+                    labLoadingView
                 } else if viewModel.notes.isEmpty {
-                    emptyStateView
+                    labEmptyView
                 } else {
-                    notesList
+                    ideaList
                 }
             }
         }
-        .navigationTitle("Voice Notes")
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Color.appBg, for: .navigationBar)
-        .toolbar {
-            if !viewModel.notes.isEmpty {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                        .tint(.brand)
-                }
-            }
-        }
         .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
             Button("OK") { viewModel.errorMessage = nil }
         } message: {
@@ -42,66 +35,80 @@ struct NotesListView: View {
 
     // MARK: - Loading
 
-    private var loadingView: some View {
+    private var labLoadingView: some View {
         VStack(spacing: 16) {
             ProgressView()
                 .tint(.brand)
                 .scaleEffect(1.2)
-            Text("Loading notes...")
-                .font(.system(size: 15))
+            Text("Setting up the lab...")
+                .font(.system(size: 15, design: .rounded))
                 .foregroundColor(.textSec)
         }
     }
 
     // MARK: - Empty State
 
-    private var emptyStateView: some View {
+    private var labEmptyView: some View {
         VStack(spacing: 20) {
-            ZStack {
-                Circle()
-                    .fill(Color.brand.opacity(0.08))
-                    .frame(width: 110, height: 110)
+            Text("🧪")
+                .font(.system(size: 56))
 
-                Image(systemName: "mic.slash.fill")
-                    .font(.system(size: 44))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.brand.opacity(0.4), Color.brandLight.opacity(0.3)],
-                            startPoint: .top, endPoint: .bottom
-                        )
-                    )
-            }
-
-            Text("No recordings yet")
-                .font(.system(size: 20, weight: .semibold, design: .rounded))
+            Text("The Lab is empty")
+                .font(.system(size: 22, weight: .bold, design: .rounded))
                 .foregroundColor(.textPri)
 
-            Text("Tap the Record tab to create\nyour first voice note")
+            Text("Record your first idea and drop it\ninto the lab for analysis")
                 .font(.system(size: 15))
                 .foregroundColor(.textSec)
                 .multilineTextAlignment(.center)
-                .lineSpacing(3)
+                .lineSpacing(4)
         }
         .padding(.horizontal, 40)
     }
 
-    // MARK: - Notes List
+    // MARK: - Idea List
 
-    private var notesList: some View {
+    private var ideaList: some View {
         List {
-            ForEach(viewModel.notes) { note in
-                NavigationLink(destination: NoteDetailView(note: note)) {
-                    NoteRowView(note: note, viewModel: viewModel)
-                }
-                .listRowBackground(Color.appBg)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+            // Lab header
+            Section {
+                LabHeaderView(count: viewModel.notes.count)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+                    .listRowSeparator(.hidden)
+                    .cardEntrance(delay: 0.0)
             }
-            .onDelete { indexSet in
-                for index in indexSet {
-                    let note = viewModel.notes[index]
-                    Task { await viewModel.deleteNote(note) }
+
+            // Ideas section
+            Section {
+                ForEach(viewModel.notes) { note in
+                    NavigationLink(destination: NoteDetailView(note: note)) {
+                        IdeaCardView(note: note, viewModel: viewModel)
+                    }
+                    .listRowBackground(Color.appBg)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 5, trailing: 16))
                 }
+                .onDelete { indexSet in
+                    for index in indexSet {
+                        let note = viewModel.notes[index]
+                        Task { await viewModel.deleteNote(note) }
+                    }
+                }
+            } header: {
+                HStack {
+                    Text("On the bench")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundColor(.textSec)
+                        .textCase(nil)
+                    Spacer()
+                    Text("\(viewModel.notes.count) idea\(viewModel.notes.count == 1 ? "" : "s")")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.textSec.opacity(0.7))
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 4)
+                .padding(.bottom, 2)
             }
         }
         .listStyle(.plain)
@@ -110,56 +117,104 @@ struct NotesListView: View {
     }
 }
 
-// MARK: - Note Row Card
+// MARK: - Lab Header
 
-struct NoteRowView: View {
+struct LabHeaderView: View {
+    let count: Int
+
+    private var tagline: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        if hour < 12 { return "morning grind, let's get it" }
+        if hour < 17 { return "ideas don't test themselves" }
+        return "late night experiments hit different"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("The Lab")
+                .font(.system(size: 36, weight: .black, design: .rounded))
+                .foregroundColor(.textPri)
+            Text(tagline)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.textSec)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+        .padding(.bottom, 16)
+    }
+}
+
+// MARK: - Idea Card
+
+struct IdeaCardView: View {
     let note: VoiceNote
     let viewModel: NotesViewModel
 
+    private var isAnalyzed: Bool { note.analysisId != nil }
+
+    private func timeAgo(_ date: Date) -> String {
+        let s = Int(Date().timeIntervalSince(date))
+        if s < 60              { return "just now" }
+        let m = s / 60
+        if m < 60              { return "\(m)m ago" }
+        let h = m / 60
+        if h < 24              { return "\(h)h ago" }
+        let d = h / 24
+        if d < 7               { return "\(d)d ago" }
+        let w = d / 7
+        if w < 5               { return "\(w)w ago" }
+        let mo = d / 30
+        if mo < 12             { return "\(mo)mo ago" }
+        return "\(d / 365)y ago"
+    }
+
     var body: some View {
-        HStack(spacing: 14) {
-            // Icon
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(LinearGradient.brand)
-                    .frame(width: 48, height: 48)
-
-                Image(systemName: "waveform")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
-            }
-            .shadow(color: Color.brand.opacity(0.3), radius: 6, x: 0, y: 3)
-
-            // Info
-            VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 14) {
+            // Title row
+            HStack(alignment: .top, spacing: 12) {
                 Text(note.title)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
                     .foregroundColor(.textPri)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                HStack(spacing: 10) {
-                    Label(viewModel.formatDuration(note.duration), systemImage: "clock")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.brand.opacity(0.7))
-                        .labelStyle(.titleAndIcon)
-
-                    Text(note.createdAt, style: .relative)
-                        .font(.system(size: 12))
-                        .foregroundColor(.textSec)
-                }
+                // Status tag
+                Text(isAnalyzed ? "Analyzed" : "Fresh idea")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(isAnalyzed ? .brandGreen : .brand)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background((isAnalyzed ? Color.brandGreen : Color.brand).opacity(0.12))
+                    .clipShape(Capsule())
             }
 
-            Spacer()
+            // Meta row
+            HStack(spacing: 10) {
+                Label(viewModel.formatDuration(note.duration), systemImage: "waveform")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.textSec)
 
-            Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(Color.textSec.opacity(0.4))
+                Text("·")
+                    .foregroundColor(.textSec.opacity(0.4))
+                    .font(.system(size: 14))
+
+                Text(timeAgo(note.createdAt))
+                    .font(.system(size: 12))
+                    .foregroundColor(.textSec)
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Color.textSec.opacity(0.3))
+            }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(Color.cardBg)
-        .cornerRadius(18)
-        .shadow(color: Color.brand.opacity(0.07), radius: 12, x: 0, y: 4)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
+        .background(Color.white)
+        .cornerRadius(20)
     }
 }
 

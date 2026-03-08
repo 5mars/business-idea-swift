@@ -25,8 +25,6 @@ class TranscriptionService: ObservableObject {
         progress = 0.0
         defer { isTranscribing = false }
 
-        print("📤 Calling Edge Function with URL: \(storageURL)")
-
         struct WhisperResponse: Codable {
             let text: String
         }
@@ -36,7 +34,6 @@ class TranscriptionService: ObservableObject {
         }
 
         let request = WhisperRequest(audioUrl: storageURL)
-        print("📦 Request body: \(request)")
 
         let response: WhisperResponse = try await supabase.client.functions
             .invoke(

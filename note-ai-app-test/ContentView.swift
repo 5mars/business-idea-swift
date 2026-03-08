@@ -2,7 +2,7 @@
 //  DesignSystem.swift (ContentView.swift)
 //  note-ai-app-test
 //
-//  Brand: Indigo/Violet primary, soft lavender background, white cards
+//  Brand: Teal/Coral primary, warm cream background, white cards
 //
 
 import SwiftUI
@@ -18,26 +18,40 @@ extension Color {
         switch hex.count {
         case 3:  (r, g, b) = ((int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
         case 6:  (r, g, b) = (int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        default: (r, g, b) = (99, 102, 241)
+        default: (r, g, b) = (78, 205, 196)
         }
         self.init(.sRGB, red: Double(r) / 255, green: Double(g) / 255, blue: Double(b) / 255)
     }
 
     // Brand palette
-    static let brand        = Color(hex: "6366F1")  // Indigo
-    static let brandLight   = Color(hex: "A78BFA")  // Violet
-    static let brandPink    = Color(hex: "EC4899")  // Pink (recording)
-    static let brandAmber   = Color(hex: "F59E0B")  // Amber
-    static let brandGreen   = Color(hex: "10B981")  // Emerald
-    static let brandRed     = Color(hex: "F43F5E")  // Rose
-    static let brandBlue    = Color(hex: "3B82F6")  // Blue
-    static let brandOrange  = Color(hex: "F97316")  // Orange
+    static let brand        = Color(hex: "4ECDC4")  // Teal
+    static let brandLight   = Color(hex: "80E8E2")  // Mint
+    static let brandPink    = Color(hex: "FF6B6B")  // Coral (recording)
+    static let brandAmber   = Color(hex: "FFAE6B")  // Warm amber
+    static let brandGreen   = Color(hex: "6DD88F")  // Soft green
+    static let brandRed     = Color(hex: "FF8A80")  // Soft coral-red
+    static let brandBlue    = Color(hex: "4DD0E1")  // Sky teal
+    static let brandOrange  = Color(hex: "FFAE6B")  // Warm orange
 
     // Surfaces
-    static let appBg        = Color(hex: "F5F3FF")  // Soft lavender background
-    static let cardBg       = Color.white
-    static let textPri      = Color(hex: "1E1B4B")  // Deep navy
-    static let textSec      = Color(hex: "6B7280")  // Gray
+    static let appBg               = Color(hex: "F5F2EE")  // Warm cream
+    static let cardBg              = Color.white            // White card (alias)
+    static let cardSurface         = Color.white            // White card
+    static let cardSurfaceElevated = Color.white            // White elevated card
+    static let textPri             = Color(hex: "1C1C1E")  // Dark charcoal
+    static let textSec             = Color(hex: "8E8E93")  // Medium gray
+
+    // Tinted light card surfaces
+    static let cardDarkBlue   = Color(hex: "EBF8FA")  // Light teal tint
+    static let cardDarkTeal   = Color(hex: "EDFAF3")  // Light green tint
+    static let cardDarkPurple = Color(hex: "F0FAFA")  // Light teal-white
+    static let cardDarkOrange = Color(hex: "FFF4EA")  // Light amber tint
+    static let cardDarkRed    = Color(hex: "FFF0EE")  // Light coral tint
+
+    // Accent colors
+    static let accentBlue   = Color(hex: "4DD0E1")  // Sky teal — charts, data viz
+    static let accentTeal   = Color(hex: "4ECDC4")  // Teal — positive indicators
+    static let accentCoral  = Color(hex: "FF6B6B")  // Coral — warnings, threats
 }
 
 // MARK: - Brand Gradients
@@ -48,36 +62,52 @@ extension LinearGradient {
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
     static let record = LinearGradient(
-        colors: [.brandPink, .brandOrange],
+        colors: [.brandPink, .brandAmber],
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
     static let swotStrength = LinearGradient(
-        colors: [Color(hex: "10B981"), Color(hex: "0D9488")],
+        colors: [Color(hex: "6DD88F"), Color(hex: "4ECDC4")],
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
     static let swotWeakness = LinearGradient(
-        colors: [Color(hex: "F43F5E"), Color(hex: "EC4899")],
+        colors: [Color(hex: "FF8A80"), Color(hex: "FF6B6B")],
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
     static let swotOpportunity = LinearGradient(
-        colors: [Color(hex: "3B82F6"), Color(hex: "6366F1")],
+        colors: [Color(hex: "4DD0E1"), Color(hex: "4ECDC4")],
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
     static let swotThreat = LinearGradient(
-        colors: [Color(hex: "F97316"), Color(hex: "F59E0B")],
+        colors: [Color(hex: "FFAE6B"), Color(hex: "FF8A80")],
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
 }
 
-// MARK: - Card Style
+// MARK: - Card Style Modifiers
 
 extension View {
+    /// Standard card — pure white, fully flat
     func cardStyle(padding: CGFloat = 20) -> some View {
         self
             .padding(padding)
-            .background(Color.cardBg)
-            .cornerRadius(20)
-            .shadow(color: Color.brand.opacity(0.08), radius: 16, x: 0, y: 6)
+            .background(Color.white)
+            .cornerRadius(24)
+    }
+
+    /// Tinted card — solid tint color, fully flat
+    func tintedCard(color: Color, padding: CGFloat = 16) -> some View {
+        self
+            .padding(padding)
+            .background(color)
+            .cornerRadius(24)
+    }
+
+    /// Hero card — solid tinted background, larger padding, fully flat
+    func heroCard(color: Color = .cardDarkPurple, padding: CGFloat = 24) -> some View {
+        self
+            .padding(padding)
+            .background(color)
+            .cornerRadius(24)
     }
 }
 
@@ -89,29 +119,62 @@ struct AppTextField: View {
     var isSecure: Bool = false
     var keyboardType: UIKeyboardType = .default
 
+    @FocusState private var isFocused: Bool
+
     var body: some View {
         Group {
             if isSecure {
                 SecureField(placeholder, text: $text)
+                    .focused($isFocused)
             } else {
                 TextField(placeholder, text: $text)
                     .keyboardType(keyboardType)
                     .autocapitalization(.none)
+                    .focused($isFocused)
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(Color.brand.opacity(0.06))
+        .background(isFocused ? Color.white : Color(hex: "EDEBE8"))
         .cornerRadius(14)
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(
-                    text.isEmpty ? Color(hex: "DDD6FE") : Color.brand.opacity(0.4),
-                    lineWidth: 1.5
-                )
-        )
+        .animation(.easeInOut(duration: 0.2), value: isFocused)
         .font(.system(size: 16))
+        .foregroundColor(.textPri)
         .tint(Color.brand)
+    }
+}
+
+// MARK: - Card Entrance Animation
+
+struct CardEntranceModifier: ViewModifier {
+    let delay: Double
+    @State private var appeared = false
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(appeared ? 1 : 0)
+            .offset(y: appeared ? 0 : 22)
+            .onAppear {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.78).delay(delay)) {
+                    appeared = true
+                }
+            }
+    }
+}
+
+extension View {
+    func cardEntrance(delay: Double = 0) -> some View {
+        modifier(CardEntranceModifier(delay: delay))
+    }
+}
+
+// MARK: - PlayfulButtonStyle
+
+struct PlayfulButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
+            .animation(.spring(response: 0.22, dampingFraction: 0.55), value: configuration.isPressed)
     }
 }
 
@@ -122,6 +185,7 @@ struct GradientButton: View {
     var gradient: LinearGradient = .brand
     var isLoading: Bool = false
     var isDisabled: Bool = false
+    var cornerRadius: CGFloat = 20
     let action: () -> Void
 
     var body: some View {
@@ -131,21 +195,18 @@ struct GradientButton: View {
                     ProgressView().tint(.white).scaleEffect(0.9)
                 } else {
                     Text(title)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundColor(.white)
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 54)
-            .background(gradient.opacity(isDisabled ? 0.4 : 1.0))
-            .cornerRadius(16)
-            .shadow(
-                color: isDisabled ? .clear : Color.brand.opacity(0.35),
-                radius: 10, x: 0, y: 5
-            )
+            .frame(height: 62)
+            .background(gradient.opacity(isDisabled ? 0.45 : 1.0))
+            .cornerRadius(cornerRadius)
         }
+        .buttonStyle(PlayfulButtonStyle())
         .disabled(isDisabled || isLoading)
-        .animation(.easeInOut(duration: 0.15), value: isDisabled)
+        .animation(.spring(response: 0.3, dampingFraction: 0.65), value: isDisabled)
     }
 }
 

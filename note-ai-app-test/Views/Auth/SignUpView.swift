@@ -21,10 +21,10 @@ struct SignUpView: View {
 
             // Decorative blob
             Circle()
-                .fill(Color.brandLight.opacity(0.12))
+                .fill(Color.brandLight.opacity(0.18))
                 .frame(width: 280, height: 280)
                 .offset(x: 140, y: -60)
-                .blur(radius: 50)
+                .blur(radius: 80)
                 .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
@@ -37,7 +37,6 @@ struct SignUpView: View {
                             Circle()
                                 .fill(LinearGradient.brand)
                                 .frame(width: 80, height: 80)
-                                .shadow(color: Color.brand.opacity(0.35), radius: 16, x: 0, y: 6)
 
                             Image(systemName: "person.fill")
                                 .font(.system(size: 30, weight: .semibold))
