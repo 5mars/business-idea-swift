@@ -1,4 +1,4 @@
-# Voice Recording & AI SWOT Analysis App
+# Abimo
 
 > A SwiftUI iOS app that records voice notes about business ideas, transcribes them automatically, and generates AI-powered SWOT analyses.
 
@@ -33,12 +33,12 @@
 
 1. **Clone or download this project**
    ```bash
-   cd /Users/mi/Desktop/Swift/note-ai-app-test
+   cd /Users/mi/Desktop/Swift/Abimo
    ```
 
 2. **Open in Xcode**
    ```bash
-   open note-ai-app-test.xcodeproj
+   open Abimo.xcodeproj
    ```
 
 3. **Follow setup guides**
@@ -51,7 +51,7 @@
 ## 📁 Project Structure
 
 ```
-note-ai-app-test/
+Abimo/
 ├── Models/              # Data models (VoiceNote, Transcription, SWOTAnalysis)
 ├── ViewModels/          # Business logic & state management
 ├── Views/               # SwiftUI views
@@ -186,7 +186,7 @@ Building this project teaches:
 ### Build & Run
 ```bash
 # Open project
-open note-ai-app-test.xcodeproj
+open Abimo.xcodeproj
 
 # In Xcode:
 # 1. Select target device

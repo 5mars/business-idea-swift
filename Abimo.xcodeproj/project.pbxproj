@@ -16,26 +16,26 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0D25206F2F57455E00219D62 /* note-ai-app-test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "note-ai-app-test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0D25206F2F57455E00219D62 /* Abimo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Abimo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		0D796D242F576BBD005CE115 /* Exceptions for "note-ai-app-test" folder in "note-ai-app-test" target */ = {
+		0D796D242F576BBD005CE115 /* Exceptions for "Abimo" folder in "Abimo" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 0D25206E2F57455E00219D62 /* note-ai-app-test */;
+			target = 0D25206E2F57455E00219D62 /* Abimo */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0D2520712F57455E00219D62 /* note-ai-app-test */ = {
+		0D2520712F57455E00219D62 /* Abimo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				0D796D242F576BBD005CE115 /* Exceptions for "note-ai-app-test" folder in "note-ai-app-test" target */,
+				0D796D242F576BBD005CE115 /* Exceptions for "Abimo" folder in "Abimo" target */,
 			);
-			path = "note-ai-app-test";
+			path = "Abimo";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -60,7 +60,7 @@
 		0D2520662F57455E00219D62 = {
 			isa = PBXGroup;
 			children = (
-				0D2520712F57455E00219D62 /* note-ai-app-test */,
+				0D2520712F57455E00219D62 /* Abimo */,
 				0D2520702F57455E00219D62 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -68,7 +68,7 @@
 		0D2520702F57455E00219D62 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				0D25206F2F57455E00219D62 /* note-ai-app-test.app */,
+				0D25206F2F57455E00219D62 /* Abimo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -76,9 +76,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		0D25206E2F57455E00219D62 /* note-ai-app-test */ = {
+		0D25206E2F57455E00219D62 /* Abimo */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0D25207A2F57455F00219D62 /* Build configuration list for PBXNativeTarget "note-ai-app-test" */;
+			buildConfigurationList = 0D25207A2F57455F00219D62 /* Build configuration list for PBXNativeTarget "Abimo" */;
 			buildPhases = (
 				0D25206B2F57455E00219D62 /* Sources */,
 				0D25206C2F57455E00219D62 /* Frameworks */,
@@ -89,9 +89,9 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				0D2520712F57455E00219D62 /* note-ai-app-test */,
+				0D2520712F57455E00219D62 /* Abimo */,
 			);
-			name = "note-ai-app-test";
+			name = "Abimo";
 			packageProductDependencies = (
 				0D796D172F576B3B005CE115 /* Auth */,
 				0D796D192F576B3B005CE115 /* Functions */,
@@ -100,8 +100,8 @@
 				0D796D1F2F576B3B005CE115 /* Storage */,
 				0D796D212F576B3B005CE115 /* Supabase */,
 			);
-			productName = "note-ai-app-test";
-			productReference = 0D25206F2F57455E00219D62 /* note-ai-app-test.app */;
+			productName = "Abimo";
+			productReference = 0D25206F2F57455E00219D62 /* Abimo.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -119,7 +119,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 0D25206A2F57455E00219D62 /* Build configuration list for PBXProject "note-ai-app-test" */;
+			buildConfigurationList = 0D25206A2F57455E00219D62 /* Build configuration list for PBXProject "Abimo" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -136,7 +136,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				0D25206E2F57455E00219D62 /* note-ai-app-test */,
+				0D25206E2F57455E00219D62 /* Abimo */,
 			);
 		};
 /* End PBXProject section */
@@ -288,7 +288,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "note-ai-app-test/Info.plist";
+				INFOPLIST_FILE = "Abimo/Info.plist";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone permission to record your voice notes";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "We need speech recognition to transcribe your recordings";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -306,7 +306,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "-mars.note-ai-app-test";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mars.Abimo";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -334,7 +334,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "note-ai-app-test/Info.plist";
+				INFOPLIST_FILE = "Abimo/Info.plist";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone permission to record your voice notes";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "We need speech recognition to transcribe your recordings";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -352,7 +352,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "-mars.note-ai-app-test";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mars.Abimo";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -371,7 +371,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		0D25206A2F57455E00219D62 /* Build configuration list for PBXProject "note-ai-app-test" */ = {
+		0D25206A2F57455E00219D62 /* Build configuration list for PBXProject "Abimo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0D2520782F57455F00219D62 /* Debug */,
@@ -380,7 +380,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0D25207A2F57455F00219D62 /* Build configuration list for PBXNativeTarget "note-ai-app-test" */ = {
+		0D25207A2F57455F00219D62 /* Build configuration list for PBXNativeTarget "Abimo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0D25207B2F57455F00219D62 /* Debug */,
