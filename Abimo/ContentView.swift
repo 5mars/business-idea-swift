@@ -2,7 +2,7 @@
 //  DesignSystem.swift (ContentView.swift)
 //  Abimo
 //
-//  Brand: Teal/Coral primary, warm cream background, white cards
+//  Brand: Coral red primary, warm cream background, white cards
 //
 
 import SwiftUI
@@ -18,23 +18,23 @@ extension Color {
         switch hex.count {
         case 3:  (r, g, b) = ((int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
         case 6:  (r, g, b) = (int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        default: (r, g, b) = (78, 205, 196)
+        default: (r, g, b) = (255, 107, 107)
         }
         self.init(.sRGB, red: Double(r) / 255, green: Double(g) / 255, blue: Double(b) / 255)
     }
 
     // Brand palette
-    static let brand        = Color(hex: "4ECDC4")  // Teal
-    static let brandLight   = Color(hex: "80E8E2")  // Mint
-    static let brandPink    = Color(hex: "FF6B6B")  // Coral (recording)
-    static let brandAmber   = Color(hex: "FFAE6B")  // Warm amber
-    static let brandGreen   = Color(hex: "6DD88F")  // Soft green
-    static let brandRed     = Color(hex: "FF8A80")  // Soft coral-red
-    static let brandBlue    = Color(hex: "4DD0E1")  // Sky teal
-    static let brandOrange  = Color(hex: "FFAE6B")  // Warm orange
+    static let brand        = Color(hex: "FF6B6B")  // Coral red
+    static let brandLight   = Color(hex: "FF9B9B")  // Light coral
+    static let brandPink    = Color(hex: "A855F7")  // Purple (accent)
+    static let brandAmber   = Color(hex: "FBBF24")  // Golden yellow
+    static let brandGreen   = Color(hex: "34D399")  // Emerald green
+    static let brandRed     = Color(hex: "F87171")  // Soft red
+    static let brandBlue    = Color(hex: "60A5FA")  // Sky blue
+    static let brandOrange  = Color(hex: "FB923C")  // Tangerine
 
     // Surfaces
-    static let appBg               = Color(hex: "F5F2EE")  // Warm cream
+    static let appBg               = Color(hex: "FFF5F5")  // Warm rose cream
     static let cardBg              = Color.white            // White card (alias)
     static let cardSurface         = Color.white            // White card
     static let cardSurfaceElevated = Color.white            // White elevated card
@@ -42,16 +42,16 @@ extension Color {
     static let textSec             = Color(hex: "8E8E93")  // Medium gray
 
     // Tinted light card surfaces
-    static let cardDarkBlue   = Color(hex: "EBF8FA")  // Light teal tint
-    static let cardDarkTeal   = Color(hex: "EDFAF3")  // Light green tint
-    static let cardDarkPurple = Color(hex: "F0FAFA")  // Light teal-white
-    static let cardDarkOrange = Color(hex: "FFF4EA")  // Light amber tint
-    static let cardDarkRed    = Color(hex: "FFF0EE")  // Light coral tint
+    static let cardDarkBlue   = Color(hex: "EFF6FF")  // Light blue tint
+    static let cardDarkTeal   = Color(hex: "ECFDF5")  // Light green tint
+    static let cardDarkPurple = Color(hex: "FAF5FF")  // Light purple tint
+    static let cardDarkOrange = Color(hex: "FFF7ED")  // Light orange tint
+    static let cardDarkRed    = Color(hex: "FFF1F2")  // Light coral tint
 
     // Accent colors
-    static let accentBlue   = Color(hex: "4DD0E1")  // Sky teal — charts, data viz
-    static let accentTeal   = Color(hex: "4ECDC4")  // Teal — positive indicators
-    static let accentCoral  = Color(hex: "FF6B6B")  // Coral — warnings, threats
+    static let accentBlue   = Color(hex: "60A5FA")  // Sky blue — charts, data viz
+    static let accentTeal   = Color(hex: "34D399")  // Emerald — positive indicators
+    static let accentCoral  = Color(hex: "A855F7")  // Purple — warnings, threats
 }
 
 // MARK: - Brand Gradients
@@ -66,19 +66,19 @@ extension LinearGradient {
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
     static let swotStrength = LinearGradient(
-        colors: [Color(hex: "6DD88F"), Color(hex: "4ECDC4")],
+        colors: [Color(hex: "34D399"), Color(hex: "6EE7B7")],
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
     static let swotWeakness = LinearGradient(
-        colors: [Color(hex: "FF8A80"), Color(hex: "FF6B6B")],
+        colors: [Color(hex: "F87171"), Color(hex: "FF6B6B")],
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
     static let swotOpportunity = LinearGradient(
-        colors: [Color(hex: "4DD0E1"), Color(hex: "4ECDC4")],
+        colors: [Color(hex: "60A5FA"), Color(hex: "93C5FD")],
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
     static let swotThreat = LinearGradient(
-        colors: [Color(hex: "FFAE6B"), Color(hex: "FF8A80")],
+        colors: [Color(hex: "FB923C"), Color(hex: "F87171")],
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
 }

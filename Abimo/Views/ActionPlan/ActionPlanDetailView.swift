@@ -116,6 +116,16 @@ struct ActionPlanDetailView: View {
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $viewModel.showCompletionReflection) {
+            if let actionId = viewModel.completingActionId {
+                CompletionReflectionSheet(
+                    viewModel: viewModel,
+                    completedActionId: actionId
+                )
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+            }
+        }
         .task {
             await viewModel.loadActionPlan(analysisId: analysisId)
         }

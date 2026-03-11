@@ -125,11 +125,15 @@ class AIAnalysisService: ObservableObject {
                 priority: item.priority,
                 quadrant: item.quadrant,
                 template: item.template,
+                actionType: item.actionType,
+                deepLinkData: item.deepLinkData,
                 isCompleted: false,
                 completedAt: nil,
                 isCommitted: false,
                 committedAt: nil,
                 scheduledFor: nil,
+                completionOutcome: nil,
+                completionNote: nil,
                 createdAt: now
             )
         }

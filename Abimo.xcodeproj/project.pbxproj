@@ -16,7 +16,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0D25206F2F57455E00219D62 /* Abimo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Abimo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0D25206F2F57455E00219D62 /* Abimo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Abimo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -35,7 +35,7 @@
 			exceptions = (
 				0D796D242F576BBD005CE115 /* Exceptions for "Abimo" folder in "Abimo" target */,
 			);
-			path = "Abimo";
+			path = Abimo;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -91,7 +91,7 @@
 			fileSystemSynchronizedGroups = (
 				0D2520712F57455E00219D62 /* Abimo */,
 			);
-			name = "Abimo";
+			name = Abimo;
 			packageProductDependencies = (
 				0D796D172F576B3B005CE115 /* Auth */,
 				0D796D192F576B3B005CE115 /* Functions */,
@@ -100,7 +100,7 @@
 				0D796D1F2F576B3B005CE115 /* Storage */,
 				0D796D212F576B3B005CE115 /* Supabase */,
 			);
-			productName = "Abimo";
+			productName = Abimo;
 			productReference = 0D25206F2F57455E00219D62 /* Abimo.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -288,7 +288,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Abimo/Info.plist";
+				INFOPLIST_FILE = Abimo/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone permission to record your voice notes";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "We need speech recognition to transcribe your recordings";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -306,7 +306,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.mars.Abimo";
+				PRODUCT_BUNDLE_IDENTIFIER = com.mars.Abimo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -334,7 +334,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Abimo/Info.plist";
+				INFOPLIST_FILE = Abimo/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone permission to record your voice notes";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "We need speech recognition to transcribe your recordings";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -352,7 +352,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.mars.Abimo";
+				PRODUCT_BUNDLE_IDENTIFIER = com.mars.Abimo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;

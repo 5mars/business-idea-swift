@@ -253,10 +253,12 @@ class SupabaseService {
         return response
     }
 
-    func toggleMicroAction(id: UUID, isCompleted: Bool) async throws {
+    func toggleMicroAction(id: UUID, isCompleted: Bool, outcome: String? = nil, note: String? = nil) async throws {
         struct TogglePayload: Encodable {
             let is_completed: Bool
             let completed_at: Date?
+            let completion_outcome: String?
+            let completion_note: String?
 
             func encode(to encoder: Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
@@ -266,10 +268,20 @@ class SupabaseService {
                 } else {
                     try container.encodeNil(forKey: .completed_at)
                 }
+                if let outcome = completion_outcome {
+                    try container.encode(outcome, forKey: .completion_outcome)
+                } else {
+                    try container.encodeNil(forKey: .completion_outcome)
+                }
+                if let note = completion_note {
+                    try container.encode(note, forKey: .completion_note)
+                } else {
+                    try container.encodeNil(forKey: .completion_note)
+                }
             }
 
             enum CodingKeys: String, CodingKey {
-                case is_completed, completed_at
+                case is_completed, completed_at, completion_outcome, completion_note
             }
         }
 
@@ -277,7 +289,9 @@ class SupabaseService {
             .from("micro_actions")
             .update(TogglePayload(
                 is_completed: isCompleted,
-                completed_at: isCompleted ? Date() : nil
+                completed_at: isCompleted ? Date() : nil,
+                completion_outcome: outcome,
+                completion_note: note
             ))
             .eq("id", value: id)
             .execute()
