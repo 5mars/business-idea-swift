@@ -521,7 +521,7 @@ struct NoteDetailView: View {
     private var actionPlanCard: some View {
         if isGeneratingPlan {
             HStack(spacing: 12) {
-                ProgressView().tint(.brandPink)
+                ProgressView().tint(.brand)
                 Text("Cooking up your action plan...")
                     .font(.system(size: 14))
                     .foregroundColor(.textSec)
@@ -584,7 +584,7 @@ struct NoteDetailView: View {
                 HStack(spacing: 10) {
                     Image(systemName: "bolt.fill")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.brandPink)
+                        .foregroundColor(.brand)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Ready to act?")
                             .font(.system(size: 16, weight: .bold, design: .rounded))

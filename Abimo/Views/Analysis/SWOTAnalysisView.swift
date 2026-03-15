@@ -265,11 +265,11 @@ struct SWOTAnalysisView: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(Color.brandPink.opacity(0.12))
+                        .fill(Color.brand.opacity(0.12))
                         .frame(width: 44, height: 44)
                     Image(systemName: "bolt.fill")
                         .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.brandPink)
+                        .foregroundColor(.brand)
                 }
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Turn this into action")

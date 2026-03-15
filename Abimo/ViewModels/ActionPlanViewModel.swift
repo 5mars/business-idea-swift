@@ -16,6 +16,8 @@ class ActionPlanViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showCommitmentPicker = false
+    @Published var showMomentumPicker = false
+    @Published var completingActionId: UUID?
 
     private let supabase = SupabaseService.shared
     private let aiService = AIAnalysisService()
@@ -79,7 +81,51 @@ class ActionPlanViewModel: ObservableObject {
     // MARK: - Toggle Micro Action
 
     func toggleMicroAction(id: UUID, isCompleted: Bool) async {
-        // Optimistic update
+        if isCompleted {
+            // Auto-confirm with default outcome, then show momentum picker
+            await confirmCompletion(id: id, outcome: "did_it", note: nil)
+            completingActionId = id
+
+            // Only show momentum picker if there are remaining actions
+            let hasRemaining = microActions.contains(where: { !$0.isCompleted && $0.id != id })
+            if hasRemaining {
+                showMomentumPicker = true
+            }
+        } else {
+            // Unchecking — just toggle directly
+            await performToggle(id: id, isCompleted: false)
+        }
+    }
+
+    /// Confirm completion with reflection data
+    func confirmCompletion(id: UUID, outcome: String, note: String?) async {
+        if let idx = microActions.firstIndex(where: { $0.id == id }) {
+            microActions[idx].isCompleted = true
+            microActions[idx].completedAt = Date()
+            microActions[idx].completionOutcome = outcome
+            microActions[idx].completionNote = note
+        }
+
+        do {
+            try await supabase.toggleMicroAction(id: id, isCompleted: true, outcome: outcome, note: note)
+
+            if let commitment = activeCommitment, commitment.microActionId == id {
+                try await supabase.updateCommitmentStatus(id: commitment.id, status: "completed", completedAt: Date())
+                activeCommitment = nil
+            }
+
+            computeNudges()
+        } catch {
+            if let idx = microActions.firstIndex(where: { $0.id == id }) {
+                microActions[idx].isCompleted = false
+                microActions[idx].completedAt = nil
+                microActions[idx].completionOutcome = nil
+                microActions[idx].completionNote = nil
+            }
+        }
+    }
+
+    private func performToggle(id: UUID, isCompleted: Bool) async {
         if let idx = microActions.firstIndex(where: { $0.id == id }) {
             microActions[idx].isCompleted = isCompleted
             microActions[idx].completedAt = isCompleted ? Date() : nil
@@ -87,16 +133,8 @@ class ActionPlanViewModel: ObservableObject {
 
         do {
             try await supabase.toggleMicroAction(id: id, isCompleted: isCompleted)
-
-            // If completing the committed action, also complete the commitment
-            if isCompleted, let commitment = activeCommitment, commitment.microActionId == id {
-                try await supabase.updateCommitmentStatus(id: commitment.id, status: "completed", completedAt: Date())
-                activeCommitment = nil
-            }
-
             computeNudges()
         } catch {
-            // Revert on failure
             if let idx = microActions.firstIndex(where: { $0.id == id }) {
                 microActions[idx].isCompleted = !isCompleted
                 microActions[idx].completedAt = nil
@@ -278,6 +316,89 @@ class ActionsTabViewModel: ObservableObject {
     func committedActionText(for planId: UUID) -> String? {
         guard let commitment = activeCommitment else { return nil }
         return microActionsByPlan[planId]?
+            .first(where: { $0.id == commitment.microActionId })?
+            .text
+    }
+
+    /// Find which plan contains the committed action
+    func committedActionPlanId() -> UUID? {
+        guard let commitment = activeCommitment else { return nil }
+        for (planId, actions) in microActionsByPlan {
+            if actions.contains(where: { $0.id == commitment.microActionId }) {
+                return planId
+            }
+        }
+        return nil
+    }
+
+    func committedActionAnalysisId() -> UUID? {
+        guard let planId = committedActionPlanId() else { return nil }
+        return plans.first(where: { $0.id == planId })?.analysisId
+    }
+
+    // MARK: - Streak & Week Activity
+
+    var allCompletionDates: [Date] {
+        microActionsByPlan.values
+            .flatMap { $0 }
+            .compactMap(\.completedAt)
+    }
+
+    /// Current streak: consecutive days ending today with at least one completion
+    var currentStreak: Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+
+        let completionDays = Set(allCompletionDates.map { calendar.startOfDay(for: $0) })
+
+        guard completionDays.contains(today) else { return 0 }
+
+        var streak = 0
+        var checkDate = today
+        while completionDays.contains(checkDate) {
+            streak += 1
+            guard let prev = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
+            checkDate = prev
+        }
+        return streak
+    }
+
+    /// 7 bools for Mon–Sun of the current week
+    var weekActivity: [Bool] {
+        let calendar = Calendar.current
+        let today = Date()
+        let completionDays = Set(allCompletionDates.map { calendar.startOfDay(for: $0) })
+
+        // Find Monday of this week
+        var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)
+        components.weekday = 2 // Monday
+        guard let monday = calendar.date(from: components) else {
+            return Array(repeating: false, count: 7)
+        }
+
+        return (0..<7).map { offset in
+            guard let day = calendar.date(byAdding: .day, value: offset, to: monday) else { return false }
+            return completionDays.contains(calendar.startOfDay(for: day))
+        }
+    }
+
+    var totalCompletedThisWeek: Int {
+        let calendar = Calendar.current
+        let today = Date()
+        var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)
+        components.weekday = 2
+        guard let monday = calendar.date(from: components) else { return 0 }
+        let mondayStart = calendar.startOfDay(for: monday)
+
+        return allCompletionDates.filter { date in
+            calendar.startOfDay(for: date) >= mondayStart
+        }.count
+    }
+
+    var activeCommitmentText: String? {
+        guard let commitment = activeCommitment else { return nil }
+        return microActionsByPlan.values
+            .flatMap { $0 }
             .first(where: { $0.id == commitment.microActionId })?
             .text
     }

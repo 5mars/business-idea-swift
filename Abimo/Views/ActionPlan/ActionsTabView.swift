@@ -24,10 +24,24 @@ struct ActionsTabView: View {
                         emptyState
                             .cardEntrance(delay: 0.1)
                     } else {
+                        // Momentum Dashboard
+                        if !viewModel.allCompletionDates.isEmpty || viewModel.activeCommitment != nil {
+                            MomentumDashboard(
+                                streak: viewModel.currentStreak,
+                                weekActivity: viewModel.weekActivity,
+                                totalCompletedThisWeek: viewModel.totalCompletedThisWeek,
+                                activeCommitmentText: viewModel.activeCommitmentText,
+                                activeCommitmentPlanId: viewModel.committedActionPlanId(),
+                                activeCommitmentAnalysisId: viewModel.committedActionAnalysisId()
+                            )
+                            .padding(.horizontal, 16)
+                            .cardEntrance(delay: 0)
+                        }
+
                         ForEach(Array(viewModel.plans.enumerated()), id: \.element.id) { index, plan in
                             ideaCard(plan)
                                 .padding(.horizontal, 16)
-                                .cardEntrance(delay: Double(index) * 0.08)
+                                .cardEntrance(delay: Double(index) * 0.08 + 0.06)
                         }
                     }
 
@@ -75,6 +89,12 @@ struct ActionsTabView: View {
                         .font(.system(size: 15, weight: .medium))
                         .foregroundColor(.textPri)
                         .lineLimit(2)
+
+                    Spacer()
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.textSec.opacity(0.5))
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)

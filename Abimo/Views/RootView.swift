@@ -32,24 +32,16 @@ struct SplashView: View {
         ZStack {
             Color.appBg.ignoresSafeArea()
 
-            VStack(spacing: 20) {
-                ZStack {
-                    Circle()
-                        .fill(Color.brand.opacity(0.15))
-                        .frame(width: 120, height: 120)
-                        .scaleEffect(pulse ? 1.15 : 1.0)
-                        .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: pulse)
+            VStack(spacing: 16) {
+                Image("MascotNeutral")
+                    .renderingMode(.original)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 140, height: 140)
+                    .scaleEffect(pulse ? 1.05 : 1.0)
+                    .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: pulse)
 
-                    Circle()
-                        .fill(LinearGradient.brand)
-                        .frame(width: 84, height: 84)
-
-                    Image(systemName: "mic.fill")
-                        .font(.system(size: 32, weight: .semibold))
-                        .foregroundColor(.white)
-                }
-
-                Text("Voice SWOT")
+                Text("Abimo")
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .foregroundColor(.textPri)
             }

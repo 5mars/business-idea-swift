@@ -38,11 +38,15 @@ struct MicroAction: Identifiable, Codable, Hashable {
     let priority: Int
     let quadrant: String?
     let template: String?
+    let actionType: String?
+    let deepLinkData: DeepLinkData?
     var isCompleted: Bool
     var completedAt: Date?
     var isCommitted: Bool
     var committedAt: Date?
     var scheduledFor: Date?
+    var completionOutcome: String?
+    var completionNote: String?
     let createdAt: Date
 
     enum CodingKeys: String, CodingKey {
@@ -54,12 +58,32 @@ struct MicroAction: Identifiable, Codable, Hashable {
         case priority
         case quadrant
         case template
+        case actionType          = "action_type"
+        case deepLinkData        = "deep_link_data"
         case isCompleted         = "is_completed"
         case completedAt         = "completed_at"
         case isCommitted         = "is_committed"
         case committedAt         = "committed_at"
         case scheduledFor        = "scheduled_for"
+        case completionOutcome   = "completion_outcome"
+        case completionNote      = "completion_note"
         case createdAt           = "created_at"
+    }
+}
+
+// MARK: - Deep Link Data
+
+struct DeepLinkData: Codable, Hashable {
+    let urlScheme: String?
+    let body: String?
+    let subject: String?
+    let query: String?
+
+    enum CodingKeys: String, CodingKey {
+        case urlScheme = "url_scheme"
+        case body
+        case subject
+        case query
     }
 }
 
@@ -100,6 +124,8 @@ struct ActionPlanResponseItem: Codable {
     let priority: Int
     let quadrant: String?
     let template: String?
+    let actionType: String?
+    let deepLinkData: DeepLinkData?
 
     enum CodingKeys: String, CodingKey {
         case text
@@ -108,5 +134,7 @@ struct ActionPlanResponseItem: Codable {
         case priority
         case quadrant
         case template
+        case actionType          = "action_type"
+        case deepLinkData        = "deep_link_data"
     }
 }

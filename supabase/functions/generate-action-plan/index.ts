@@ -26,8 +26,23 @@ const ACTION_PLAN_SCHEMA = {
             enum: ["strength", "weakness", "opportunity", "threat"],
           },
           template: { type: "string" },
+          action_type: {
+            type: "string",
+            enum: ["message", "search", "email", "post", "generic"],
+          },
+          deep_link_data: {
+            type: "object",
+            properties: {
+              url_scheme: { type: "string" },
+              body: { type: "string" },
+              subject: { type: "string" },
+              query: { type: "string" },
+            },
+            required: ["url_scheme", "body", "subject", "query"],
+            additionalProperties: false,
+          },
         },
-        required: ["text", "done_criteria", "time_estimate_minutes", "priority", "quadrant", "template"],
+        required: ["text", "done_criteria", "time_estimate_minutes", "priority", "quadrant", "template", "action_type", "deep_link_data"],
         additionalProperties: false,
       },
     },
@@ -59,6 +74,25 @@ Examples:
 - For a survey: "1. How often do you experience [problem]? 2. What do you currently do about it? 3. Would you pay $X/month for [solution]?"
 
 The template should reference the founder's SPECIFIC idea, market, and problem. Fill in as much as possible — only use [brackets] for things you truly can't know (like a friend's name).
+
+"action_type" — Classify what the user needs to DO with the template:
+- "message" — send a text/DM to someone (template is the message body)
+- "search" — search Google/web (template is the search query)
+- "email" — send an email (template is the email body)
+- "post" — post on Reddit/Twitter/LinkedIn (template is the post body)
+- "generic" — anything else (write on paper, brainstorm, etc.)
+
+"deep_link_data" — Data to pre-fill the target app. ALL fields required (use empty string "" if not applicable):
+- "body" — message/email body text (for message, email, post types)
+- "query" — search query string (for search type)
+- "subject" — email subject line (for email type)
+- "url_scheme" — full URL for post types (e.g. "https://www.reddit.com/submit?title=...")
+
+For "message" type: fill "body" with the exact message to send. Leave query/subject/url_scheme as "".
+For "search" type: fill "query" with the exact search string. Leave body/subject/url_scheme as "".
+For "email" type: fill "body" and "subject". Leave query/url_scheme as "".
+For "post" type: fill "body" and "url_scheme" with the platform URL. Leave query/subject as "".
+For "generic" type: all fields as "".
 
 "time_estimate_minutes" — 5, 10, 15, 20, or 30.
 

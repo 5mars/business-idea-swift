@@ -60,3 +60,10 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# Claude Code
+.claude/
+
+# Source art files
+neutral.svg
+neutral-png.png

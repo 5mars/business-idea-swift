@@ -47,7 +47,7 @@ struct SignUpView: View {
                             .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundColor(.textPri)
 
-                        Text("Join Voice SWOT today")
+                        Text("Join Abimo today")
                             .font(.system(size: 15))
                             .foregroundColor(.textSec)
                     }

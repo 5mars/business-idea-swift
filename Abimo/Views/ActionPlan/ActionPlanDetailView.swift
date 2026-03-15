@@ -116,6 +116,16 @@ struct ActionPlanDetailView: View {
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $viewModel.showMomentumPicker) {
+            if let actionId = viewModel.completingActionId {
+                MomentumPickerSheet(
+                    viewModel: viewModel,
+                    completedActionId: actionId
+                )
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+            }
+        }
         .task {
             await viewModel.loadActionPlan(analysisId: analysisId)
         }
