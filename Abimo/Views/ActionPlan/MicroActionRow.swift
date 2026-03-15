@@ -55,6 +55,13 @@ struct MicroActionRow: View {
                     Text("\(action.timeEstimateMinutes)m")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.textSec)
+
+                    // Expand chevron
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.textSec.opacity(0.5))
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isExpanded)
                 }
                 .padding(.vertical, 14)
             }

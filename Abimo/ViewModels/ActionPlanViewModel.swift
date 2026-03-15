@@ -16,7 +16,7 @@ class ActionPlanViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showCommitmentPicker = false
-    @Published var showCompletionReflection = false
+    @Published var showMomentumPicker = false
     @Published var completingActionId: UUID?
 
     private let supabase = SupabaseService.shared
@@ -82,9 +82,15 @@ class ActionPlanViewModel: ObservableObject {
 
     func toggleMicroAction(id: UUID, isCompleted: Bool) async {
         if isCompleted {
-            // Show reflection sheet instead of immediately completing
+            // Auto-confirm with default outcome, then show momentum picker
+            await confirmCompletion(id: id, outcome: "did_it", note: nil)
             completingActionId = id
-            showCompletionReflection = true
+
+            // Only show momentum picker if there are remaining actions
+            let hasRemaining = microActions.contains(where: { !$0.isCompleted && $0.id != id })
+            if hasRemaining {
+                showMomentumPicker = true
+            }
         } else {
             // Unchecking — just toggle directly
             await performToggle(id: id, isCompleted: false)

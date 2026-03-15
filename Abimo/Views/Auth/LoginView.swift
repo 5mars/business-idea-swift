@@ -51,7 +51,7 @@ struct LoginView: View {
                         .scaleEffect(appeared ? 1 : 0.6)
                         .opacity(appeared ? 1 : 0)
 
-                        Text("Voice SWOT")
+                        Text("Abimo")
                             .font(.system(size: 34, weight: .bold, design: .rounded))
                             .foregroundColor(.textPri)
 

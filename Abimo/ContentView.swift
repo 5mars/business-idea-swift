@@ -62,7 +62,7 @@ extension LinearGradient {
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
     static let record = LinearGradient(
-        colors: [.brandPink, .brandAmber],
+        colors: [.brand, .brand],
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
     static let swotStrength = LinearGradient(

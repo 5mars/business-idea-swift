@@ -86,9 +86,9 @@ struct RecordingView: View {
                 ZStack {
                     if viewModel.isRecording {
                         // Pulse rings behind stop button
-                        PulseRing(color: .brandPink, delay: 0)
+                        PulseRing(color: .brand, delay: 0)
                             .frame(width: 96, height: 96)
-                        PulseRing(color: .brandPink, delay: 0.6)
+                        PulseRing(color: .brand, delay: 0.6)
                             .frame(width: 96, height: 96)
 
                         // Stop button
@@ -100,7 +100,7 @@ struct RecordingView: View {
                                 Circle()
                                     .fill(LinearGradient.record)
                                     .frame(width: 88, height: 88)
-                                    .shadow(color: Color.brandPink.opacity(0.5), radius: 20, x: 0, y: 8)
+                                    .shadow(color: Color.brand.opacity(0.5), radius: 20, x: 0, y: 8)
 
                                 RoundedRectangle(cornerRadius: 8)
                                     .fill(Color.white)
@@ -231,7 +231,7 @@ struct RecordingView: View {
     }
 
     private var statusDotColor: Color {
-        if viewModel.isRecording { return .brandPink }
+        if viewModel.isRecording { return .brand }
         if viewModel.recordingFileURL != nil { return .brandGreen }
         return .textSec
     }

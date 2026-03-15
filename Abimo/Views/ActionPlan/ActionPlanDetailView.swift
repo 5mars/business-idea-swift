@@ -116,9 +116,9 @@ struct ActionPlanDetailView: View {
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $viewModel.showCompletionReflection) {
+        .sheet(isPresented: $viewModel.showMomentumPicker) {
             if let actionId = viewModel.completingActionId {
-                CompletionReflectionSheet(
+                MomentumPickerSheet(
                     viewModel: viewModel,
                     completedActionId: actionId
                 )

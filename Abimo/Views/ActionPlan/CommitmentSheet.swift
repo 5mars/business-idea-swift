@@ -31,7 +31,7 @@ struct CommitmentSheet: View {
             VStack(spacing: 8) {
                 Image(systemName: "bolt.fill")
                     .font(.system(size: 28, weight: .semibold))
-                    .foregroundColor(.brandPink)
+                    .foregroundColor(.brand)
 
                 Text("Pick ONE action to do right now")
                     .font(.system(size: 20, weight: .bold, design: .rounded))
@@ -83,6 +83,10 @@ struct CommitmentSheet: View {
                             }
 
                             Spacer()
+
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.textSec.opacity(0.5))
                         }
                         .padding(14)
                         .background(selectedAction?.id == action.id ? Color.cardDarkTeal : Color.white)

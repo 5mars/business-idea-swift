@@ -89,6 +89,12 @@ struct ActionsTabView: View {
                         .font(.system(size: 15, weight: .medium))
                         .foregroundColor(.textPri)
                         .lineLimit(2)
+
+                    Spacer()
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.textSec.opacity(0.5))
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
