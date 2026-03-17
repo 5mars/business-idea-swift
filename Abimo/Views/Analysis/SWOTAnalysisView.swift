@@ -141,49 +141,12 @@ struct SWOTAnalysisView: View {
         "Stress-testing your thesis...",
         "Nearly plated up...",
     ]
-    @State private var cookingMsgIndex = 0
 
     private var analyzingView: some View {
-        VStack(spacing: 24) {
-            Spacer().frame(height: 60)
-
-            ZStack {
-                Circle()
-                    .fill(Color.brand.opacity(0.08))
-                    .frame(width: 100, height: 100)
-
-                ProgressView()
-                    .tint(.brand)
-                    .scaleEffect(1.4)
-            }
-
-            VStack(spacing: 8) {
-                Text(cookingMessages[cookingMsgIndex % cookingMessages.count])
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundColor(.textPri)
-                    .multilineTextAlignment(.center)
-                    .id(cookingMsgIndex)
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .bottom).combined(with: .opacity),
-                        removal: .move(edge: .top).combined(with: .opacity)
-                    ))
-                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: cookingMsgIndex)
-
-                Text("This might take 15–30 seconds")
-                    .font(.system(size: 13))
-                    .foregroundColor(.textSec)
-            }
-
-            Spacer().frame(height: 60)
-        }
-        .frame(maxWidth: .infinity)
-        .onAppear {
-            Timer.scheduledTimer(withTimeInterval: 2.8, repeats: true) { _ in
-                withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
-                    cookingMsgIndex += 1
-                }
-            }
-        }
+        LoadingView(
+            rotatingMessages: cookingMessages,
+            subtitle: "This might take 15–30 seconds"
+        )
     }
 
     private var readyView: some View {

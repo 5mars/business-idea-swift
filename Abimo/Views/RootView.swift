@@ -9,44 +9,22 @@ struct RootView: View {
     @StateObject private var authViewModel = AuthViewModel()
 
     var body: some View {
-        Group {
+        ZStack {
             if authViewModel.isLoading {
-                SplashView()
+                LoadingView()
+                    .transition(.opacity)
             } else if authViewModel.isAuthenticated {
                 MainTabView()
                     .environmentObject(authViewModel)
+                    .transition(.opacity)
             } else {
                 LoginView()
                     .environmentObject(authViewModel)
+                    .transition(.opacity)
             }
         }
-    }
-}
-
-// MARK: - Splash / Loading
-
-struct SplashView: View {
-    @State private var pulse = false
-
-    var body: some View {
-        ZStack {
-            Color.appBg.ignoresSafeArea()
-
-            VStack(spacing: 16) {
-                Image("MascotNeutral")
-                    .renderingMode(.original)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 140, height: 140)
-                    .scaleEffect(pulse ? 1.05 : 1.0)
-                    .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: pulse)
-
-                Text("Abimo")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
-                    .foregroundColor(.textPri)
-            }
-        }
-        .onAppear { pulse = true }
+        .animation(.easeInOut(duration: 0.4), value: authViewModel.isLoading)
+        .animation(.easeInOut(duration: 0.4), value: authViewModel.isAuthenticated)
     }
 }
 

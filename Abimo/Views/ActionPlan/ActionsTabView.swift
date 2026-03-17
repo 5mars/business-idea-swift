@@ -17,9 +17,7 @@ struct ActionsTabView: View {
                     Spacer().frame(height: 4)
 
                     if viewModel.isLoading {
-                        ProgressView()
-                            .tint(.brand)
-                            .padding(.top, 60)
+                        LoadingView(text: "Loading your actions...")
                     } else if viewModel.plans.isEmpty {
                         emptyState
                             .cardEntrance(delay: 0.1)

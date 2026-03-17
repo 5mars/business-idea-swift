@@ -17,8 +17,7 @@ struct ActionPlanDetailView: View {
             Color.appBg.ignoresSafeArea()
 
             if viewModel.isLoading {
-                ProgressView()
-                    .tint(.brand)
+                LoadingView(text: "Loading your plan...")
             } else if let plan = viewModel.actionPlan {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 16) {
