@@ -60,8 +60,9 @@ class ActionPlanViewModel: ObservableObject {
     // MARK: - Load Existing Plan
 
     func loadActionPlan(analysisId: UUID) async {
-        isLoading = true
-        defer { isLoading = false }
+        let isFirstLoad = actionPlan == nil
+        if isFirstLoad { isLoading = true }
+        defer { if isFirstLoad { isLoading = false } }
 
         do {
             guard let plan = try await supabase.fetchActionPlan(analysisId: analysisId) else { return }
@@ -282,17 +283,21 @@ class ActionsTabViewModel: ObservableObject {
     }
 
     func loadAllPlans() async {
-        isLoading = true
-        defer { isLoading = false }
+        let isFirstLoad = plans.isEmpty
+        if isFirstLoad { isLoading = true }
+        defer { if isFirstLoad { isLoading = false } }
 
         guard let userId = try? await supabase.getCurrentUser()?.id else { return }
 
         do {
-            plans = try await supabase.fetchAllActionPlans(userId: userId)
-            for plan in plans {
+            let fetchedPlans = try await supabase.fetchAllActionPlans(userId: userId)
+            var fetchedActions: [UUID: [MicroAction]] = [:]
+            for plan in fetchedPlans {
                 let actions = try await supabase.fetchMicroActions(actionPlanId: plan.id)
-                microActionsByPlan[plan.id] = actions
+                fetchedActions[plan.id] = actions
             }
+            plans = fetchedPlans
+            microActionsByPlan = fetchedActions
             activeCommitment = try? await supabase.fetchActiveCommitment(userId: userId)
         } catch {
             // Silent failure — tab just shows empty state

@@ -36,14 +36,7 @@ struct NotesListView: View {
     // MARK: - Loading
 
     private var labLoadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .tint(.brand)
-                .scaleEffect(1.2)
-            Text("Setting up the lab...")
-                .font(.system(size: 15, design: .rounded))
-                .foregroundColor(.textSec)
-        }
+        LoadingView(text: "Setting up the lab...")
     }
 
     // MARK: - Empty State
