@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-stopped_at: Completed 01-foundation-01-PLAN.md
-last_updated: "2026-03-18T20:57:40.443Z"
+status: executing
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-18T21:43:01Z"
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 2
-  completed_plans: 1
+  completed_phases: 1
+  total_plans: 5
+  completed_plans: 3
 ---
 
 # Project State
@@ -19,33 +19,36 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** Users actually complete their micro-actions because the experience is engaging, rewarding, and fun
-**Current focus:** Phase 01 — foundation
+**Current focus:** Phase 02 — journey-path-and-action-cards
 
 ## Current Position
 
-Phase: 01 (foundation) — EXECUTING
-Plan: 2 of 2
+Phase: 02 (journey-path-and-action-cards) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 1
+- Total plans completed: 3
 - Average duration: 3 min
-- Total execution time: 0.05 hours
+- Total execution time: 0.1 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 1 | 3 min | 3 min |
+| 02-journey-path-and-action-cards | 1 | 3 min | 3 min |
 
 **Recent Trend:**
 
 - Last 5 plans: 3 min
-- Trend: —
+- Trend: Steady
 
 *Updated after each plan completion*
+| Phase 01-foundation P02 | 8 | 1 tasks | 4 files |
+| Phase 02 P01 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -62,6 +65,12 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: UIAccessibility.isReduceMotionEnabled chosen over @Environment for AnimationPolicy (callable outside SwiftUI context)
 - [Phase 01-foundation]: Separate static let generators per impact style for HapticEngine (each independently pre-prepared)
 - [Phase 01-foundation]: Caseless enum namespace pattern established for all three utility primitives
+- [Phase 01-foundation]: Traditional PBXGroup used for AbimoTests (not PBXFileSystemSynchronizedRootGroup) — file list is small and explicit, avoids auto-sync edge cases
+- [Phase 01-foundation]: BUNDLE_LOADER + TEST_HOST pattern established for @testable import Abimo in unit test target
+- [Phase 01-foundation]: Smoke-test pattern (no-crash = pass) established for UIKit side-effect APIs like HapticEngine
+- [Phase 02-01]: PBXFileSystemSynchronizedRootGroup auto-includes new Swift files — no pbxproj edits needed for Abimo main target
+- [Phase 02-01]: NodeState enum at file scope (not nested) so nodeState(at:actions:) can be called from JourneyPathView without qualification
+- [Phase 02-01]: .task + 50ms sleep pattern for auto-scroll prevents race condition where onAppear fires before first layout pass
 
 ### Pending Todos
 
@@ -74,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T20:57:40.441Z
-Stopped at: Completed 01-foundation-01-PLAN.md
-Resume file: None
+Last session: 2026-03-18T21:43:01Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: .planning/phases/02-journey-path-and-action-cards/02-02-PLAN.md
