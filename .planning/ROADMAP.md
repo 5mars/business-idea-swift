@@ -12,7 +12,7 @@ Transform the existing flat micro-action task manager into a spatially engaging,
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Build the three utility primitives that every animated view depends on
+- [x] **Phase 1: Foundation** - Build the three utility primitives that every animated view depends on (completed 2026-03-18)
 - [ ] **Phase 2: Journey Path and Action Cards** - Replace the flat list with a vertical node path and card-state system
 - [ ] **Phase 3: Celebration System** - Add inline and full-screen celebrations for action and plan completions
 - [ ] **Phase 4: Polish** - Smooth node-unlock transitions, animated progress rings, and haptic coverage
@@ -29,8 +29,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Given a `MicroAction` with any action type (email, search, message, post, or unknown), `ActionIconMapper` returns a non-nil emoji and SF Symbol name
 **Plans**: 2 plans
 Plans:
-- [ ] 01-01-PLAN.md — Create AnimationPolicy, HapticEngine, and ActionIconMapper utilities
-- [ ] 01-02-PLAN.md — Create AbimoTests target and unit tests for all three utilities
+- [x] 01-01-PLAN.md — Create AnimationPolicy, HapticEngine, and ActionIconMapper utilities
+- [x] 01-02-PLAN.md — Create AbimoTests target and unit tests for all three utilities
 
 ### Phase 2: Journey Path and Action Cards
 **Goal**: Users see and navigate a vertical zigzag node path instead of a flat list — each node renders its locked/active/completed state and expands into a full action card on tap
@@ -42,7 +42,11 @@ Plans:
   3. Each node clearly communicates its state: future nodes appear greyed/locked, the current node is highlighted, and completed nodes show a checked/done state
   4. Tapping a locked/active node opens a bottom sheet showing the action's icon, text, time estimate, and — on secondary tap or scroll within the sheet — done criteria, template text, and deep link buttons
   5. Completing an action from the card causes that node to visually animate into the completed state and the next node plays an unlock animation transitioning from locked to active
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 02-01-PLAN.md — Build JourneyNodeView, JourneyPathView, and ProgressRingView components
+- [ ] 02-02-PLAN.md — Build ActionDetailSheet bottom sheet with primary and secondary content
+- [ ] 02-03-PLAN.md — Wire journey path into ActionPlanDetailView with completion and unlock animations
 
 ### Phase 3: Celebration System
 **Goal**: Completing an action produces an immediate, satisfying inline reward; completing all actions in a plan produces a full-screen celebration with summary and a prompt to continue
@@ -73,7 +77,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 1/2 | In Progress|  |
-| 2. Journey Path and Action Cards | 0/TBD | Not started | - |
+| 1. Foundation | 2/2 | Complete   | 2026-03-18 |
+| 2. Journey Path and Action Cards | 0/3 | Not started | - |
 | 3. Celebration System | 0/TBD | Not started | - |
 | 4. Polish | 0/TBD | Not started | - |
