@@ -56,9 +56,12 @@ Plans:
   1. Marking any single micro-action complete triggers a confetti burst and animated checkmark directly on the card within half a second, then clears automatically without requiring user dismissal
   2. Completing the final action in a plan immediately transitions to a full-screen celebration with a Lottie animation and confetti — distinct from the inline per-action celebration
   3. The plan completion screen displays a summary showing how many actions were completed and the total estimated time invested
-  4. The plan completion screen has a clearly visible "Record a new voice note" button that navigates back to the recording flow
+  4. The plan completion screen has a placeholder area for a future "What's next" feature and a "Done" dismiss button (CELB-04 deferred — voice note CTA not implemented)
   5. Completing a 3rd, 5th, or 7th action triggers a visually distinct milestone moment (lighter than plan completion, heavier than a standard inline celebration)
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 03-01-PLAN.md — Add SPM packages (Vortex + lottie-spm), CelebrationState enum, ViewModel celebration logic, and unit tests
+- [ ] 03-02-PLAN.md — Build InlineConfettiView, MilestoneBannerView, PlanCompletionView and wire into journey path
 
 ### Phase 4: Polish
 **Goal**: All key interactions feel physically responsive and all transitions between states animate smoothly — the journey path feels alive from first tap to plan completion
@@ -79,5 +82,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-18 |
 | 2. Journey Path and Action Cards | 2/3 | In Progress|  |
-| 3. Celebration System | 0/TBD | Not started | - |
+| 3. Celebration System | 0/2 | Not started | - |
 | 4. Polish | 0/TBD | Not started | - |
