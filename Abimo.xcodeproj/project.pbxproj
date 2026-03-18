@@ -13,10 +13,27 @@
 		0D796D1E2F576B3B005CE115 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 0D796D1D2F576B3B005CE115 /* Realtime */; };
 		0D796D202F576B3B005CE115 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 0D796D1F2F576B3B005CE115 /* Storage */; };
 		0D796D222F576B3B005CE115 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 0D796D212F576B3B005CE115 /* Supabase */; };
+		30877432D1026706D7E805DA /* AnimationPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 846A32C3BB81E3C29B621791 /* AnimationPolicyTests.swift */; };
+		846A32C3BB81E3C29B621792 /* HapticEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73C8EB5BB682575EC87A171B /* HapticEngineTests.swift */; };
+		73C8EB5BB682575EC87A171A /* ActionIconMapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C826A6FCE48478DCB74F2135 /* ActionIconMapperTests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C59C0996DAEEE6F529A27976 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0D2520672F57455E00219D62 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0D25206E2F57455E00219D62;
+			remoteInfo = Abimo;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		0D25206F2F57455E00219D62 /* Abimo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Abimo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7B95E909348334896A68F812 /* AbimoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbimoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		846A32C3BB81E3C29B621791 /* AnimationPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationPolicyTests.swift; sourceTree = "<group>"; };
+		73C8EB5BB682575EC87A171B /* HapticEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticEngineTests.swift; sourceTree = "<group>"; };
+		C826A6FCE48478DCB74F2135 /* ActionIconMapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionIconMapperTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -54,6 +71,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D58E72E310275DFF6C15C0C8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -61,6 +85,7 @@
 			isa = PBXGroup;
 			children = (
 				0D2520712F57455E00219D62 /* Abimo */,
+				CBEE3772A077021721A278F6 /* AbimoTests */,
 				0D2520702F57455E00219D62 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -69,8 +94,19 @@
 			isa = PBXGroup;
 			children = (
 				0D25206F2F57455E00219D62 /* Abimo.app */,
+				7B95E909348334896A68F812 /* AbimoTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		CBEE3772A077021721A278F6 /* AbimoTests */ = {
+			isa = PBXGroup;
+			children = (
+				846A32C3BB81E3C29B621791 /* AnimationPolicyTests.swift */,
+				73C8EB5BB682575EC87A171B /* HapticEngineTests.swift */,
+				C826A6FCE48478DCB74F2135 /* ActionIconMapperTests.swift */,
+			);
+			path = AbimoTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -104,6 +140,24 @@
 			productReference = 0D25206F2F57455E00219D62 /* Abimo.app */;
 			productType = "com.apple.product-type.application";
 		};
+		12DA86A78C49EA20E32684B2 /* AbimoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D810A485ED03241B4D419B1B /* Build configuration list for PBXNativeTarget "AbimoTests" */;
+			buildPhases = (
+				4F7FD633DBDDE131CA3766E4 /* Sources */,
+				D58E72E310275DFF6C15C0C8 /* Frameworks */,
+				E9DF469611A11F5125227C37 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D3C681D06BD2AA399DAC946D /* PBXTargetDependency */,
+			);
+			name = AbimoTests;
+			productName = AbimoTests;
+			productReference = 7B95E909348334896A68F812 /* AbimoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -116,6 +170,10 @@
 				TargetAttributes = {
 					0D25206E2F57455E00219D62 = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					12DA86A78C49EA20E32684B2 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 0D25206E2F57455E00219D62;
 					};
 				};
 			};
@@ -137,12 +195,20 @@
 			projectRoot = "";
 			targets = (
 				0D25206E2F57455E00219D62 /* Abimo */,
+				12DA86A78C49EA20E32684B2 /* AbimoTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		0D25206D2F57455E00219D62 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E9DF469611A11F5125227C37 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -159,7 +225,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4F7FD633DBDDE131CA3766E4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30877432D1026706D7E805DA /* AnimationPolicyTests.swift in Sources */,
+				846A32C3BB81E3C29B621792 /* HapticEngineTests.swift in Sources */,
+				73C8EB5BB682575EC87A171A /* ActionIconMapperTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D3C681D06BD2AA399DAC946D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0D25206E2F57455E00219D62 /* Abimo */;
+			targetProxy = C59C0996DAEEE6F529A27976 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0D2520782F57455F00219D62 /* Debug */ = {
@@ -368,6 +452,46 @@
 			};
 			name = Release;
 		};
+		673BD4755D05AD7853C1F76E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = VMFBV25WD2;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mars.AbimoTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Abimo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Abimo";
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		B97706CA828BCA0385813DBA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = VMFBV25WD2;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mars.AbimoTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Abimo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Abimo";
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -385,6 +509,15 @@
 			buildConfigurations = (
 				0D25207B2F57455F00219D62 /* Debug */,
 				0D25207C2F57455F00219D62 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D810A485ED03241B4D419B1B /* Build configuration list for PBXNativeTarget "AbimoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				673BD4755D05AD7853C1F76E /* Debug */,
+				B97706CA828BCA0385813DBA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
