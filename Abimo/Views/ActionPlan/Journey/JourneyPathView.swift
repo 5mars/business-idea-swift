@@ -38,7 +38,10 @@ struct JourneyPathView: View {
                             action: action,
                             state: nodeState(at: index, actions: viewModel.microActions),
                             isLastNode: index == viewModel.microActions.count - 1,
-                            onTap: { selectedAction = action }
+                            onTap: { selectedAction = action },
+                            justCompletedActionId: viewModel.justCompletedActionId,
+                            index: index,
+                            actions: viewModel.microActions
                         )
                         .offset(x: index.isMultiple(of: 2) ? -60 : 60)
                         .id(action.id)

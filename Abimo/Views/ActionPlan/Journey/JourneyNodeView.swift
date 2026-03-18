@@ -30,6 +30,12 @@ struct JourneyNodeView: View {
     let state: NodeState
     let isLastNode: Bool
     let onTap: () -> Void
+    let justCompletedActionId: UUID?
+    let index: Int
+    let actions: [MicroAction]
+
+    @State private var isAnimatingCompletion = false
+    @State private var unlockAnimating = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -50,8 +56,36 @@ struct JourneyNodeView: View {
                     radius: 8,
                     y: 2
                 )
+                .scaleEffect(isAnimatingCompletion ? 1.2 : 1.0)
+                .scaleEffect(unlockAnimating ? 1.15 : 1.0)
             }
             .buttonStyle(.plain)
+            .onChange(of: state) { oldValue, newValue in
+                if oldValue != .completed && newValue == .completed {
+                    // Bounce up
+                    AnimationPolicy.animate(.spring(response: 0.15, dampingFraction: 0.4)) {
+                        isAnimatingCompletion = true
+                    }
+                    // Bounce back
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        AnimationPolicy.animate(.spring(response: 0.15, dampingFraction: 0.6)) {
+                            isAnimatingCompletion = false
+                        }
+                    }
+                }
+            }
+            .onChange(of: justCompletedActionId) { _, completedId in
+                guard let completedId = completedId,
+                      let completedIndex = actions.firstIndex(where: { $0.id == completedId }),
+                      index == completedIndex + 1 else { return }
+                // This node is the successor — animate unlock
+                AnimationPolicy.animate(.spring(response: 0.5, dampingFraction: 0.7)) {
+                    unlockAnimating = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    unlockAnimating = false
+                }
+            }
 
             // Connecting line (only if not last node)
             if !isLastNode {
@@ -174,19 +208,28 @@ struct JourneyNodeView: View {
             action: actions[0],
             state: .completed,
             isLastNode: false,
-            onTap: {}
+            onTap: {},
+            justCompletedActionId: nil,
+            index: 0,
+            actions: actions
         )
         JourneyNodeView(
             action: actions[1],
             state: .active,
             isLastNode: false,
-            onTap: {}
+            onTap: {},
+            justCompletedActionId: nil,
+            index: 1,
+            actions: actions
         )
         JourneyNodeView(
             action: actions[2],
             state: .locked,
             isLastNode: true,
-            onTap: {}
+            onTap: {},
+            justCompletedActionId: nil,
+            index: 2,
+            actions: actions
         )
     }
     .padding()
