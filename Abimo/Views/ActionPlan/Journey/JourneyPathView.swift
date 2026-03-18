@@ -34,6 +34,7 @@ struct JourneyPathView: View {
 
                     // Nodes
                     ForEach(Array(viewModel.microActions.enumerated()), id: \.element.id) { index, action in
+                        let offset: CGFloat = index.isMultiple(of: 2) ? -60 : 60
                         JourneyNodeView(
                             action: action,
                             state: nodeState(at: index, actions: viewModel.microActions),
@@ -41,9 +42,10 @@ struct JourneyPathView: View {
                             onTap: { selectedAction = action },
                             justCompletedActionId: viewModel.justCompletedActionId,
                             index: index,
-                            actions: viewModel.microActions
+                            actions: viewModel.microActions,
+                            zigzagOffset: offset
                         )
-                        .offset(x: index.isMultiple(of: 2) ? -60 : 60)
+                        .offset(x: offset)
                         .id(action.id)
                         .cardEntrance(delay: Double(index) * 0.05)
                     }

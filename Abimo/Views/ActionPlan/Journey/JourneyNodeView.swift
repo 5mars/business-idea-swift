@@ -33,6 +33,9 @@ struct JourneyNodeView: View {
     let justCompletedActionId: UUID?
     let index: Int
     let actions: [MicroAction]
+    /// The horizontal offset applied to THIS node by the parent zigzag layout.
+    /// Used to calculate the diagonal connecting line to the next node.
+    var zigzagOffset: CGFloat = 0
 
     @State private var isAnimatingCompletion = false
     @State private var unlockAnimating = false
@@ -89,23 +92,10 @@ struct JourneyNodeView: View {
 
             // Connecting line (only if not last node)
             if !isLastNode {
-                Rectangle()
-                    .fill(Color.clear)
-                    .frame(width: 2, height: 80)
-                    .overlay(
-                        Rectangle()
-                            .stroke(
-                                style: StrokeStyle(
-                                    lineWidth: 2,
-                                    dash: state == .completed ? [] : [6, 4]
-                                )
-                            )
-                            .foregroundColor(
-                                state == .completed
-                                    ? .brandGreen
-                                    : .textSec.opacity(0.3)
-                            )
-                    )
+                ConnectingLineView(
+                    isCompleted: state == .completed,
+                    zigzagOffset: zigzagOffset
+                )
             }
         }
     }
@@ -134,6 +124,44 @@ struct JourneyNodeView: View {
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.white)
         }
+    }
+}
+
+// MARK: - ConnectingLineView
+
+struct ConnectingLineView: View {
+    let isCompleted: Bool
+    let zigzagOffset: CGFloat
+
+    /// The horizontal distance from this node's center to the next node's center.
+    /// Since nodes alternate ±60, the delta is always 120 (or -120).
+    private var horizontalDelta: CGFloat {
+        -zigzagOffset * 2
+    }
+
+    var body: some View {
+        let lineColor: Color = isCompleted ? .brandGreen : .textSec.opacity(0.3)
+
+        Canvas { context, size in
+            let from = CGPoint(x: size.width / 2, y: 0)
+            let to = CGPoint(x: size.width / 2 + horizontalDelta, y: size.height)
+
+            var path = Path()
+            path.move(to: from)
+            path.addLine(to: to)
+
+            if isCompleted {
+                context.stroke(path, with: .color(lineColor), lineWidth: 2.5)
+            } else {
+                context.stroke(
+                    path,
+                    with: .color(lineColor),
+                    style: StrokeStyle(lineWidth: 2, dash: [6, 4])
+                )
+            }
+        }
+        .frame(height: 80)
+        .allowsHitTesting(false)
     }
 }
 
@@ -211,8 +239,10 @@ struct JourneyNodeView: View {
             onTap: {},
             justCompletedActionId: nil,
             index: 0,
-            actions: actions
+            actions: actions,
+            zigzagOffset: -60
         )
+        .offset(x: -60)
         JourneyNodeView(
             action: actions[1],
             state: .active,
@@ -220,8 +250,10 @@ struct JourneyNodeView: View {
             onTap: {},
             justCompletedActionId: nil,
             index: 1,
-            actions: actions
+            actions: actions,
+            zigzagOffset: 60
         )
+        .offset(x: 60)
         JourneyNodeView(
             action: actions[2],
             state: .locked,
@@ -229,8 +261,10 @@ struct JourneyNodeView: View {
             onTap: {},
             justCompletedActionId: nil,
             index: 2,
-            actions: actions
+            actions: actions,
+            zigzagOffset: -60
         )
+        .offset(x: -60)
     }
     .padding()
     .background(Color.appBg)
