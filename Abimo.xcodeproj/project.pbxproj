@@ -14,8 +14,10 @@
 		0D796D202F576B3B005CE115 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 0D796D1F2F576B3B005CE115 /* Storage */; };
 		0D796D222F576B3B005CE115 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 0D796D212F576B3B005CE115 /* Supabase */; };
 		30877432D1026706D7E805DA /* AnimationPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 846A32C3BB81E3C29B621791 /* AnimationPolicyTests.swift */; };
-		846A32C3BB81E3C29B621792 /* HapticEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73C8EB5BB682575EC87A171B /* HapticEngineTests.swift */; };
 		73C8EB5BB682575EC87A171A /* ActionIconMapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C826A6FCE48478DCB74F2135 /* ActionIconMapperTests.swift */; };
+		846A32C3BB81E3C29B621792 /* HapticEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73C8EB5BB682575EC87A171B /* HapticEngineTests.swift */; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* Vortex in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F6A7B8C9D0E1F3 /* Vortex */; };
+		A1B2C3D4E5F6A7B8C9D0E1F4 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F6A7B8C9D0E1F5 /* Lottie */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,9 +32,9 @@
 
 /* Begin PBXFileReference section */
 		0D25206F2F57455E00219D62 /* Abimo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Abimo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		73C8EB5BB682575EC87A171B /* HapticEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticEngineTests.swift; sourceTree = "<group>"; };
 		7B95E909348334896A68F812 /* AbimoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbimoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		846A32C3BB81E3C29B621791 /* AnimationPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationPolicyTests.swift; sourceTree = "<group>"; };
-		73C8EB5BB682575EC87A171B /* HapticEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticEngineTests.swift; sourceTree = "<group>"; };
 		C826A6FCE48478DCB74F2135 /* ActionIconMapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionIconMapperTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -68,6 +70,8 @@
 				0D796D182F576B3B005CE115 /* Auth in Frameworks */,
 				0D796D202F576B3B005CE115 /* Storage in Frameworks */,
 				0D796D1E2F576B3B005CE115 /* Realtime in Frameworks */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* Vortex in Frameworks */,
+				A1B2C3D4E5F6A7B8C9D0E1F4 /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -135,6 +139,8 @@
 				0D796D1D2F576B3B005CE115 /* Realtime */,
 				0D796D1F2F576B3B005CE115 /* Storage */,
 				0D796D212F576B3B005CE115 /* Supabase */,
+				A1B2C3D4E5F6A7B8C9D0E1F3 /* Vortex */,
+				A1B2C3D4E5F6A7B8C9D0E1F5 /* Lottie */,
 			);
 			productName = Abimo;
 			productReference = 0D25206F2F57455E00219D62 /* Abimo.app */;
@@ -188,6 +194,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				0D796D162F576B3B005CE115 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				A1B2C3D4E5F6A7B8C9D0E1F8 /* XCRemoteSwiftPackageReference "Vortex" */,
+				A1B2C3D4E5F6A7B8C9D0E1F9 /* XCRemoteSwiftPackageReference "lottie-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0D2520702F57455E00219D62 /* Products */;
@@ -533,6 +541,22 @@
 				minimumVersion = 2.5.1;
 			};
 		};
+		A1B2C3D4E5F6A7B8C9D0E1F8 /* XCRemoteSwiftPackageReference "Vortex" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/twostraws/Vortex";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		A1B2C3D4E5F6A7B8C9D0E1F9 /* XCRemoteSwiftPackageReference "lottie-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-spm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -565,6 +589,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0D796D162F576B3B005CE115 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		A1B2C3D4E5F6A7B8C9D0E1F3 /* Vortex */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F6A7B8C9D0E1F8 /* XCRemoteSwiftPackageReference "Vortex" */;
+			productName = Vortex;
+		};
+		A1B2C3D4E5F6A7B8C9D0E1F5 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F6A7B8C9D0E1F9 /* XCRemoteSwiftPackageReference "lottie-spm" */;
+			productName = Lottie;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
