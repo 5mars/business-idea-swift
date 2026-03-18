@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-03-18T21:49:44.585Z"
+stopped_at: Phase 2 plan 03 complete
+last_updated: "2026-03-18T22:07:28.057Z"
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -50,6 +50,7 @@ Plan: 3 of 3
 | Phase 01-foundation P02 | 8 | 1 tasks | 4 files |
 | Phase 02 P01 | 3 | 2 tasks | 3 files |
 | Phase 02 P02 | 6 | 1 tasks | 1 files |
+| Phase 02 P03 | 20 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,8 @@ Recent decisions affecting current work:
 - [Phase 02-02]: NodeState imported from JourneyNodeView.swift (Plan 01 prerequisite) — no local redefinition needed
 - [Phase 02-02]: PBXFileSystemSynchronizedRootGroup auto-includes Cards/ subdirectory — no pbxproj edits required
 - [Phase 02-02]: Deep link helpers copied verbatim from MicroActionRow to maintain identical behavior; consolidation deferred
+- [Phase 02-03]: ConnectingLineView uses Canvas with horizontalDelta=-zigzagOffset*2; zigzagOffset passed from JourneyPathView parent to keep single source of truth for layout offsets
+- [Phase 02-03]: justCompletedActionId cleared after 0.6s buffer (not tied to animation duration) to ensure all child node .onChange handlers fire
 
 ### Pending Todos
 
@@ -87,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T21:49:00Z
-Stopped at: Completed 02-02-PLAN.md
-Resume file: .planning/phases/02-journey-path-and-action-cards/02-03-PLAN.md
+Last session: 2026-03-18T22:07:19.091Z
+Stopped at: Phase 2 plan 03 complete
+Resume file: None

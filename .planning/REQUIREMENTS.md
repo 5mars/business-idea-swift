@@ -20,7 +20,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **PATH-03**: Path auto-scrolls to the current active node when the view appears
 - [x] **PATH-04**: Each node shows a progress ring indicating completion status
 - [x] **PATH-05**: Nodes are connected by a visible line/path with animated fill showing progress
-- [ ] **PATH-06**: When a user completes an action, the next node plays an unlock animation transitioning from locked to active
+- [x] **PATH-06**: When a user completes an action, the next node plays an unlock animation transitioning from locked to active
 
 ### Action Cards
 
@@ -28,7 +28,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **CARD-02**: Card shows simplified content by default — done criteria and templates are hidden until tap
 - [x] **CARD-03**: Tapping a card expands it to reveal done criteria, template text, and deep link buttons
 - [x] **CARD-04**: Completed cards show a distinct visual state (not just strikethrough) that feels rewarding
-- [ ] **CARD-05**: Card plays a spring/flip animation when marked as completed
+- [x] **CARD-05**: Card plays a spring/flip animation when marked as completed
 
 ### Celebrations
 
@@ -84,12 +84,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PATH-03 | Phase 2 | Complete |
 | PATH-04 | Phase 2 | Complete |
 | PATH-05 | Phase 2 | Complete |
-| PATH-06 | Phase 2 | Pending |
+| PATH-06 | Phase 2 | Complete |
 | CARD-01 | Phase 2 | Complete |
 | CARD-02 | Phase 2 | Complete |
 | CARD-03 | Phase 2 | Complete |
 | CARD-04 | Phase 2 | Complete |
-| CARD-05 | Phase 2 | Pending |
+| CARD-05 | Phase 2 | Complete |
 | CELB-01 | Phase 3 | Pending |
 | CELB-02 | Phase 3 | Pending |
 | CELB-03 | Phase 3 | Pending |
