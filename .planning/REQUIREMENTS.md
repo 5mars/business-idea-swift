@@ -24,10 +24,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Action Cards
 
-- [ ] **CARD-01**: Each action displays as a card with a type-mapped emoji/icon, action text, and time estimate pill
-- [ ] **CARD-02**: Card shows simplified content by default — done criteria and templates are hidden until tap
-- [ ] **CARD-03**: Tapping a card expands it to reveal done criteria, template text, and deep link buttons
-- [ ] **CARD-04**: Completed cards show a distinct visual state (not just strikethrough) that feels rewarding
+- [x] **CARD-01**: Each action displays as a card with a type-mapped emoji/icon, action text, and time estimate pill
+- [x] **CARD-02**: Card shows simplified content by default — done criteria and templates are hidden until tap
+- [x] **CARD-03**: Tapping a card expands it to reveal done criteria, template text, and deep link buttons
+- [x] **CARD-04**: Completed cards show a distinct visual state (not just strikethrough) that feels rewarding
 - [ ] **CARD-05**: Card plays a spring/flip animation when marked as completed
 
 ### Celebrations
@@ -85,10 +85,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PATH-04 | Phase 2 | Complete |
 | PATH-05 | Phase 2 | Complete |
 | PATH-06 | Phase 2 | Pending |
-| CARD-01 | Phase 2 | Pending |
-| CARD-02 | Phase 2 | Pending |
-| CARD-03 | Phase 2 | Pending |
-| CARD-04 | Phase 2 | Pending |
+| CARD-01 | Phase 2 | Complete |
+| CARD-02 | Phase 2 | Complete |
+| CARD-03 | Phase 2 | Complete |
+| CARD-04 | Phase 2 | Complete |
 | CARD-05 | Phase 2 | Pending |
 | CELB-01 | Phase 3 | Pending |
 | CELB-02 | Phase 3 | Pending |

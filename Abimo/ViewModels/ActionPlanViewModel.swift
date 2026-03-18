@@ -18,6 +18,7 @@ class ActionPlanViewModel: ObservableObject {
     @Published var showCommitmentPicker = false
     @Published var showMomentumPicker = false
     @Published var completingActionId: UUID?
+    @Published var justCompletedActionId: UUID? = nil
 
     private let supabase = SupabaseService.shared
     private let aiService = AIAnalysisService()
@@ -105,6 +106,11 @@ class ActionPlanViewModel: ObservableObject {
             microActions[idx].completedAt = Date()
             microActions[idx].completionOutcome = outcome
             microActions[idx].completionNote = note
+        }
+
+        justCompletedActionId = id
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+            self?.justCompletedActionId = nil
         }
 
         do {

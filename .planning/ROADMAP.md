@@ -78,6 +78,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-18 |
-| 2. Journey Path and Action Cards | 1/3 | In Progress|  |
+| 2. Journey Path and Action Cards | 2/3 | In Progress|  |
 | 3. Celebration System | 0/TBD | Not started | - |
 | 4. Polish | 0/TBD | Not started | - |
