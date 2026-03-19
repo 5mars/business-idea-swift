@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Actions Flow UX
 status: unknown
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-19T17:10:22.006Z"
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-03-19T17:20:00.000Z"
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -23,8 +23,8 @@ See: .planning/PROJECT.md (updated 2026-03-19)
 
 ## Current Position
 
-Phase: 05 (viewmodel-foundation-and-ordering-model) — EXECUTING
-Plan: 1 of 2
+Phase: 05 (viewmodel-foundation-and-ordering-model) — COMPLETE
+Plan: 2 of 2 (complete)
 
 ## Accumulated Context
 
@@ -40,6 +40,8 @@ Recent decisions affecting current work:
 - [v1.1 scoping]: CongratsHalfSheet is separate from CelebrationState — plan completion uses full-screen overlay, not half-sheet
 - [Phase 05-01]: PostCompletionSheet enum on ViewModel drives single .sheet(item:) in ActionPlanDetailView — eliminates boolean sheet races
 - [Phase 05-01]: userOrderedIds @Published + orderedActions computed property — user order separate from microActions, mergeUserOrder handles stale/new IDs on every loadActionPlan
+- [Phase 05-02]: JourneyPathView uses orderedActions exclusively — view layer no longer references microActions directly
+- [Phase 05-02]: Single .sheet(item: postCompletionSheet) replaces all boolean CommitmentSheet/MomentumPickerSheet modifiers in ActionPlanDetailView
 
 ### Pending Todos
 
@@ -54,6 +56,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T17:10:22.004Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-03-19T17:20:00.000Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None

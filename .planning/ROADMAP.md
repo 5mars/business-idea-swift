@@ -144,7 +144,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 2. Journey Path and Action Cards | v1.0 | 3/3 | Complete | 2026-03-19 |
 | 3. Celebration System | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 4. Polish | v1.0 | 1/1 | Complete | 2026-03-19 |
-| 5. ViewModel Foundation and Ordering Model | v1.1 | 0/2 | Not started | - |
+| 5. ViewModel Foundation and Ordering Model | 2/2 | Complete   | 2026-03-19 | - |
 | 6. Tap Bubbles on Nodes | v1.1 | 0/1 | Not started | - |
 | 7. Action Picker Sheet | v1.1 | 0/1 | Not started | - |
 | 8. Two-Step Completion Sheet and Full Wiring | v1.1 | 0/1 | Not started | - |
