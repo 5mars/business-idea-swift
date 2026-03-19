@@ -41,6 +41,7 @@ struct JourneyNodeView: View {
 
     @State private var isAnimatingCompletion = false
     @State private var unlockAnimating = false
+    @State private var animatedFillColor: Color = Color.textSec.opacity(0.3)
 
     var body: some View {
         VStack(spacing: 0) {
@@ -49,7 +50,7 @@ struct JourneyNodeView: View {
                 ZStack {
                     // Fill circle
                     Circle()
-                        .fill(circleFillColor)
+                        .fill(animatedFillColor)
                         .frame(width: 56, height: 56)
 
                     // Content overlay
@@ -72,11 +73,15 @@ struct JourneyNodeView: View {
                         .allowsHitTesting(false)
                 }
             }
+            .onAppear {
+                animatedFillColor = circleFillColor
+            }
             .onChange(of: state) { oldValue, newValue in
                 if oldValue != .completed && newValue == .completed {
-                    // Bounce up
+                    // Bounce up + color change simultaneously (coral to green during bounce)
                     AnimationPolicy.animate(.spring(response: 0.15, dampingFraction: 0.4)) {
                         isAnimatingCompletion = true
+                        animatedFillColor = Color.brandGreen
                     }
                     // Bounce back
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
@@ -84,18 +89,29 @@ struct JourneyNodeView: View {
                             isAnimatingCompletion = false
                         }
                     }
+                } else if oldValue != newValue {
+                    // Generic state change (e.g., active->locked on undo) — animate color
+                    AnimationPolicy.animate(.easeInOut(duration: 0.3)) {
+                        animatedFillColor = circleFillColor
+                    }
                 }
             }
             .onChange(of: justCompletedActionId) { _, completedId in
                 guard let completedId = completedId,
                       let completedIndex = actions.firstIndex(where: { $0.id == completedId }),
                       index == completedIndex + 1 else { return }
-                // This node is the successor — animate unlock
-                AnimationPolicy.animate(.spring(response: 0.5, dampingFraction: 0.7)) {
+
+                // Beat 1: Pulse scale up
+                AnimationPolicy.animate(.spring(response: 0.3, dampingFraction: 0.6)) {
                     unlockAnimating = true
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    unlockAnimating = false
+
+                // Beat 2: After pulse, scale down + color fade grey->coral
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    AnimationPolicy.animate(.easeInOut(duration: 0.3)) {
+                        unlockAnimating = false
+                        animatedFillColor = Color.brand
+                    }
                 }
             }
 

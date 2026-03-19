@@ -5,6 +5,7 @@
 
 import Foundation
 import Combine
+import UIKit
 
 // MARK: - CelebrationState
 
@@ -227,6 +228,7 @@ class ActionPlanViewModel: ObservableObject {
             try await supabase.createCommitment(commitment)
             try await supabase.commitMicroAction(id: action.id, scheduledFor: scheduledFor)
             activeCommitment = commitment
+            HapticEngine.selection()
 
             if let idx = microActions.firstIndex(where: { $0.id == action.id }) {
                 microActions[idx].isCommitted = true

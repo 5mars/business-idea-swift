@@ -71,7 +71,9 @@ Plans:
   1. Completing an action, toggling a commitment, and reaching a milestone each produce a distinct haptic pattern — not the same generic tap feedback
   2. A node that transitions from locked to active animates fluidly; a node that transitions from active to completed animates fluidly — no jarring state jumps
   3. When plan progress advances (e.g., one more action is completed), the progress ring on the plan header visually animates its fill from the old value to the new value
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 04-01-PLAN.md — Add commitment haptic, animate node color transitions, verify progress ring
 
 ## Progress
 
@@ -83,4 +85,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation | 2/2 | Complete   | 2026-03-18 |
 | 2. Journey Path and Action Cards | 2/3 | In Progress|  |
 | 3. Celebration System | 0/2 | Not started | - |
-| 4. Polish | 0/TBD | Not started | - |
+| 4. Polish | 0/1 | Not started | - |
