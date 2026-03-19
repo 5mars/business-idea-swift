@@ -33,16 +33,16 @@ struct JourneyPathView: View {
                     .padding(.bottom, 32)
 
                     // Nodes
-                    ForEach(Array(viewModel.microActions.enumerated()), id: \.element.id) { index, action in
+                    ForEach(Array(viewModel.orderedActions.enumerated()), id: \.element.id) { index, action in
                         let offset: CGFloat = index.isMultiple(of: 2) ? -60 : 60
                         JourneyNodeView(
                             action: action,
-                            state: nodeState(at: index, actions: viewModel.microActions),
-                            isLastNode: index == viewModel.microActions.count - 1,
+                            state: nodeState(at: index, actions: viewModel.orderedActions),
+                            isLastNode: index == viewModel.orderedActions.count - 1,
                             onTap: { selectedAction = action },
                             justCompletedActionId: viewModel.justCompletedActionId,
                             index: index,
-                            actions: viewModel.microActions,
+                            actions: viewModel.orderedActions,
                             zigzagOffset: offset,
                             celebrationState: viewModel.celebrationState
                         )
@@ -56,7 +56,7 @@ struct JourneyPathView: View {
                 .task {
                     // Defer scroll to after first layout pass
                     try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
-                    if let activeAction = viewModel.microActions.first(where: { !$0.isCompleted }) {
+                    if let activeAction = viewModel.orderedActions.first(where: { !$0.isCompleted }) {
                         AnimationPolicy.animate(.easeInOut(duration: 0.5)) {
                             proxy.scrollTo(activeAction.id, anchor: .center)
                         }
