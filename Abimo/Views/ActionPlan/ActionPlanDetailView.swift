@@ -57,24 +57,45 @@ struct ActionPlanDetailView: View {
             .presentationBackground(Color.appBg)
         }
         .sheet(isPresented: $viewModel.showActionPicker) {
-            // Phase 7 builds the actual ActionPickerSheet view
-            // Placeholder: dismiss immediately until Phase 7
-            Text("Action Picker — Phase 7")
-                .presentationDetents([.medium])
+            // Phase 7 builds ActionPickerSheet; placeholder for first-visit trigger
+            VStack(spacing: 16) {
+                Text("Pick your first action")
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                Text("Coming in Phase 7")
+                    .foregroundColor(.secondary)
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(Color.appBg)
         }
         .sheet(item: $viewModel.postCompletionSheet) { sheet in
             switch sheet {
             case .congrats(let actionId):
-                MomentumPickerSheet(
-                    viewModel: viewModel,
-                    completedActionId: actionId
-                )
+                // Phase 8 builds CongratsHalfSheet; placeholder for now
+                VStack(spacing: 16) {
+                    Text("Nice work!")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                    Text("Action completed")
+                        .foregroundColor(.secondary)
+                    Button("Keep the momentum?") {
+                        viewModel.advanceToActionPicker()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Color.appBg)
+            case .actionPicker:
+                // Phase 7 builds ActionPickerSheet; placeholder for now
+                VStack(spacing: 16) {
+                    Text("Pick your next action")
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                    Text("Coming in Phase 7")
+                        .foregroundColor(.secondary)
+                }
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
-            case .actionPicker:
-                // Phase 7 builds the actual picker view
-                Text("Action Picker — Phase 7")
-                    .presentationDetents([.medium])
+                .presentationBackground(Color.appBg)
             }
         }
         .task {
