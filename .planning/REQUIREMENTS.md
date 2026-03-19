@@ -13,9 +13,9 @@ Requirements for Actions Flow UX milestone. Each maps to roadmap phases.
 
 ### Node Discoverability
 
-- [ ] **DISC-01**: User can tap any journey node to see a bubble with the action name and a CTA button
-- [ ] **DISC-02**: Bubble shows "Complete!" button on the active node and "See more" on completed nodes
-- [ ] **DISC-03**: Only one bubble is visible at a time (tapping another node dismisses the previous)
+- [x] **DISC-01**: User can tap any journey node to see a bubble with the action name and a CTA button
+- [x] **DISC-02**: Bubble shows "Complete!" button on the active node and "See more" on completed nodes
+- [x] **DISC-03**: Only one bubble is visible at a time (tapping another node dismisses the previous)
 
 ### Action Picker
 
@@ -68,9 +68,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DISC-01 | Phase 6 | Pending |
-| DISC-02 | Phase 6 | Pending |
-| DISC-03 | Phase 6 | Pending |
+| DISC-01 | Phase 6 | Complete |
+| DISC-02 | Phase 6 | Complete |
+| DISC-03 | Phase 6 | Complete |
 | PICK-01 | Phase 7 | Pending |
 | PICK-02 | Phase 7 | Pending |
 | PICK-03 | Phase 7 | Pending |

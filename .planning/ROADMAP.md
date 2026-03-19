@@ -100,7 +100,7 @@ Plans:
   2. The active node bubble shows a "Complete!" button that opens the action detail sheet; completed node bubbles show a read-only "Done" badge with no CTA
   3. Tapping a second node while a bubble is visible dismisses the first bubble and shows the new one — only one bubble is ever visible at a time
   4. Tapping the journey path background (not a node) dismisses any open bubble
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
 - [ ] 06-01-PLAN.md — Build `NodeBubbleView` parameterised by `NodeState`; modify `JourneyNodeView` tap handler to set `activeNodeId`; add background tap dismissal to `JourneyPathView`
@@ -114,7 +114,7 @@ Plans:
   2. Action picker cards clearly show each action's name, type icon (from ActionIconMapper), and time estimate
   3. Confirming a selection in the picker updates the journey path immediately — the chosen action becomes the next active node
   4. The picker shown after completing an action does not include the just-completed action in its list
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
 - [ ] 07-01-PLAN.md — Build `ActionPickerSheet` with `LazyVGrid` 2-column layout; wire first-visit trigger in `ActionPlanDetailView.task`; call `viewModel.pickAction(_:)` on confirm
@@ -128,7 +128,7 @@ Plans:
   2. Tapping the CTA on the congrats sheet transitions to the action picker within the same sheet — no sheet dismiss/re-present gap is visible
   3. Completing the final action in a plan shows the full-screen plan completion overlay (not the congrats half-sheet) — the two flows are mutually exclusive
   4. Rapidly completing multiple actions back-to-back (3 in a row) never produces a broken or stuck sheet state
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
 - [ ] 08-01-PLAN.md — Build `CongratsHalfSheet` with Lottie trophy animation and "Keep the momentum?" CTA; wire `PostCompletionSheet` enum into `ActionPlanDetailView` via single `.sheet(item:)`; retire `MomentumPickerSheet`
@@ -145,6 +145,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 3. Celebration System | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 4. Polish | v1.0 | 1/1 | Complete | 2026-03-19 |
 | 5. ViewModel Foundation and Ordering Model | 2/2 | Complete   | 2026-03-19 | - |
-| 6. Tap Bubbles on Nodes | v1.1 | 0/1 | Not started | - |
+| 6. Tap Bubbles on Nodes | 1/1 | Complete   | 2026-03-19 | - |
 | 7. Action Picker Sheet | v1.1 | 0/1 | Not started | - |
 | 8. Two-Step Completion Sheet and Full Wiring | v1.1 | 0/1 | Not started | - |
