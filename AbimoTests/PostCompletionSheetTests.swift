@@ -70,13 +70,14 @@ final class PostCompletionSheetTests: XCTestCase {
 
     func testFinalCompletionSetsPlanCompleteNotCongrats() {
         let vm = makeViewModel(actionCount: 2)
-        // Complete first action (non-final)
+        // Complete first action (non-final) and dismiss the congrats sheet (simulates user dismissal)
         simulateCompletion(vm: vm, at: 0)
-        // Complete second action (final)
+        vm.dismissPostCompletionSheet() // User dismisses congrats before completing last action
+        // Complete second action (final) — must NOT set postCompletionSheet
         simulateCompletion(vm: vm, at: 1)
 
         XCTAssertNil(vm.postCompletionSheet,
-                     "Final completion must NOT set postCompletionSheet (it stays nil)")
+                     "Final completion must NOT set postCompletionSheet (it stays nil after dismiss + final complete)")
         XCTAssertEqual(vm.celebrationState, .planComplete,
                        "Final completion must set celebrationState to .planComplete")
     }

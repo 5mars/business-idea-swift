@@ -11,7 +11,6 @@ struct ActionPlanDetailView: View {
 
     @StateObject private var viewModel = ActionPlanViewModel()
     @State private var selectedAction: MicroAction? = nil
-    @State private var showCommitmentSheet = false
 
     var body: some View {
         ZStack {
@@ -57,24 +56,25 @@ struct ActionPlanDetailView: View {
             .presentationDragIndicator(.visible)
             .presentationBackground(Color.appBg)
         }
-        .sheet(isPresented: $showCommitmentSheet) {
-            CommitmentSheet(viewModel: viewModel)
+        .sheet(isPresented: $viewModel.showActionPicker) {
+            // Phase 7 builds the actual ActionPickerSheet view
+            // Placeholder: dismiss immediately until Phase 7
+            Text("Action Picker — Phase 7")
                 .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $viewModel.showCommitmentPicker) {
-            CommitmentSheet(viewModel: viewModel)
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $viewModel.showMomentumPicker) {
-            if let actionId = viewModel.completingActionId {
+        .sheet(item: $viewModel.postCompletionSheet) { sheet in
+            switch sheet {
+            case .congrats(let actionId):
                 MomentumPickerSheet(
                     viewModel: viewModel,
                     completedActionId: actionId
                 )
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
+            case .actionPicker:
+                // Phase 7 builds the actual picker view
+                Text("Action Picker — Phase 7")
+                    .presentationDetents([.medium])
             }
         }
         .task {
@@ -83,9 +83,9 @@ struct ActionPlanDetailView: View {
     }
 
     private func nodeStateForAction(_ action: MicroAction) -> NodeState {
-        guard let index = viewModel.microActions.firstIndex(where: { $0.id == action.id }) else {
+        guard let index = viewModel.orderedActions.firstIndex(where: { $0.id == action.id }) else {
             return .locked
         }
-        return nodeState(at: index, actions: viewModel.microActions)
+        return nodeState(at: index, actions: viewModel.orderedActions)
     }
 }

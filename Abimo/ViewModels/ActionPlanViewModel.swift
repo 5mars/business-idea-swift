@@ -18,6 +18,22 @@ enum CelebrationState: Equatable {
     case planComplete                     // full-screen overlay, user-dismissed via Done button
 }
 
+// MARK: - PostCompletionSheet
+
+/// Drives the post-completion sheet state machine. A single `.sheet(item:)` modifier reads from this.
+/// Replaces the old `showMomentumPicker` boolean to eliminate sheet presentation race conditions.
+enum PostCompletionSheet: Identifiable, Equatable {
+    case congrats(actionId: UUID)
+    case actionPicker
+
+    var id: String {
+        switch self {
+        case .congrats(let id): return "congrats-\(id)"
+        case .actionPicker: return "actionPicker"
+        }
+    }
+}
+
 @MainActor
 class ActionPlanViewModel: ObservableObject {
     @Published var actionPlan: ActionPlan?
@@ -27,8 +43,9 @@ class ActionPlanViewModel: ObservableObject {
     @Published var isGenerating = false
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var showCommitmentPicker = false
-    @Published var showMomentumPicker = false
+    @Published var userOrderedIds: [UUID] = []
+    @Published var postCompletionSheet: PostCompletionSheet? = nil
+    @Published var showActionPicker = false
     @Published var completingActionId: UUID?
     @Published var justCompletedActionId: UUID? = nil
     @Published var celebrationState: CelebrationState = .idle
@@ -49,8 +66,22 @@ class ActionPlanViewModel: ObservableObject {
             .reduce(0) { $0 + $1.timeEstimateMinutes }
     }
 
+    /// Returns microActions sorted by user-driven ordering. When no user order is set,
+    /// falls back to the original microActions array order.
+    var orderedActions: [MicroAction] {
+        guard !userOrderedIds.isEmpty else { return microActions }
+        let rank = userOrderedIds.enumerated().reduce(into: [UUID: Int]()) {
+            $0[$1.element] = $1.offset
+        }
+        return microActions.sorted {
+            let ra = rank[$0.id] ?? (Int.max - $0.priority)
+            let rb = rank[$1.id] ?? (Int.max - $1.priority)
+            return ra < rb
+        }
+    }
+
     var nextRecommendedAction: MicroAction? {
-        microActions.first(where: { !$0.isCompleted })
+        orderedActions.first(where: { !$0.isCompleted })
     }
 
     var committedAction: MicroAction? {
@@ -72,7 +103,7 @@ class ActionPlanViewModel: ObservableObject {
             )
             actionPlan = plan
             microActions = actions
-            showCommitmentPicker = true
+            showActionPicker = true
         } catch {
             errorMessage = "Failed to generate action plan: \(error.localizedDescription)"
         }
@@ -95,6 +126,7 @@ class ActionPlanViewModel: ObservableObject {
             }
 
             computeNudges()
+            mergeUserOrder(planId: plan.id)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -104,14 +136,15 @@ class ActionPlanViewModel: ObservableObject {
 
     func toggleMicroAction(id: UUID, isCompleted: Bool) async {
         if isCompleted {
-            // Auto-confirm with default outcome, then show momentum picker
+            // Auto-confirm with default outcome, then show post-completion sheet
             await confirmCompletion(id: id, outcome: "did_it", note: nil)
             completingActionId = id
 
-            // Only show momentum picker if there are remaining actions
+            // Only show congrats sheet if there are remaining actions (not plan complete)
             let hasRemaining = microActions.contains(where: { !$0.isCompleted && $0.id != id })
-            if hasRemaining {
-                showMomentumPicker = true
+            let allDone = !microActions.contains(where: { !$0.isCompleted && $0.id != id })
+            if hasRemaining && !allDone {
+                postCompletionSheet = .congrats(actionId: id)
             }
         } else {
             // Unchecking — just toggle directly
@@ -239,6 +272,75 @@ class ActionPlanViewModel: ObservableObject {
             computeNudges()
         } catch {
             errorMessage = "Failed to save commitment: \(error.localizedDescription)"
+        }
+    }
+
+    // MARK: - Action Ordering
+
+    func pickAction(id: UUID) {
+        var ids = orderedActions.map(\.id)
+        ids.removeAll { $0 == id }
+        let completedIds = Set(microActions.filter(\.isCompleted).map(\.id))
+        let nextIncompleteIdx = ids.firstIndex(where: { !completedIds.contains($0) }) ?? ids.endIndex
+        ids.insert(id, at: nextIncompleteIdx)
+        userOrderedIds = ids
+        saveOrderToUserDefaults()
+        showActionPicker = false
+        HapticEngine.selection()
+        Task { await silentCommit(actionId: id) }
+    }
+
+    func advanceToActionPicker() {
+        postCompletionSheet = nil
+        let hasRemaining = microActions.contains(where: { !$0.isCompleted })
+        guard hasRemaining else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+            self?.postCompletionSheet = .actionPicker
+        }
+    }
+
+    func dismissPostCompletionSheet() {
+        postCompletionSheet = nil
+    }
+
+    private func silentCommit(actionId: UUID) async {
+        guard let action = microActions.first(where: { $0.id == actionId }) else { return }
+        if let existing = activeCommitment {
+            try? await supabase.updateCommitmentStatus(id: existing.id, status: "skipped")
+        }
+        await commitToAction(action, scheduledFor: nil)
+    }
+
+    // MARK: - Order Persistence
+
+    private let defaults = UserDefaults.standard
+
+    private func userDefaultsKey(for planId: UUID) -> String {
+        "actionOrder_\(planId.uuidString)"
+    }
+
+    private func loadOrderFromUserDefaults(planId: UUID) -> [UUID]? {
+        guard let data = defaults.data(forKey: userDefaultsKey(for: planId)),
+              let ids = try? JSONDecoder().decode([UUID].self, from: data) else { return nil }
+        return ids
+    }
+
+    func saveOrderToUserDefaults() {
+        guard let planId = actionPlan?.id else { return }
+        guard let data = try? JSONEncoder().encode(userOrderedIds) else { return }
+        defaults.set(data, forKey: userDefaultsKey(for: planId))
+    }
+
+    func mergeUserOrder(planId: UUID) {
+        let fetchedIds = Set(microActions.map(\.id))
+        if var stored = loadOrderFromUserDefaults(planId: planId) {
+            stored = stored.filter { fetchedIds.contains($0) }
+            let storedSet = Set(stored)
+            let newIds = microActions
+                .filter { !storedSet.contains($0.id) }
+                .sorted { $0.priority < $1.priority }
+                .map(\.id)
+            userOrderedIds = stored + newIds
         }
     }
 

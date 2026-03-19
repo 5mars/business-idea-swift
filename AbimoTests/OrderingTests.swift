@@ -12,10 +12,33 @@ final class OrderingTests: XCTestCase {
     // MARK: - Helpers
 
     private let testSuiteName = "test_ordering"
+    private var usedPlanIds: [UUID] = []
 
     override func setUp() {
         super.setUp()
         UserDefaults(suiteName: testSuiteName)?.removePersistentDomain(forName: testSuiteName)
+        usedPlanIds = []
+    }
+
+    override func tearDown() {
+        // Clean up any UserDefaults.standard keys written by tests
+        for planId in usedPlanIds {
+            UserDefaults.standard.removeObject(forKey: "actionOrder_\(planId.uuidString)")
+        }
+        super.tearDown()
+    }
+
+    private func makePlan(id: UUID) -> ActionPlan {
+        usedPlanIds.append(id)
+        return ActionPlan(
+            id: id,
+            analysisId: UUID(),
+            userId: UUID(),
+            title: "Test Plan",
+            summary: "Summary",
+            totalEstimateMinutes: 50,
+            createdAt: Date()
+        )
     }
 
     /// Creates a fresh ViewModel with microActions pre-populated (no Supabase).
@@ -111,16 +134,7 @@ final class OrderingTests: XCTestCase {
     func testUserDefaultsRoundTrip() {
         let vm = makeViewModel(actionCount: 5)
         let planId = UUID()
-        // Simulate having an actionPlan so saveOrderToUserDefaults uses the correct key
-        let plan = ActionPlan(
-            id: planId,
-            analysisId: UUID(),
-            userId: UUID(),
-            title: "Test Plan",
-            summary: "Summary",
-            totalEstimateMinutes: 50,
-            createdAt: Date()
-        )
+        let plan = makePlan(id: planId)
         vm.actionPlan = plan
         vm.pickAction(id: vm.microActions[2].id)
         let savedIds = vm.userOrderedIds
@@ -140,15 +154,7 @@ final class OrderingTests: XCTestCase {
     func testMergeUserOrderDropsStaleIds() {
         let vm = makeViewModel(actionCount: 5)
         let planId = UUID()
-        let plan = ActionPlan(
-            id: planId,
-            analysisId: UUID(),
-            userId: UUID(),
-            title: "Test Plan",
-            summary: "Summary",
-            totalEstimateMinutes: 50,
-            createdAt: Date()
-        )
+        let plan = makePlan(id: planId)
         vm.actionPlan = plan
 
         // Manually set userOrderedIds to include a stale UUID
@@ -170,15 +176,7 @@ final class OrderingTests: XCTestCase {
     func testMergeUserOrderAppendsNewIdsInPriorityOrder() {
         let vm = makeViewModel(actionCount: 5)
         let planId = UUID()
-        let plan = ActionPlan(
-            id: planId,
-            analysisId: UUID(),
-            userId: UUID(),
-            title: "Test Plan",
-            summary: "Summary",
-            totalEstimateMinutes: 50,
-            createdAt: Date()
-        )
+        let plan = makePlan(id: planId)
         vm.actionPlan = plan
         let allActions = vm.microActions
 

@@ -19,6 +19,8 @@
 		A1B2C3D4E5F6A7B8C9D0E1F2 /* Vortex in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F6A7B8C9D0E1F3 /* Vortex */; };
 		A1B2C3D4E5F6A7B8C9D0E1F4 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F6A7B8C9D0E1F5 /* Lottie */; };
 		B3C4D5E6F7A8B9C0D1E2F3A4 /* CelebrationStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C4D5E6F7A8B9C0D1E2F3A5 /* CelebrationStateTests.swift */; };
+		C7D8E9F0A1B2C3D4E5F6A7B8 /* OrderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D8E9F0A1B2C3D4E5F6A7B9 /* OrderingTests.swift */; };
+		D8E9F0A1B2C3D4E5F6A7B8C9 /* PostCompletionSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E9F0A1B2C3D4E5F6A7B8CA /* PostCompletionSheetTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +40,8 @@
 		846A32C3BB81E3C29B621791 /* AnimationPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationPolicyTests.swift; sourceTree = "<group>"; };
 		B3C4D5E6F7A8B9C0D1E2F3A5 /* CelebrationStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CelebrationStateTests.swift; sourceTree = "<group>"; };
 		C826A6FCE48478DCB74F2135 /* ActionIconMapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionIconMapperTests.swift; sourceTree = "<group>"; };
+		C7D8E9F0A1B2C3D4E5F6A7B9 /* OrderingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderingTests.swift; sourceTree = "<group>"; };
+		D8E9F0A1B2C3D4E5F6A7B8CA /* PostCompletionSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostCompletionSheetTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -112,6 +116,8 @@
 				73C8EB5BB682575EC87A171B /* HapticEngineTests.swift */,
 				C826A6FCE48478DCB74F2135 /* ActionIconMapperTests.swift */,
 				B3C4D5E6F7A8B9C0D1E2F3A5 /* CelebrationStateTests.swift */,
+				C7D8E9F0A1B2C3D4E5F6A7B9 /* OrderingTests.swift */,
+				D8E9F0A1B2C3D4E5F6A7B8CA /* PostCompletionSheetTests.swift */,
 			);
 			path = AbimoTests;
 			sourceTree = "<group>";
@@ -244,6 +250,8 @@
 				846A32C3BB81E3C29B621792 /* HapticEngineTests.swift in Sources */,
 				73C8EB5BB682575EC87A171A /* ActionIconMapperTests.swift in Sources */,
 				B3C4D5E6F7A8B9C0D1E2F3A4 /* CelebrationStateTests.swift in Sources */,
+				C7D8E9F0A1B2C3D4E5F6A7B8 /* OrderingTests.swift in Sources */,
+				D8E9F0A1B2C3D4E5F6A7B8C9 /* PostCompletionSheetTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
