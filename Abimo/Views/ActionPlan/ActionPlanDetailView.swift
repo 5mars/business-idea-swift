@@ -25,7 +25,25 @@ struct ActionPlanDetailView: View {
                     selectedAction: $selectedAction
                 )
             }
+
+            // Milestone banner
+            if case .milestone(let count) = viewModel.celebrationState {
+                MilestoneBannerView(count: count)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(1)
+            }
+
+            // Plan completion overlay
+            if viewModel.celebrationState == .planComplete {
+                PlanCompletionView(viewModel: viewModel, onDismiss: {
+                    viewModel.celebrationState = .idle
+                })
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .zIndex(2)
+                .ignoresSafeArea()
+            }
         }
+        .animation(.easeInOut(duration: 0.3), value: viewModel.celebrationState)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Color.appBg, for: .navigationBar)
         .sheet(item: $selectedAction) { action in

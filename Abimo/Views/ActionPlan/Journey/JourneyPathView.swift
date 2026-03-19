@@ -43,7 +43,8 @@ struct JourneyPathView: View {
                             justCompletedActionId: viewModel.justCompletedActionId,
                             index: index,
                             actions: viewModel.microActions,
-                            zigzagOffset: offset
+                            zigzagOffset: offset,
+                            celebrationState: viewModel.celebrationState
                         )
                         .offset(x: offset)
                         .id(action.id)

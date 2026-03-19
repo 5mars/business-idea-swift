@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import Vortex
 
 // MARK: - NodeState
 
@@ -36,6 +37,7 @@ struct JourneyNodeView: View {
     /// The horizontal offset applied to THIS node by the parent zigzag layout.
     /// Used to calculate the diagonal connecting line to the next node.
     var zigzagOffset: CGFloat = 0
+    var celebrationState: CelebrationState = .idle
 
     @State private var isAnimatingCompletion = false
     @State private var unlockAnimating = false
@@ -63,6 +65,13 @@ struct JourneyNodeView: View {
                 .scaleEffect(unlockAnimating ? 1.15 : 1.0)
             }
             .buttonStyle(.plain)
+            .overlay {
+                if case .inlineConfetti(let actionId) = celebrationState,
+                   actionId == action.id {
+                    InlineConfettiView()
+                        .allowsHitTesting(false)
+                }
+            }
             .onChange(of: state) { oldValue, newValue in
                 if oldValue != .completed && newValue == .completed {
                     // Bounce up
