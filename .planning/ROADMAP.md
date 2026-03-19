@@ -1,23 +1,14 @@
-# Roadmap: Abimo — Actions Flow Revamp
+# Roadmap: Abimo — Actions Flow UX
 
-## Overview
+## Milestones
 
-Transform the existing flat micro-action task manager into a spatially engaging, gamified journey experience. Foundation utilities come first to guarantee accessibility and haptic infrastructure before any animation is wired. The journey path and card system then replace the flat list as the core spatial metaphor. A two-tier celebration system rewards individual completions inline and full plan completion with a dedicated screen. Polish pass finalizes smooth transitions and integrates momentum context into the journey header.
+- ✅ **v1.0 Actions Flow Revamp** - Phases 1-4 (shipped 2026-03-19)
+- 🚧 **v1.1 Actions Flow UX** - Phases 5-8 (in progress)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
-
-Decimal phases appear between their surrounding integers in numeric order.
-
-- [x] **Phase 1: Foundation** - Build the three utility primitives that every animated view depends on (completed 2026-03-18)
-- [ ] **Phase 2: Journey Path and Action Cards** - Replace the flat list with a vertical node path and card-state system
-- [ ] **Phase 3: Celebration System** - Add inline and full-screen celebrations for action and plan completions
-- [ ] **Phase 4: Polish** - Smooth node-unlock transitions, animated progress rings, and haptic coverage
-
-## Phase Details
+<details>
+<summary>✅ v1.0 Actions Flow Revamp (Phases 1-4) - SHIPPED 2026-03-19</summary>
 
 ### Phase 1: Foundation
 **Goal**: The three shared utilities exist and can be used from any view — animations respect reduced-motion, haptics fire at zero latency, and every action type resolves to a consistent icon
@@ -28,6 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Any ViewModel can call `HapticEngine.impact()` or `HapticEngine.success()` and get immediate physical feedback with no perceptible delay
   3. Given a `MicroAction` with any action type (email, search, message, post, or unknown), `ActionIconMapper` returns a non-nil emoji and SF Symbol name
 **Plans**: 2 plans
+
 Plans:
 - [x] 01-01-PLAN.md — Create AnimationPolicy, HapticEngine, and ActionIconMapper utilities
 - [x] 01-02-PLAN.md — Create AbimoTests target and unit tests for all three utilities
@@ -43,10 +35,11 @@ Plans:
   4. Tapping a locked/active node opens a bottom sheet showing the action's icon, text, time estimate, and — on secondary tap or scroll within the sheet — done criteria, template text, and deep link buttons
   5. Completing an action from the card causes that node to visually animate into the completed state and the next node plays an unlock animation transitioning from locked to active
 **Plans**: 3 plans
+
 Plans:
-- [ ] 02-01-PLAN.md — Build JourneyNodeView, JourneyPathView, and ProgressRingView components
-- [ ] 02-02-PLAN.md — Build ActionDetailSheet bottom sheet with primary and secondary content
-- [ ] 02-03-PLAN.md — Wire journey path into ActionPlanDetailView with completion and unlock animations
+- [x] 02-01-PLAN.md — Build JourneyNodeView, JourneyPathView, and ProgressRingView components
+- [x] 02-02-PLAN.md — Build ActionDetailSheet bottom sheet with primary and secondary content
+- [x] 02-03-PLAN.md — Wire journey path into ActionPlanDetailView with completion and unlock animations
 
 ### Phase 3: Celebration System
 **Goal**: Completing an action produces an immediate, satisfying inline reward; completing all actions in a plan produces a full-screen celebration with summary and a prompt to continue
@@ -56,12 +49,13 @@ Plans:
   1. Marking any single micro-action complete triggers a confetti burst and animated checkmark directly on the card within half a second, then clears automatically without requiring user dismissal
   2. Completing the final action in a plan immediately transitions to a full-screen celebration with a Lottie animation and confetti — distinct from the inline per-action celebration
   3. The plan completion screen displays a summary showing how many actions were completed and the total estimated time invested
-  4. The plan completion screen has a placeholder area for a future "What's next" feature and a "Done" dismiss button (CELB-04 deferred — voice note CTA not implemented)
+  4. The plan completion screen has a placeholder area for a future "What's next" feature and a "Done" dismiss button
   5. Completing a 3rd, 5th, or 7th action triggers a visually distinct milestone moment (lighter than plan completion, heavier than a standard inline celebration)
 **Plans**: 2 plans
+
 Plans:
-- [ ] 03-01-PLAN.md — Add SPM packages (Vortex + lottie-spm), CelebrationState enum, ViewModel celebration logic, and unit tests
-- [ ] 03-02-PLAN.md — Build InlineConfettiView, MilestoneBannerView, PlanCompletionView and wire into journey path
+- [x] 03-01-PLAN.md — Add SPM packages (Vortex + lottie-spm), CelebrationState enum, ViewModel celebration logic, and unit tests
+- [x] 03-02-PLAN.md — Build InlineConfettiView, MilestoneBannerView, PlanCompletionView and wire into journey path
 
 ### Phase 4: Polish
 **Goal**: All key interactions feel physically responsive and all transitions between states animate smoothly — the journey path feels alive from first tap to plan completion
@@ -72,17 +66,85 @@ Plans:
   2. A node that transitions from locked to active animates fluidly; a node that transitions from active to completed animates fluidly — no jarring state jumps
   3. When plan progress advances (e.g., one more action is completed), the progress ring on the plan header visually animates its fill from the old value to the new value
 **Plans**: 1 plan
+
 Plans:
-- [ ] 04-01-PLAN.md — Add commitment haptic, animate node color transitions, verify progress ring
+- [x] 04-01-PLAN.md — Add commitment haptic, animate node color transitions, verify progress ring
+
+</details>
+
+### 🚧 v1.1 Actions Flow UX (In Progress)
+
+**Milestone Goal:** Make the journey path intuitive — users understand their actions, choose their own order, and get celebrated properly between completions.
+
+#### Phase 5: ViewModel Foundation and Ordering Model
+**Goal**: The ViewModel has a stable, ordered view of actions and a single enum driving all post-completion sheet state — all downstream view work is unblocked with no ordering bugs possible
+**Depends on**: Phase 4
+**Requirements**: ORDR-01, ORDR-02, ORDR-03, CELB-03
+**Success Criteria** (what must be TRUE):
+  1. When a user picks an action, `orderedActions` immediately reflects the chosen action first, with remaining actions preserving their relative AI order — no duplicate `.active` nodes appear
+  2. User's chosen action order persists across app restarts for the same plan (UserDefaults keyed by plan ID)
+  3. Post-completion sheet state is driven by a single `PostCompletionSheet` enum — no boolean flags exist that could race against each other
+  4. `JourneyPathView` reads from `orderedActions` (not raw `microActions`) so `nodeState()` always returns the correct state for the user-driven order
+**Plans**: 2 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — TDD: Add ordering model (userOrderedIds, orderedActions, pickAction) and PostCompletionSheet enum to ViewModel with unit tests
+- [ ] 05-02-PLAN.md — Wire JourneyPathView to orderedActions and replace boolean sheet modifiers with enum-driven sheets in ActionPlanDetailView
+
+#### Phase 6: Tap Bubbles on Nodes
+**Goal**: Every journey node communicates its state on tap — active nodes prompt users to start, locked nodes explain what to finish first, and completed nodes show a read-only recap
+**Depends on**: Phase 5
+**Requirements**: DISC-01, DISC-02, DISC-03
+**Success Criteria** (what must be TRUE):
+  1. Tapping any node on the journey path shows a callout bubble with the action name and a contextual CTA — no node is silent on tap
+  2. The active node bubble shows a "Complete!" button that opens the action detail sheet; completed node bubbles show a read-only "Done" badge with no CTA
+  3. Tapping a second node while a bubble is visible dismisses the first bubble and shows the new one — only one bubble is ever visible at a time
+  4. Tapping the journey path background (not a node) dismisses any open bubble
+**Plans**: TBD
+
+Plans:
+- [ ] 06-01-PLAN.md — Build `NodeBubbleView` parameterised by `NodeState`; modify `JourneyNodeView` tap handler to set `activeNodeId`; add background tap dismissal to `JourneyPathView`
+
+#### Phase 7: Action Picker Sheet
+**Goal**: Users can see all their actions and choose which one to tackle next — on first visit to a plan and as the second step of the post-completion flow
+**Depends on**: Phase 5
+**Requirements**: PICK-01, PICK-02, PICK-03
+**Success Criteria** (what must be TRUE):
+  1. Opening a new action plan for the first time presents a full action list before the user interacts with any node — they pick their first action before the journey path is in focus
+  2. Action picker cards clearly show each action's name, type icon (from ActionIconMapper), and time estimate
+  3. Confirming a selection in the picker updates the journey path immediately — the chosen action becomes the next active node
+  4. The picker shown after completing an action does not include the just-completed action in its list
+**Plans**: TBD
+
+Plans:
+- [ ] 07-01-PLAN.md — Build `ActionPickerSheet` with `LazyVGrid` 2-column layout; wire first-visit trigger in `ActionPlanDetailView.task`; call `viewModel.pickAction(_:)` on confirm
+
+#### Phase 8: Two-Step Completion Sheet and Full Wiring
+**Goal**: Completing an action triggers a congrats half-sheet that celebrates the win and flows directly into the action picker — the full v1.1 user journey works end-to-end
+**Depends on**: Phase 7
+**Requirements**: CELB-01, CELB-02
+**Success Criteria** (what must be TRUE):
+  1. After marking any action complete (except the final one in a plan), a half-sheet slides up with a Lottie celebration animation and a "Keep the momentum?" CTA — the journey path remains visible behind it
+  2. Tapping the CTA on the congrats sheet transitions to the action picker within the same sheet — no sheet dismiss/re-present gap is visible
+  3. Completing the final action in a plan shows the full-screen plan completion overlay (not the congrats half-sheet) — the two flows are mutually exclusive
+  4. Rapidly completing multiple actions back-to-back (3 in a row) never produces a broken or stuck sheet state
+**Plans**: TBD
+
+Plans:
+- [ ] 08-01-PLAN.md — Build `CongratsHalfSheet` with Lottie trophy animation and "Keep the momentum?" CTA; wire `PostCompletionSheet` enum into `ActionPlanDetailView` via single `.sheet(item:)`; retire `MomentumPickerSheet`
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Foundation | 2/2 | Complete   | 2026-03-18 |
-| 2. Journey Path and Action Cards | 2/3 | In Progress|  |
-| 3. Celebration System | 0/2 | Not started | - |
-| 4. Polish | 0/1 | Not started | - |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Foundation | v1.0 | 2/2 | Complete | 2026-03-18 |
+| 2. Journey Path and Action Cards | v1.0 | 3/3 | Complete | 2026-03-19 |
+| 3. Celebration System | v1.0 | 2/2 | Complete | 2026-03-19 |
+| 4. Polish | v1.0 | 1/1 | Complete | 2026-03-19 |
+| 5. ViewModel Foundation and Ordering Model | v1.1 | 0/2 | Not started | - |
+| 6. Tap Bubbles on Nodes | v1.1 | 0/1 | Not started | - |
+| 7. Action Picker Sheet | v1.1 | 0/1 | Not started | - |
+| 8. Two-Step Completion Sheet and Full Wiring | v1.1 | 0/1 | Not started | - |

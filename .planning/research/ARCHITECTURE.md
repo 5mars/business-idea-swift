@@ -1,389 +1,539 @@
 # Architecture Research
 
-**Domain:** Gamified task completion UX in SwiftUI MVVM — journey path, celebration overlays, animation coordination
-**Researched:** 2026-03-18
-**Confidence:** MEDIUM (SwiftUI patterns from official docs + community; Duolingo-specific path layout inferred from primitives)
+**Domain:** Gamified task completion UX — v1.1 integration: action picker, tap bubbles, user-driven ordering, two-step completion sheet
+**Researched:** 2026-03-19
+**Confidence:** HIGH (all conclusions drawn from reading actual source files, not inferred)
 
-## Standard Architecture
+---
 
-### System Overview
+## Context: What Already Exists
+
+This research covers v1.1 integration only. The v1.0 architecture (JourneyPathView, JourneyNodeView, CelebrationState machine, HapticEngine, AnimationPolicy) is fully shipped. The findings below describe exactly how each new feature grafts onto existing components.
+
+Existing component inventory relevant to v1.1:
+
+| Existing File | Role |
+|---|---|
+| `ActionPlanViewModel.swift` | Single source of truth. `@Published microActions: [MicroAction]`, `celebrationState: CelebrationState`, `justCompletedActionId: UUID?`, `showMomentumPicker: Bool`, `completingActionId: UUID?` |
+| `JourneyPathView.swift` | Renders scrollable node list. Passes `selectedAction` binding up to `ActionPlanDetailView` via `@Binding`. Calls `nodeState(at:actions:)` free function for each node. |
+| `JourneyNodeView.swift` | Renders one node circle + connecting line. Currently: tap fires `onTap` closure which sets `selectedAction`. Has `celebrationState` param for inline confetti. |
+| `ActionPlanDetailView.swift` | Root view. Owns `@State var selectedAction: MicroAction?`. Drives three `.sheet` modifiers: `ActionDetailSheet` (item binding), `CommitmentSheet` (showCommitmentPicker), and `MomentumPickerSheet` (showMomentumPicker). |
+| `ActionDetailSheet.swift` | Bottom sheet showing action detail + "Mark Complete" button. Calls `viewModel.toggleMicroAction` then dismisses. |
+| `CommitmentSheet.swift` | Picker showing up to 3 incomplete actions. User picks one and commits. Driven by `viewModel.showCommitmentPicker`. |
+| `CelebrationState` enum | `.idle`, `.inlineConfetti(actionId:)`, `.milestone(count:)`, `.planComplete`. Lives in `ActionPlanViewModel.swift`. |
+| `PlanCompletionView.swift` | Full-screen overlay for `.planComplete`. Has a placeholder `Color.clear.frame(height: 48)` marked "future 'What's next' feature (CELB-04 deferred)". |
+| `nodeState(at:actions:)` free function | In `JourneyNodeView.swift`. Returns `.locked`, `.active`, or `.completed`. Currently: only the first incomplete action is `.active`; all others are `.locked`. |
+
+---
+
+## System Overview: v1.1 Layer Changes
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                          View Layer                                  │
-│                                                                      │
-│  ┌─────────────────────┐  ┌──────────────────┐  ┌───────────────┐  │
-│  │  JourneyPathView    │  │  CelebrationView  │  │  ActionCard   │  │
-│  │  (replaces Detail)  │  │  (fullscreen      │  │  (replaces    │  │
-│  │                     │  │   overlay)        │  │  MicroAction  │  │
-│  │  ScrollView + VStack│  │                   │  │  Row)         │  │
-│  │  of path nodes      │  │  Lottie +         │  │               │  │
-│  │  + connecting lines │  │  confetti +       │  │  emoji icon + │  │
-│  │  + progress ring    │  │  haptic trigger   │  │  expand sheet │  │
-│  └──────────┬──────────┘  └────────┬─────────┘  └──────┬────────┘  │
-│             │                      │                    │           │
-└─────────────┼──────────────────────┼────────────────────┼───────────┘
-              │  @ObservedObject      │  .sheet / ZStack    │ callback
-┌─────────────┼──────────────────────┼────────────────────┼───────────┐
-│                       ViewModel Layer                                │
-│                                                                      │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │  ActionPlanViewModel (@MainActor, ObservableObject)          │    │
-│  │                                                              │    │
-│  │  @Published microActions: [MicroAction]    ← existing       │    │
-│  │  @Published progress: Double               ← existing       │    │
-│  │  @Published activeCommitment: Commitment?  ← existing       │    │
-│  │                                                              │    │
-│  │  + @Published celebrationState: CelebrationState  ← new     │    │
-│  │  + @Published justCompletedAction: MicroAction?   ← new     │    │
-│  │  + func iconName(for: MicroAction) -> String       ← new    │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│                                                                      │
-└────────────────────────────────┬─────────────────────────────────────┘
-                                 │ async/await
-┌────────────────────────────────┼─────────────────────────────────────┐
-│                       Service Layer (unchanged)                      │
-│                                                                      │
-│  SupabaseService  ·  AIAnalysisService  ·  AudioRecordingService     │
-│                                                                      │
+┌──────────────────────────────────────────────────────────────────────┐
+│                          View Layer                                   │
+│                                                                       │
+│  ┌────────────────────────┐    ┌───────────────────────────────────┐ │
+│  │   JourneyPathView      │    │  ActionPlanDetailView              │ │
+│  │   (MODIFIED)           │    │  (MODIFIED — additional sheets)    │ │
+│  │                        │    │                                   │ │
+│  │  ForEach node          │    │  .sheet(item: $selectedAction)    │ │
+│  │    JourneyNodeView     │    │  .sheet(isPresented: showCommit)  │ │
+│  │    + NodeBubbleView    │    │  .sheet(isPresented: showMomentum)│ │
+│  │      (NEW)             │    │  .sheet(isPresented: showCongrats)│ │
+│  └───────────┬────────────┘    │  .sheet(isPresented: showPicker)  │ │
+│              │                 └───────────┬───────────────────────┘ │
+│              │                             │                          │
+│  ┌───────────▼────────────┐   ┌────────────▼──────────────────────┐ │
+│  │   JourneyNodeView      │   │  ActionPickerSheet (NEW)           │ │
+│  │   (MODIFIED)           │   │  CongratsHalfSheet (NEW)           │ │
+│  │                        │   │  MomentumPickerSheet (NEW?)        │ │
+│  │   onTap → show bubble  │   │  PlanCompletionView (MODIFIED)     │ │
+│  │   bubble onCTA → sheet │   └───────────────────────────────────┘ │
+│  └────────────────────────┘                                          │
+└──────────────────────────────────────────────────────────────────────┘
+                          │ @ObservedObject
+┌─────────────────────────▼────────────────────────────────────────────┐
+│                       ViewModel Layer                                 │
+│                                                                       │
+│  ActionPlanViewModel (MODIFIED)                                       │
+│                                                                       │
+│  EXISTING (keep as-is):                                               │
+│    @Published microActions: [MicroAction]                             │
+│    @Published celebrationState: CelebrationState                      │
+│    @Published justCompletedActionId: UUID?                            │
+│    @Published showCommitmentPicker: Bool                              │
+│    @Published showMomentumPicker: Bool                                │
+│    @Published completingActionId: UUID?                               │
+│                                                                       │
+│  NEW:                                                                 │
+│    @Published activeNodeId: UUID?   ← which node has bubble open     │
+│    @Published showCongratsSheet: Bool                                 │
+│    @Published showActionPicker: Bool                                  │
+│    var orderedActions: [MicroAction]  ← reordered by user choice     │
+│    func pickAction(_ action: MicroAction)                             │
+│    func dismissCongrats()                                             │
+│                                                                       │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-### Component Responsibilities
+---
 
-| Component | Responsibility | Talks To |
-|-----------|----------------|----------|
-| `JourneyPathView` | Vertical scroll canvas with staggered node layout, connecting path lines, progress ring header | `ActionPlanViewModel` (read state + call toggleMicroAction) |
-| `JourneyNodeView` | Single action node: circle button with emoji/icon, state (locked/active/done), tap target | `JourneyPathView` (callback) |
-| `ActionDetailSheet` | Bottom sheet expanding one action's details (done criteria, template, deep link) — replaces expanded MicroActionRow | `ActionPlanViewModel` (read action, commit) |
-| `CelebrationOverlay` | Full-screen overlay: Lottie animation + confetti burst + haptics; auto-dismisses after N seconds | `ActionPlanViewModel` (reads `celebrationState`) |
-| `PlanCompletionView` | Full-screen dedicated screen: summary stats, big celebration, "what's next" CTA | `ActionPlanViewModel` (triggered when all done) |
-| `ProgressRingView` | Circular trim-based progress ring showing X/total; replaces progress bar | `ActionPlanViewModel` (reads `progress`) |
-| `HapticEngine` | Namespace of static helpers wrapping `UIImpactFeedbackGenerator` / `UINotificationFeedbackGenerator` | Called from ViewModel on MainActor |
-| `ActionIconMapper` | Pure function mapping `MicroAction.actionType` → SF Symbol name + accent color | `ActionCard`, `JourneyNodeView` |
-| `ActionsTabView` | Existing list of plans; gains journey-path entry points per plan | `ActionsTabViewModel` (unchanged) |
+## Component Boundaries: New vs Modified
 
-## Recommended Project Structure
+### New Components
 
-```
-Abimo/
-├── Models/
-│   └── ActionPlan.swift          # unchanged — reuse as-is
-├── ViewModels/
-│   └── ActionPlanViewModel.swift # extend with celebrationState, justCompletedAction
-├── Views/
-│   ├── ActionPlan/
-│   │   ├── ActionsTabView.swift            # existing — minor updates
-│   │   ├── ActionPlanDetailView.swift      # replace body with JourneyPathView
-│   │   ├── Journey/
-│   │   │   ├── JourneyPathView.swift       # new — main journey scroll canvas
-│   │   │   ├── JourneyNodeView.swift       # new — individual path node
-│   │   │   └── ProgressRingView.swift      # new — circular progress indicator
-│   │   ├── Cards/
-│   │   │   ├── ActionDetailSheet.swift     # new — replaces MicroActionRow expanded state
-│   │   │   └── ActionIconMapper.swift      # new — type → emoji/SF symbol mapping
-│   │   ├── Celebration/
-│   │   │   ├── CelebrationOverlay.swift    # new — per-action celebration
-│   │   │   └── PlanCompletionView.swift    # new — all-done screen
-│   │   ├── CommitmentSheet.swift           # existing — reuse unchanged
-│   │   └── MomentumDashboard.swift         # existing — integrate into journey header
-│   └── ...
-├── Utilities/
-│   └── HapticEngine.swift        # new — static haptic helpers
-└── ...
-```
+#### `NodeBubbleView`
+**What it is:** A callout bubble that appears above (or below) a node when tapped, showing the action name and a CTA button ("Start" / "Do this next").
 
-### Structure Rationale
+**Where it lives:** `Views/ActionPlan/Journey/NodeBubbleView.swift`
 
-- **Journey/:** Path layout components are visually distinct and likely to evolve together; isolating them avoids polluting the ActionPlan folder
-- **Cards/:** Action card + icon mapper are tightly coupled; grouping makes the mapping logic easy to find
-- **Celebration/:** Overlay and plan-completion screen share animation lifecycle concerns; co-locating keeps that logic reviewable
+**Integration:** Rendered as an `.overlay` on `JourneyNodeView`, similar to how `InlineConfettiView` is overlaid today. Visibility is controlled by comparing `action.id` against `viewModel.activeNodeId`.
 
-## Architectural Patterns
+**Communicates with:**
+- Parent (`JourneyPathView`) reads `viewModel.activeNodeId` and passes it down to each node via a binding or direct param
+- Tapping the CTA sets `selectedAction` (opens `ActionDetailSheet`) or calls `viewModel.pickAction(_:)` depending on context
 
-### Pattern 1: Celebration State Machine in ViewModel
+#### `ActionPickerSheet`
+**What it is:** A full-height sheet showing all incomplete actions so the user can choose what to do next. Shows after first load and after each completion.
 
-**What:** `celebrationState` is an enum published on `ActionPlanViewModel`. Views subscribe and render the appropriate overlay. The ViewModel drives state transitions, not the View.
+**Where it lives:** `Views/ActionPlan/ActionPickerSheet.swift`
 
-**When to use:** Whenever animation triggers depend on business logic (completing an action, completing all actions). Keeps the View dumb.
+**Integration:** Presented from `ActionPlanDetailView` via `.sheet(isPresented: $viewModel.showActionPicker)`. Replaces or supplements `CommitmentSheet` — these two are structurally similar but serve different moments (commitment = time-scheduled promise; picker = immediate ordering choice).
 
-**Trade-offs:** ViewModel holds UI-adjacent state, which purists dislike. Acceptable here because the state is transient and directly derived from domain events (completion).
+**Communicates with:**
+- `ActionPlanViewModel.pickAction(_:)` — reorders `microActions` array
+- Dismisses via `viewModel.showActionPicker = false`
 
-**Example:**
+#### `CongratsHalfSheet`
+**What it is:** A half-sheet shown immediately after an action is marked complete. Shows a celebration animation and a "Keep the momentum?" prompt that transitions to `ActionPickerSheet`.
+
+**Where it lives:** `Views/ActionPlan/Celebration/CongratsHalfSheet.swift`
+
+**Integration:** Presented from `ActionPlanDetailView` via `.sheet(isPresented: $viewModel.showCongratsSheet)`. Replaces the current `showMomentumPicker` → `MomentumPickerSheet` flow. After the user taps "Keep going", `CongratsHalfSheet` dismisses and `viewModel.showActionPicker` is set to `true`.
+
+**Communicates with:**
+- `ActionPlanViewModel.dismissCongrats()` — dismisses and optionally chains to picker
+- Reads `viewModel.completingActionId` to show the completed action's name/emoji
+
+### Modified Components
+
+#### `JourneyNodeView` (modified)
+**Current behavior:** Tap fires `onTap` closure which sets `selectedAction` in `JourneyPathView`. `ActionDetailSheet` appears immediately.
+
+**New behavior:** Tap reveals `NodeBubbleView` instead of immediately opening the sheet. The bubble shows the action name and a "Start" / "Do this" CTA. Tapping the CTA opens `ActionDetailSheet`. Tapping elsewhere dismisses the bubble.
+
+**Change required:** Replace the direct `onTap: { selectedAction = action }` pattern with a two-step: `onTap: { viewModel.activeNodeId = action.id }`. The CTA inside `NodeBubbleView` then sets `selectedAction`.
+
+**NodeState impact:** Currently `nodeState(at:actions:)` returns `.locked` for all nodes except the first incomplete one. User-driven ordering requires ALL incomplete actions to be `.active` (tappable and showing their emoji). The `.locked` state should be reserved for truly locked mechanics — v1.1 has none, so this free function changes to return `.active` for all incomplete nodes.
+
+#### `ActionPlanDetailView` (modified)
+**Current sheet drivers:**
+
 ```swift
-enum CelebrationState: Equatable {
-    case idle
-    case singleAction(MicroAction)  // "Nice job!" overlay
-    case allComplete                 // plan completion screen
-}
+.sheet(item: $selectedAction)       // ActionDetailSheet
+.sheet(isPresented: $showCommitmentSheet)  // CommitmentSheet (local state)
+.sheet(isPresented: $viewModel.showCommitmentPicker)  // CommitmentSheet (VM driven)
+.sheet(isPresented: $viewModel.showMomentumPicker)    // MomentumPickerSheet
+```
 
+**New sheet drivers to add:**
+
+```swift
+.sheet(isPresented: $viewModel.showCongratsSheet)  // CongratsHalfSheet
+.sheet(isPresented: $viewModel.showActionPicker)   // ActionPickerSheet
+```
+
+The existing `showMomentumPicker` sheet may be retired or replaced by the new `showCongratsSheet` → `showActionPicker` two-step flow. Decision at build time based on whether `MomentumPickerSheet` content is reused.
+
+#### `ActionPlanViewModel` (modified)
+**Current completion flow:**
+
+```
+toggleMicroAction(isCompleted: true)
+  → confirmCompletion()
+  → evaluateCelebrationState()   [sets celebrationState]
+  → completingActionId = id
+  → showMomentumPicker = true    [if remaining actions exist]
+```
+
+**New completion flow:**
+
+```
+toggleMicroAction(isCompleted: true)
+  → confirmCompletion()
+  → evaluateCelebrationState()   [unchanged — inline confetti + milestone still fire]
+  → completingActionId = id
+  → showCongratsSheet = true     [replaces showMomentumPicker]
+```
+
+`showMomentumPicker` and `MomentumPickerSheet` can be removed once `CongratsHalfSheet` + `ActionPickerSheet` replace the flow.
+
+**User-driven ordering:**
+
+`microActions` is currently the authoritative ordered array. Its order is used to determine `NodeState` (first incomplete = `.active`). For user-driven ordering, the ViewModel needs a way to move a chosen action to the "next" position.
+
+Recommended approach: add `var displayOrder: [UUID]` (an array of action IDs in display order) and derive display ordering from it. Alternatively, add a `displayIndex` field to a local wrapper — but that requires a wrapper type.
+
+Simplest correct approach: keep `microActions` as the Supabase-fetched source of truth (ordered by `priority`). Add a separate `@Published var userOrderedIds: [UUID]` that starts empty (meaning "use default order") and is updated when the user picks an action. `orderedActions` becomes a computed property that applies `userOrderedIds` when set, otherwise falls back to `microActions` order.
+
+```swift
 // In ActionPlanViewModel:
-@Published var celebrationState: CelebrationState = .idle
+@Published var userOrderedIds: [UUID] = []
 
-func toggleMicroAction(id: UUID, isCompleted: Bool) async {
-    await confirmCompletion(id: id, ...)
-    let allDone = microActions.allSatisfy(\.isCompleted)
-    celebrationState = allDone ? .allComplete : .singleAction(action)
-    // View auto-dismisses after timeout or user dismiss
+var orderedActions: [MicroAction] {
+    guard !userOrderedIds.isEmpty else { return microActions }
+    let idOrder = userOrderedIds.enumerated().reduce(into: [UUID: Int]()) { $0[$1.element] = $1.offset }
+    return microActions.sorted { (idOrder[$0.id] ?? Int.max) < (idOrder[$1.id] ?? Int.max) }
+}
+
+func pickAction(_ action: MicroAction) {
+    // Move chosen action to first incomplete slot
+    var ids = userOrderedIds.isEmpty
+        ? microActions.map(\.id)
+        : userOrderedIds
+    ids.removeAll { $0 == action.id }
+    let firstIncompleteIdx = ids.firstIndex(where: { id in
+        microActions.first(where: { $0.id == id })?.isCompleted == false
+    }) ?? ids.endIndex
+    ids.insert(action.id, at: firstIncompleteIdx)
+    userOrderedIds = ids
+    showActionPicker = false
+    HapticEngine.selection()
 }
 ```
 
-### Pattern 2: Journey Node Layout via Offset Staggering
+`JourneyPathView` and `nodeState(at:actions:)` must be updated to use `viewModel.orderedActions` instead of `viewModel.microActions`.
 
-**What:** Render `MicroAction` nodes in a `ScrollView > VStack`. Each node is a `ZStack` containing a circle button and a connecting vertical line to the next node. Alternate left/right horizontal offsets to create the zigzag path feel.
+#### `PlanCompletionView` (modified)
+**Current state:** Has a `Color.clear.frame(height: 48)` placeholder for "What's next" (CELB-04 deferred). The "Done" button dismisses the view.
 
-**When to use:** The path must scroll and doesn't require actual curved geometry. Offset staggering is simpler than Path-following and performs better because it avoids GeometryReader in the hot scroll path.
+**v1.1 change:** The two-step completion sheet (`CongratsHalfSheet` → `ActionPickerSheet`) applies to *per-action* completions, not plan completion. `PlanCompletionView` is the end state when all actions are done — it stays full-screen, no picker needed. The placeholder can remain deferred.
 
-**Trade-offs:** Zigzag is visual only (not a true bezier path). Sufficient for Duolingo-style feel without the complexity of scrollView-relative position tracking.
+No functional change to `PlanCompletionView` is required for v1.1.
 
-**Example:**
-```swift
-struct JourneyPathView: View {
-    @ObservedObject var viewModel: ActionPlanViewModel
-
-    // Alternate offsets: even index = left, odd = right
-    private func offset(for index: Int) -> CGFloat {
-        let baseOffset: CGFloat = 60
-        return index.isMultiple(of: 2) ? -baseOffset : baseOffset
-    }
-
-    var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 0) {
-                ForEach(Array(viewModel.microActions.enumerated()), id: \.element.id) { index, action in
-                    JourneyNodeView(action: action, index: index)
-                        .offset(x: offset(for: index))
-                        .padding(.vertical, 20)
-                }
-            }
-            .padding(.horizontal, 40)
-        }
-    }
-}
-```
-
-### Pattern 3: Overlay Coordination via ZStack at Root of Detail View
-
-**What:** `ActionPlanDetailView` (or its replacement) wraps its content in a `ZStack`. The `CelebrationOverlay` and `PlanCompletionView` sit above the journey content in that stack. Visibility is driven by `celebrationState`.
-
-**When to use:** Whenever a celebration must cover the full view without a navigation push (celebrations are transient, not navigated to).
-
-**Trade-offs:** ZStack overlays are simpler than NavigationStack pushes for transient celebrations. The overlay does not persist in navigation history. A full-screen `PlanCompletionView` that the user explicitly dismisses may warrant a navigation push instead — evaluate at build time.
-
-**Example:**
-```swift
-// In ActionPlanDetailView:
-ZStack {
-    JourneyPathView(viewModel: viewModel)
-
-    if case .singleAction(let action) = viewModel.celebrationState {
-        CelebrationOverlay(action: action) {
-            viewModel.celebrationState = .idle
-        }
-        .transition(.opacity)
-        .zIndex(1)
-    }
-
-    if viewModel.celebrationState == .allComplete {
-        PlanCompletionView(viewModel: viewModel)
-            .transition(.move(edge: .bottom).combined(with: .opacity))
-            .zIndex(2)
-    }
-}
-.animation(.easeInOut(duration: 0.3), value: viewModel.celebrationState)
-```
-
-### Pattern 4: Reduce-Motion Guard at Animation Sites
-
-**What:** Read `@Environment(\.accessibilityReduceMotion)` in each animated component. Replace motion-heavy animations with instant state changes or simple fades.
-
-**When to use:** Any component that uses spring animations, confetti particles, Lottie, or positional transitions must gate on this setting.
-
-**Trade-offs:** Adds a line of code per animated view. Worth it — Accessibility is non-negotiable per project constraints.
-
-**Example:**
-```swift
-struct CelebrationOverlay: View {
-    @Environment(\.accessibilityReduceMotion) var reduceMotion
-
-    var body: some View {
-        ZStack {
-            if !reduceMotion {
-                // ConfettiSwiftUI or Lottie
-                LottieView(animation: .named("celebration"))
-                    .playbackMode(.playing(.fromProgress(0, toProgress: 1, loopMode: .playOnce)))
-            }
-            // Text "Nice job!" always shown regardless of motion setting
-            celebrationText
-        }
-    }
-}
-```
-
-### Pattern 5: Lottie via LottieView (SwiftUI native API, v4.3+)
-
-**What:** Use `LottieView` from `lottie-ios` v4.3+ which provides a declarative SwiftUI component. Use `.playbackMode()` to control play/stop. Bind play trigger to `celebrationState`.
-
-**When to use:** Celebration animations (confetti burst, checkmark, stars). Not for every interaction — only the "Nice job!" and plan-complete moments.
-
-**Trade-offs:** Lottie adds SPM dependency. The `.lottie` bundle format (dotLottie) is smaller and faster than `.json` — prefer it for bundled animations. Must source free/licensed animations from LottieFiles or create custom ones.
-
-**Example:**
-```swift
-LottieView(animation: .named("celebration-stars"))
-    .playbackMode(.playing(.fromProgress(0, toProgress: 1, loopMode: .playOnce)))
-    .animationDidFinish { _ in
-        onDismiss()
-    }
-    .frame(width: 200, height: 200)
-```
+---
 
 ## Data Flow
 
-### Action Completion Flow
+### First Visit Flow (Action Picker on Load)
 
 ```
-User taps node in JourneyNodeView
+ActionPlanDetailView.task { await viewModel.loadActionPlan() }
     ↓
-JourneyPathView calls viewModel.toggleMicroAction(id:, isCompleted: true)
+loadActionPlan() completes, microActions populated
     ↓
-ActionPlanViewModel.toggleMicroAction()
-    → optimistic local update to microActions[idx].isCompleted
-    → UIImpactFeedbackGenerator.impactOccurred(.medium)  [haptic]
-    → HapticEngine.completion()
-    → supabase.toggleMicroAction() [persisted]
-    → sets celebrationState = .singleAction(action) OR .allComplete
+ViewModel checks: activeCommitment == nil && completedCount == 0
+    → showActionPicker = true    [first visit trigger]
     ↓
-CelebrationOverlay appears (ZStack overlay reacts to celebrationState)
-    → Lottie animation plays
-    → ConfettiSwiftUI burst triggers
-    → UINotificationFeedbackGenerator.notificationOccurred(.success)
+ActionPickerSheet appears
+User taps an action → viewModel.pickAction(action)
+    → userOrderedIds updated (chosen action moves to slot 0)
+    → showActionPicker = false
     ↓
-User dismisses OR auto-dismiss after 2.5s
-    → celebrationState = .idle
-    → overlay fades out
-    ↓
-JourneyPathView re-renders: completed node shows filled checkmark state
+JourneyPathView re-renders using orderedActions
+    → chosen action is now at top node, shows .active state
+    → ScrollView auto-scrolls to it (existing .task scroll logic)
 ```
 
-### State Management
+### Node Tap → Bubble → CTA Flow
 
 ```
-[ActionPlanViewModel]
-    @Published microActions        → JourneyPathView (node states)
-    @Published progress            → ProgressRingView (ring fill)
-    @Published celebrationState    → ActionPlanDetailView ZStack (overlay visibility)
-    @Published activeCommitment    → JourneyNodeView (committed badge)
-    @Published justCompletedAction → CelebrationOverlay (action text)
+User taps node circle
+    ↓
+JourneyNodeView.onTap fires
+    → viewModel.activeNodeId = action.id
+    ↓
+NodeBubbleView appears over that node (overlay driven by activeNodeId == action.id)
+    → Shows: action.text + CTA button ("Start" / "Do this")
+    ↓
+User taps CTA
+    → selectedAction = action    [sets ActionDetailSheet binding]
+    → viewModel.activeNodeId = nil    [dismisses bubble]
+    ↓
+ActionDetailSheet appears (existing sheet flow, unchanged)
+    ↓
+User taps "Mark Complete"
+    → dismiss() + viewModel.toggleMicroAction(id:, isCompleted: true)
+    [existing completion flow continues from here]
 
-[User Action]
-    tap node → toggleMicroAction() → mutates microActions → UI updates
-    tap commit → commitToAction() → mutates activeCommitment → committed badge updates
-    celebrate dismiss → celebrationState = .idle → overlay fades
+User taps outside bubble
+    → viewModel.activeNodeId = nil    [dismiss on background tap]
 ```
 
-### Key Data Flows
+### Completion → Two-Step Sheet Flow
 
-1. **Type-to-icon mapping:** `MicroAction.actionType` → `ActionIconMapper.icon(for:)` → SF Symbol name + Color. Pure function, no async. Called in `JourneyNodeView` and `ActionDetailSheet` at render time.
+```
+toggleMicroAction(id:, isCompleted: true)
+    ↓
+confirmCompletion() [optimistic update, Supabase persist]
+evaluateCelebrationState() [inlineConfetti or milestone fires as before]
+    ↓
+completingActionId = id
+showCongratsSheet = true
+    ↓
+CongratsHalfSheet appears (.medium detent)
+    → Lottie/confetti animation plays
+    → Shows completed action name + "Keep the momentum?" prompt
+    ↓
+User taps "Keep going"
+    → viewModel.dismissCongrats()
+      → showCongratsSheet = false
+      → showActionPicker = true (if remaining actions exist)
+    ↓
+ActionPickerSheet appears (.large detent)
+    → Shows all incomplete actions
+    → User picks next → viewModel.pickAction(action)
+    → showActionPicker = false
+    ↓
+JourneyPathView: chosen action is now in next node slot
+```
 
-2. **Plan completion detection:** Computed in `ActionPlanViewModel.toggleMicroAction()` by checking `microActions.allSatisfy(\.isCompleted)` after optimistic update. No backend query needed. Sets `celebrationState = .allComplete`.
+### State Management Summary
 
-3. **Progress ring update:** `ProgressRingView` observes `viewModel.progress` (computed Double). Animates `.trim(from:to:)` with `.animation(.spring(response: 0.5, dampingFraction: 0.8), value: progress)`.
+```
+ActionPlanViewModel @Published state → driven views:
 
-## Scaling Considerations
+  microActions          → JourneyPathView (all nodes)
+  orderedActions        → JourneyPathView (display order) [NEW computed]
+  celebrationState      → ActionPlanDetailView ZStack overlays [unchanged]
+  justCompletedActionId → JourneyNodeView unlock animation [unchanged]
+  activeNodeId          → JourneyNodeView bubble visibility [NEW]
+  showCongratsSheet     → ActionPlanDetailView sheet [NEW, replaces showMomentumPicker]
+  showActionPicker      → ActionPlanDetailView sheet [NEW]
+  completingActionId    → CongratsHalfSheet (completed action display) [unchanged field]
+  showCommitmentPicker  → CommitmentSheet [unchanged]
+```
 
-This is a single-user mobile app. Scaling here means feature complexity, not server load.
+---
 
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| Current milestone (journey + celebrations) | Single ViewModel, ZStack overlay pattern, all in ActionPlan/ group |
-| If celebration logic grows (streaks, XP, badges) | Extract `CelebrationCoordinator` class that `ActionPlanViewModel` delegates to — prevents ViewModel bloat |
-| If multiple animation types proliferate | `AnimationRegistry` mapping celebration type → Lottie file name + confetti config |
+## Recommended Project Structure (v1.1 additions)
 
-### Scaling Priorities
+```
+Abimo/
+├── ViewModels/
+│   └── ActionPlanViewModel.swift       # MODIFIED: add activeNodeId, showCongratsSheet,
+│                                       #   showActionPicker, userOrderedIds, orderedActions,
+│                                       #   pickAction(), dismissCongrats()
+├── Views/
+│   ├── ActionPlan/
+│   │   ├── ActionPlanDetailView.swift  # MODIFIED: add 2 new .sheet modifiers
+│   │   ├── Journey/
+│   │   │   ├── JourneyPathView.swift   # MODIFIED: use orderedActions, pass activeNodeId
+│   │   │   ├── JourneyNodeView.swift   # MODIFIED: tap → bubble instead of direct sheet
+│   │   │   └── NodeBubbleView.swift    # NEW: callout bubble with action name + CTA
+│   │   ├── ActionPickerSheet.swift     # NEW: full list of incomplete actions for user choice
+│   │   └── Celebration/
+│   │       ├── CongratsHalfSheet.swift # NEW: post-completion half-sheet (replaces MomentumPickerSheet)
+│   │       └── PlanCompletionView.swift # unchanged
+```
 
-1. **First bottleneck:** `ActionPlanViewModel` becomes bloated if it accumulates celebration + streak + nudge + commitment logic. Mitigation: extract `CelebrationCoordinator` early.
-2. **Second bottleneck:** Journey path scroll performance if node count grows beyond ~15. Mitigation: `LazyVStack` instead of `VStack` in `JourneyPathView`.
+### What Does NOT Change
 
-## Anti-Patterns
+- `ActionDetailSheet.swift` — no changes needed; still opens from `selectedAction` binding
+- `CommitmentSheet.swift` — no changes; still driven by `showCommitmentPicker`
+- `InlineConfettiView.swift`, `MilestoneBannerView.swift` — no changes
+- `HapticEngine.swift`, `AnimationPolicy.swift`, `ActionIconMapper.swift` — no changes
+- All Models, Services, Utilities — no changes
+- Supabase schema — no changes; `userOrderedIds` is client-only state, not persisted
 
-### Anti-Pattern 1: Triggering Animations from View, Not ViewModel
+---
 
-**What people do:** Put `withAnimation {}` blocks inside `Button` actions in views, calling `celebrationActive = true` directly in the View.
+## Architectural Patterns
 
-**Why it's wrong:** Completion logic (did all actions finish? which celebration to show?) lives in the ViewModel. Views that duplicate this logic diverge and cause bugs. The ViewModel already owns `microActions` — it's the only place that can reliably detect "all done."
+### Pattern 1: Bubble Visibility via Shared `activeNodeId`
 
-**Do this instead:** ViewModel sets `celebrationState`. View observes and renders the appropriate overlay. View does not decide *what* to celebrate, only *how* to render the given state.
+**What:** A single `@Published var activeNodeId: UUID?` on the ViewModel controls which node (if any) shows its bubble. Only one bubble can be visible at a time — setting a new ID implicitly dismisses the previous one.
 
-### Anti-Pattern 2: Putting Lottie/Confetti Directly in JourneyPathView
+**When to use:** Any "one-at-a-time" popover-style UI where SwiftUI's built-in popover is too heavy. Avoids managing multiple `@State var showBubble` per node.
 
-**What people do:** Embed `LottieView` and confetti inside the scroll canvas.
+**Trade-offs:** The ViewModel holds a UI-selection concept. Acceptable because "which node is tapped" is shared across views (JourneyPathView needs to close it on background tap; ActionDetailSheet CTA needs to clear it).
 
-**Why it's wrong:** Celebration overlays must cover the full screen. Embedding inside the scroll hierarchy clips them to the scroll content area and makes z-ordering unpredictable.
+**Example:**
+```swift
+// JourneyNodeView tap:
+Button { viewModel.activeNodeId = action.id } label: { ... }
+    .overlay {
+        if viewModel.activeNodeId == action.id {
+            NodeBubbleView(action: action, onCTA: {
+                viewModel.activeNodeId = nil
+                selectedAction = action
+            })
+        }
+    }
 
-**Do this instead:** `CelebrationOverlay` is a sibling of `JourneyPathView` in the `ZStack` at `ActionPlanDetailView`'s root. It uses `.ignoresSafeArea()` to fill the screen.
+// JourneyPathView background tap to dismiss:
+.onTapGesture { viewModel.activeNodeId = nil }
+```
 
-### Anti-Pattern 3: GeometryReader in Scroll Content for Node Positioning
+### Pattern 2: User Ordering via Client-Side `userOrderedIds`
 
-**What people do:** Wrap every `JourneyNodeView` in `GeometryReader` to calculate exact scroll-relative positions for bezier path drawing.
+**What:** The Supabase `microActions` array (ordered by `priority`) is never mutated by user ordering. Instead, `userOrderedIds: [UUID]` is a client-only array that overrides display order. `orderedActions` is a computed property that applies the override.
 
-**Why it's wrong:** GeometryReader in ScrollView content is fragile, causes layout passes, and is overkill. The visual zigzag effect is achieved with alternating `.offset(x:)` — no scroll position tracking needed.
+**When to use:** When persistence of user ordering is not required (or deferred). The ordering choice resets on app restart, which is acceptable given actions are typically completed in a single session.
 
-**Do this instead:** Offset staggering (Pattern 2 above). Reserve GeometryReader for the connecting-line SVG path only if a true curved line between nodes is required (Phase 2+ enhancement).
+**Trade-offs:** User ordering is lost on restart. If persistence is later required, `userOrderedIds` can be serialized to `UserDefaults` keyed by `actionPlanId` without any Supabase changes.
 
-### Anti-Pattern 4: Blocking Main Thread with Animation Prep
+**Example:**
+```swift
+var orderedActions: [MicroAction] {
+    guard !userOrderedIds.isEmpty else { return microActions }
+    let rank = userOrderedIds.enumerated().reduce(into: [UUID: Int]()) { $0[$1.element] = $1.offset }
+    return microActions.sorted { (rank[$0.id] ?? Int.max) < (rank[$1.id] ?? Int.max) }
+}
+```
 
-**What people do:** Create `UIImpactFeedbackGenerator` instances at the point of use (inside a `Task` or async context).
+### Pattern 3: Two-Step Sheet Chaining via Sequential `@Published` Flags
 
-**Why it's wrong:** The Taptic Engine needs prepare time. Creating the generator at call time introduces latency — haptic fires late or not at all.
+**What:** `CongratsHalfSheet` is dismissed first, then `showActionPicker` is set to `true`. SwiftUI processes one sheet presentation per run loop iteration — setting both simultaneously can cause the second sheet to be silently dropped.
 
-**Do this instead:** Use `HapticEngine` as a namespace of pre-configured `static let` generators, or call `.prepare()` a beat before anticipated interaction (e.g., when the user starts pressing a node).
+**When to use:** Any time two `.sheet` modifiers on the same view need to chain (one dismisses, other presents).
+
+**Trade-offs:** A small `Task.sleep` or `DispatchQueue.main.asyncAfter` may be needed between dismiss and present to let SwiftUI settle. Test on device — this is a known SwiftUI timing issue.
+
+**Example:**
+```swift
+func dismissCongrats() {
+    showCongratsSheet = false
+    let hasRemaining = microActions.contains(where: { !$0.isCompleted })
+    if hasRemaining {
+        // Give SwiftUI one run loop to process the dismiss before presenting
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+            self?.showActionPicker = true
+        }
+    }
+}
+```
+
+### Pattern 4: `nodeState` Update for User-Driven Ordering
+
+**What:** The current `nodeState(at:actions:)` free function marks only the first incomplete action as `.active`. For user-driven ordering, ALL incomplete actions must be tappable so users can open their bubble and choose.
+
+**Change:** Return `.active` for any incomplete action. Remove the `.locked` case from the v1.1 render path (nodes are only "locked" in a future game-mechanic sense, not in v1.1).
+
+**Example:**
+```swift
+// v1.0 (current):
+func nodeState(at index: Int, actions: [MicroAction]) -> NodeState {
+    let action = actions[index]
+    if action.isCompleted { return .completed }
+    let firstIncompleteIndex = actions.firstIndex(where: { !$0.isCompleted })
+    if firstIncompleteIndex == index { return .active }
+    return .locked   // <-- blocks all non-first nodes
+}
+
+// v1.1:
+func nodeState(at index: Int, actions: [MicroAction]) -> NodeState {
+    actions[index].isCompleted ? .completed : .active
+    // .locked removed — all incomplete actions are tappable
+}
+```
+
+---
 
 ## Integration Points
 
-### External Services
-
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| Supabase (existing) | `toggleMicroAction`, `commitMicroAction` — unchanged async/await | No schema changes needed; completion is already persisted |
-| Lottie (new) | SPM: `lottie-ios` v4.3+ — `LottieView` in `CelebrationOverlay` | Prefer `.lottie` (dotLottie) over `.json` for bundle size; source files from LottieFiles |
-| ConfettiSwiftUI (optional) | SPM: `ConfettiSwiftUI` — single `$counter` Int trigger | Alternative: pure SwiftUI Canvas particle system to avoid extra dependency |
-
 ### Internal Boundaries
 
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| `JourneyPathView` ↔ `ActionPlanViewModel` | `@ObservedObject` + callbacks | View reads Published state; calls ViewModel methods. No reverse dependency. |
-| `CelebrationOverlay` ↔ `ActionPlanViewModel` | Reads `celebrationState`; calls dismiss callback | Overlay is stateless — no @StateObject, no local logic |
-| `ActionDetailSheet` ↔ `ActionPlanViewModel` | `@ObservedObject` pass-through from parent | Sheet receives ViewModel reference; can call `commitToAction` directly |
-| `HapticEngine` ↔ `ActionPlanViewModel` | Direct call — `HapticEngine.completion()` | ViewModel calls on `@MainActor`, synchronous — no async needed |
-| `ActionIconMapper` ↔ `JourneyNodeView` / `ActionDetailSheet` | Pure function call — `ActionIconMapper.symbol(for: action)` | No dependency injection; static or free function |
+| Boundary | Communication | Change in v1.1 |
+|---|---|---|
+| `JourneyPathView` ↔ `ActionPlanViewModel` | `@ObservedObject`, reads `orderedActions`, writes `activeNodeId` | Use `orderedActions` instead of `microActions` directly |
+| `JourneyNodeView` ↔ `JourneyPathView` | `onTap` closure, `activeNodeId` param | `onTap` sets `activeNodeId`; new `activeNodeId` param drives bubble visibility |
+| `NodeBubbleView` ↔ `JourneyNodeView` | Overlay; `onCTA` closure | New component; CTA closure sets `selectedAction` in parent |
+| `ActionPickerSheet` ↔ `ActionPlanViewModel` | `@ObservedObject`; calls `pickAction(_:)` | New sheet; `showActionPicker` is the trigger |
+| `CongratsHalfSheet` ↔ `ActionPlanViewModel` | Reads `completingActionId`; calls `dismissCongrats()` | Replaces `MomentumPickerSheet`; `showCongratsSheet` is the trigger |
+| `ActionPlanDetailView` ↔ `ActionPlanViewModel` | Two new `.sheet(isPresented:)` modifiers added | `showCongratsSheet`, `showActionPicker` |
+| `PlanCompletionView` ↔ `ActionPlanViewModel` | Unchanged — `.planComplete` state, `onDismiss` callback | No change |
+
+### External Services
+
+No new external services in v1.1. Supabase, Lottie, and Vortex dependencies are unchanged. User ordering is client-only state.
+
+---
 
 ## Suggested Build Order
 
-Dependencies flow bottom-up. Build in this order to avoid blockers:
+Dependencies flow bottom-up. Each step is unblocked once the prior step compiles.
 
-1. **`ActionIconMapper`** — pure function, no dependencies. Can be built and tested in isolation.
-2. **`ProgressRingView`** — pure view taking a `Double` progress value. No ViewModel coupling.
-3. **`JourneyNodeView`** — consumes `MicroAction` and an icon from `ActionIconMapper`. Renders completed/active/locked states with checkmark animations.
-4. **`HapticEngine`** — static helpers, no dependencies.
-5. **Extend `ActionPlanViewModel`** — add `celebrationState`, `justCompletedAction`, update `toggleMicroAction` to set celebration state and fire haptics. Gate all-complete detection here.
-6. **`JourneyPathView`** — composes nodes + connecting lines + `ProgressRingView` header. Reads from ViewModel. Replace `ActionPlanDetailView` body.
-7. **`ActionDetailSheet`** — replaces `MicroActionRow` expanded state; re-uses existing template/deep link logic from `MicroActionRow`.
-8. **`CelebrationOverlay`** — reads `celebrationState`. Integrates Lottie + confetti. Includes `accessibilityReduceMotion` guard.
-9. **`PlanCompletionView`** — full-screen all-done screen. Can share animation components from `CelebrationOverlay`.
-10. **Wire `ActionPlanDetailView` ZStack** — compose `JourneyPathView` + overlays. Replace the existing list-based detail body.
+1. **Update `nodeState(at:actions:)` in `JourneyNodeView.swift`**
+   Remove `.locked` return for non-first incomplete nodes. All incomplete nodes become `.active`. This is a one-line change and unblocks bubble UI.
+
+2. **Add `userOrderedIds`, `orderedActions`, `activeNodeId`, `showCongratsSheet`, `showActionPicker`, `pickAction()`, `dismissCongrats()` to `ActionPlanViewModel`**
+   Pure additions to the ViewModel — no deletions yet. This unblocks all downstream view work.
+
+3. **Build `NodeBubbleView`**
+   Pure UI component taking `action: MicroAction`, `onCTA: () -> Void`. No ViewModel coupling. Styled as a callout bubble with action name + CTA label. Verify it positions correctly relative to zigzag offset nodes.
+
+4. **Modify `JourneyNodeView` to show `NodeBubbleView`**
+   Change `onTap` to set `activeNodeId`. Add `activeNodeId: UUID?` param (or binding). Overlay `NodeBubbleView` when `activeNodeId == action.id`. Tap on bubble CTA sets `selectedAction` and clears `activeNodeId`.
+
+5. **Modify `JourneyPathView` to use `orderedActions`**
+   Replace all references to `viewModel.microActions` in `ForEach` with `viewModel.orderedActions`. Pass `viewModel.activeNodeId` down to each `JourneyNodeView`. Add background tap gesture to clear `activeNodeId`.
+
+6. **Build `ActionPickerSheet`**
+   Takes `viewModel: ActionPlanViewModel`. Shows all `viewModel.microActions.filter { !$0.isCompleted }`. Each row taps → `viewModel.pickAction(action)`. Style similar to `CommitmentSheet` but shows all actions, not just top 3, and no schedule toggle.
+
+7. **Build `CongratsHalfSheet`**
+   Takes `viewModel: ActionPlanViewModel`. Shows completed action info (`completingActionId` → look up in `microActions`). Celebration animation (reuse Lottie/Vortex from existing celebration components). CTA "Keep the momentum?" → calls `viewModel.dismissCongrats()`. Presented at `.medium` detent.
+
+8. **Modify `ActionPlanViewModel.toggleMicroAction`**
+   Replace `showMomentumPicker = true` with `showCongratsSheet = true`. Remove `showMomentumPicker` and `MomentumPickerSheet` references.
+
+9. **Wire new sheets into `ActionPlanDetailView`**
+   Add `.sheet(isPresented: $viewModel.showCongratsSheet)` and `.sheet(isPresented: $viewModel.showActionPicker)`. Remove `showMomentumPicker` sheet. Add first-visit trigger in `.task` (after `loadActionPlan`) to set `showActionPicker = true` when no actions are completed yet.
+
+10. **Delete `MomentumPickerSheet` (or repurpose)**
+    If `MomentumPickerSheet` exists, delete it once `CongratsHalfSheet` + `ActionPickerSheet` fully replace its behavior. Confirm no other references before deleting.
+
+---
+
+## Anti-Patterns
+
+### Anti-Pattern 1: Opening `ActionDetailSheet` Directly on Node Tap
+
+**What people do:** Keep `onTap: { selectedAction = action }` unchanged, skipping the bubble step.
+
+**Why it's wrong:** The bubble is the v1.1 feature. Without it, users cannot see the action name before committing to the detail sheet. The two-step (bubble preview → sheet) is the UX requirement.
+
+**Do this instead:** Tap reveals bubble. Bubble CTA opens sheet. Tapping elsewhere dismisses bubble.
+
+### Anti-Pattern 2: Mutating `microActions` Order for User Picks
+
+**What people do:** Sort or reorder `microActions` array directly when user picks an action.
+
+**Why it's wrong:** `microActions` is the Supabase-fetched array. Sorting it means the next `loadActionPlan()` call re-fetches in `priority` order and discards the user's pick. It also makes optimistic updates and rollback logic fragile.
+
+**Do this instead:** Keep `microActions` as the source-of-truth fetch result. Use `userOrderedIds` + `orderedActions` computed property to apply display ordering without mutating the backing store.
+
+### Anti-Pattern 3: Chaining Sheets with Simultaneous Flag Sets
+
+**What people do:** `showCongratsSheet = false; showActionPicker = true` in the same synchronous call.
+
+**Why it's wrong:** SwiftUI may process both flags in the same render pass and silently drop the second sheet presentation, leaving the user stuck on the dismissed state.
+
+**Do this instead:** Use a brief `DispatchQueue.main.asyncAfter(deadline: .now() + 0.05)` between dismiss and present. This forces SwiftUI to process the dismiss transition before attempting the next presentation.
+
+### Anti-Pattern 4: Showing Bubble via `@State` Inside `JourneyNodeView`
+
+**What people do:** Each `JourneyNodeView` tracks `@State var showBubble = false`.
+
+**Why it's wrong:** If the user taps a second node while a bubble is open, both bubbles would appear simultaneously (no mutual exclusion). Closing requires the user to tap the already-open node again, which is unintuitive.
+
+**Do this instead:** Single `activeNodeId: UUID?` on the ViewModel. Setting any node's ID implicitly clears all other bubbles.
+
+---
 
 ## Sources
 
-- SwiftUI ScrollView documentation and scroll transition modifier: [Beyond scroll views — WWDC23](https://developer.apple.com/videos/play/wwdc2023/10159/)
-- Lottie SwiftUI API (v4.3+): [Lottie 4.3.0 official SwiftUI discussion](https://github.com/airbnb/lottie-ios/discussions/2189)
-- ConfettiSwiftUI library: [simibac/ConfettiSwiftUI](https://github.com/simibac/ConfettiSwiftUI)
-- Reduce Motion accessibility pattern: [HackingWithSwift — reduce animations](https://www.hackingwithswift.com/quick-start/swiftui/how-to-reduce-animations-when-requested)
-- Haptic feedback best practices: [HackingWithSwift — haptic effects](https://www.hackingwithswift.com/books/ios-swiftui/adding-haptic-effects)
-- Progress ring with trim: [Animating a Circular Progress Bar in SwiftUI — Cindori](https://cindori.com/developer/swiftui-animation-rings)
-- ZStack overlay coordination: community MVVM pattern for animation triggers via `@Published` state
+- `ActionPlanViewModel.swift` — actual source, read 2026-03-19
+- `JourneyNodeView.swift` — actual source, read 2026-03-19
+- `JourneyPathView.swift` — actual source, read 2026-03-19
+- `ActionPlanDetailView.swift` — actual source, read 2026-03-19
+- `ActionDetailSheet.swift` — actual source, read 2026-03-19
+- `PlanCompletionView.swift` — actual source, read 2026-03-19
+- `CommitmentSheet.swift` — actual source, read 2026-03-19
+- `ActionPlan.swift` (models) — actual source, read 2026-03-19
+- SwiftUI sheet chaining known issue: community-documented timing requirement for sequential sheet presentations — confirmed in multiple sources (no official Apple documentation; pattern is broadly used)
 
 ---
-*Architecture research for: Gamified journey path UX — Abimo Actions Flow Revamp*
-*Researched: 2026-03-18*
+*Architecture research for: v1.1 Actions Flow UX — Abimo*
+*Researched: 2026-03-19*

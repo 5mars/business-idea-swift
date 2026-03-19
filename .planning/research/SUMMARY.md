@@ -1,17 +1,17 @@
 # Project Research Summary
 
-**Project:** Abimo — Actions Flow Revamp (Gamified UX Layer)
-**Domain:** Gamified micro-action completion UX in SwiftUI — Duolingo-style journey path, celebration screens, haptic feedback
-**Researched:** 2026-03-18
-**Confidence:** MEDIUM-HIGH
+**Project:** Abimo v1.1 — Actions Flow UX
+**Domain:** SwiftUI gamified micro-action journey path — action picker, node tap bubbles, user-driven ordering, two-step completion sheet
+**Researched:** 2026-03-19
+**Confidence:** HIGH
 
 ## Executive Summary
 
-Abimo's actions flow revamp is a well-scoped gamification layer on an existing SwiftUI/Supabase app. The goal is to replace a flat micro-action list with a spatially engaging journey path (vertical node map in the style of Duolingo's 2022 redesign) and to wrap action completions in satisfying celebration moments — animated checkmarks, full-screen confetti overlays, and haptic feedback. The domain is well-documented: Duolingo's design decisions have been publicly analyzed in depth, and all required technical primitives are available as iOS 17/18 built-ins or small, mature SPM packages (Lottie, Vortex). No new backend schema is required; the existing `MicroAction` and `ActionPlan` models already carry the completion state this feature needs.
+Abimo v1.1 is a pure SwiftUI enhancement milestone layered onto an already-shipped v1.0 codebase. The four target features (tap-to-reveal node bubbles, action picker screen, user-driven action ordering, and two-step congrats-to-picker completion flow) are all buildable with zero new dependencies using native SwiftUI APIs available within the iOS 26.2 deployment target. The existing Lottie and Vortex packages cover every animation need. The single recommended package change is a minor version bump of lottie-spm from 4.5.x to 4.6.0, which is a drop-in upgrade. All conclusions are drawn from direct reads of the actual source files — confidence is high because nothing is inferred.
 
-The recommended approach is to build in clear dependency order — foundation utilities first (icon mapping, haptic helpers, AnimationPolicy), then the journey path and card states, then the celebration overlay system, and finally the full-plan completion screen as a natural extension of the celebration infrastructure. Two third-party packages cover animation needs that go beyond SwiftUI's built-ins: `lottie-spm` (4.5.x) for authored celebration animations and `Vortex` (1.0.4) for confetti particle bursts. Everything else — haptics, spring animations, scroll snapping, hero transitions — is covered by iOS 17+ built-in APIs.
+The recommended approach is to treat this milestone as a layered extension of the existing `ActionPlanViewModel` → `JourneyPathView` → `JourneyNodeView` architecture. Two new views (`NodeBubbleView`, `ActionPickerSheet`) and one new sheet (`CongratsHalfSheet`) are added. The critical ViewModel changes are: adding `activeNodeId: UUID?` for mutual-exclusion bubble control, replacing `showMomentumPicker` with a `PostCompletionSheet` enum that drives the two-step flow as a single sheet rather than two competing boolean flags, and adding `userOrderedIds: [UUID]` plus an `orderedActions` computed property that applies user picks without mutating the Supabase-fetched `microActions` array.
 
-The primary risks are technical rather than strategic. Lottie is powerful but has well-documented pitfalls: it must not be placed in scrollable list cells (causes CPU/memory spikes), its `.automatic` rendering engine silently falls back to the main thread when animation files use unsupported AE features, and it must be coordinated with `accessibilityReduceMotion` at every call site. The UX risk is over-gamification: applying celebration modals to every micro-action (appropriate for Duolingo's one-action-per-session model) creates friction in Abimo's multi-action-per-session loop. The fix is a deliberate two-tier celebration model — inline non-blocking feedback for individual actions, full-screen celebration reserved for plan completion.
+The primary risks are two SwiftUI-specific traps that must be addressed before any view work begins. First, the current `nodeState(at:actions:)` function uses array index position as a proxy for ordering — user-driven reordering will produce two simultaneous `.active` nodes unless `JourneyPathView` switches to `viewModel.orderedActions` before the picker UI is built. Second, driving the congrats → picker transition with two independent booleans will cause SwiftUI's sheet queue to silently drop the second presentation. Both traps are low recovery cost at design time and high cost if discovered mid-integration.
 
 ---
 
@@ -19,116 +19,125 @@ The primary risks are technical rather than strategic. Lottie is powerful but ha
 
 ### Recommended Stack
 
-The entire feature is achievable with two SPM packages plus iOS 17/18 built-ins. `lottie-spm` (not `lottie-ios`) provides the `LottieView` SwiftUI component for authored celebration animations; the `lottie-spm` variant has an ~500 KB footprint vs. 300+ MB for the main repo's git history and is identical at runtime. `Vortex` (1.0.4, by Paul Hudson) provides Metal-backed confetti particle bursts as a pure SwiftUI composable — no UIKit bridging, composes naturally with `ZStack`. All haptic feedback is handled by SwiftUI's `.sensoryFeedback` modifier (iOS 17+), which replaces the UIKit `UIFeedbackGenerator` wrapper pattern. Animation sequencing uses `KeyframeAnimator` and `withAnimation(.spring(duration:bounce:))` with completion closures (iOS 17+). The journey path scroll uses `ScrollViewReader` + `scrollTargetBehavior(.viewAligned)` for snap-to-node behavior. Hero transitions use `matchedTransitionSource` + `.zoom` NavigationTransition on iOS 18 (available given the Xcode 26.2 toolchain), with `matchedGeometryEffect` as the iOS 17 fallback.
+No new dependencies. All four v1.1 features are built entirely from native SwiftUI APIs available at the iOS 26.2 deployment target: `.popover` + `.presentationCompactAdaptation(.popover)` for node bubbles, `presentationDetents(selection:)` for programmatic detent control, `interactiveDismissDisabled` to lock the congrats step, `matchedGeometryEffect` for the picker card → journey node transition, and `LazyVGrid` for the 2-column action picker layout. The existing Lottie `trophy.json` asset is reused as-is — adding new Lottie JSON files is explicitly an anti-feature.
 
 **Core technologies:**
-- `lottie-spm` 4.5.x: authored celebration/confetti JSON animations — industry standard, native SwiftUI API, ~500 KB package size
-- `Vortex` 1.0.4: particle confetti burst — pure SwiftUI, Metal-backed, zero UIKit bridging
-- `.sensoryFeedback` modifier (iOS 17+ built-in): haptic feedback on completions and commit toggles — zero-dependency, declarative
-- `KeyframeAnimator` + `withAnimation` completion (iOS 17+ built-in): multi-stage celebration animation sequencing — no third-party sequencer needed
-- `scrollTargetBehavior(.viewAligned)` (iOS 17+ built-in): snap-to-active-node scroll behavior — no paging library needed
-- `matchedTransitionSource` + `.zoom` (iOS 18+ built-in): hero card-to-celebration transition
+- SwiftUI native APIs (iOS 16.4+): All required APIs ship with the iOS 26.2 SDK — no installation required
+- lottie-spm 4.6.0 (upgrade from 4.5.x): Congrats animation reusing existing `trophy.json` — drop-in upgrade, `LottieView` API unchanged since 4.3.0
+- Vortex 1.0.4 (no change): Node bubble and completion particle effects — already at latest tag; no version bump needed
+- `matchedGeometryEffect` + `@Namespace`: Action picker card → journey node visual continuity — native, zero dependencies
+- `presentationDetents([.medium, .large], selection:)`: Two-step sheet expansion without dismiss/re-present cycle — only native approach that avoids a visual gap
+
+**What not to add:** No drag-reorder library (wrong UX model — ordering is tap-to-pick-next, not physical drag). No third-party tooltip library (native `.popover` + `.presentationCompactAdaptation` is a 30-line replacement). No `SheeKit` (iOS 26.2 deployment target makes it redundant). No new Lottie JSON files (reuse `trophy.json`).
 
 ### Expected Features
 
-Features research is grounded in Duolingo design case studies, gamification psychology literature, and direct competitor analysis (Duolingo, Habitica, Forest). The table-stakes list reflects what users expect once the "gamified" interaction paradigm is established; missing any of them breaks the implied contract.
+**Must have (table stakes — required for v1.1 to be complete):**
+- Tap bubble on active node — emoji + action name + time estimate + "Start" CTA that opens detail sheet
+- Tap bubble on locked node — "finish [X] first" message, no CTA (explains prerequisite)
+- Tap bubble on completed node — action name + "Done" badge, read-only (user orientation)
+- Action picker screen on first visit — shows all actions before user touches anything; pre-selects first incomplete
+- User-driven ordering — user's picked action becomes the next `.active` node in-session
+- Congrats half-sheet (step 1) — presented after marking any action done; Lottie trophy + "Keep the momentum?" CTA
+- Two-step sheet sequencing — congrats transitions to action picker via single `PostCompletionSheet` enum, not two sheet presentations
 
-**Must have (table stakes — P1):**
-- Vertical journey path (node map) replacing the flat action list — core spatial metaphor
-- Action card states (locked, current, done) — orientation requires these; path is meaningless without them
-- Celebration screen per action (Lottie confetti) — primary reward moment; absence reads as broken
-- Haptic feedback on completion and commit — iOS users expect physical confirmation
-- Satisfying checkmark animation and card state transition — static checkmarks read as a task manager
-- Type-mapped emoji/icon per action card — visual identity without AI latency
-- Full plan completion summary screen — marks the larger milestone distinctly from a single action
-- Progressive disclosure on cards (expand for templates/deep links) — keeps path visually clean
-- Animated progress ring per plan — "how far am I" at a glance
+**Should have (competitive differentiators, add if time allows):**
+- Local sort persistence via UserDefaults — user ordering survives app restart (no Supabase schema change; keyed by `planId`)
+- Locked-node bubble copy refinement — "Finish '[prev action]' to unlock" rather than generic padlock with no explanation
+- Picker pre-selection — recommended action pre-highlighted using existing `nextRecommendedAction` computed var
 
-**Should have (competitive differentiators — P2):**
-- Contextual celebration copy variation (1st action, midpoint, last) — requires usage validation first
-- Smooth animated node-unlock transition — polish pass after core interactions are stable
-- Momentum dashboard integration into journey path header — consolidation UX
-
-**Defer (v2+):**
-- Sound effects (opt-in toggle)
-- Streak freeze / skip mechanics
-- Badge/achievement wall
-- XP/points system, leaderboards — explicitly excluded; do not add as "small enhancements"
+**Defer (v1.x or v2+):**
+- AI "what's next" edge function — Supabase not ready; client-side `nextRecommendedAction` is sufficient
+- Drag-to-reorder on journey path — user-driven ordering via picker supersedes this
+- Sound effects — explicitly excluded in PROJECT.md
+- XP/points in congrats sheet — no economy exists to spend them
 
 ### Architecture Approach
 
-The architecture fits naturally into the existing MVVM structure. `ActionPlanViewModel` is extended with a `CelebrationState` enum (`idle`, `singleAction(MicroAction)`, `allComplete`) that drives overlay visibility without putting display logic in views. New views are organized into three subgroups under `Views/ActionPlan/`: `Journey/` (path canvas, nodes, progress ring), `Cards/` (action detail sheet, icon mapper), and `Celebration/` (per-action overlay, plan-completion screen). The service layer (Supabase, AI, audio) is untouched. A `HapticEngine` utility namespace and an `AnimationPolicy` accessibility wrapper are foundational utilities that must exist before any animated view is built.
+The v1.0 MVVM architecture remains intact. V1.1 grafts onto it via targeted additions: two new `@Published` properties (`activeNodeId`, unified `PostCompletionSheet` enum), one computed property (`orderedActions`), two new methods (`pickAction(_:)`, `dismissCongrats()`), and three new view files. `JourneyNodeView`, `JourneyPathView`, and `ActionPlanDetailView` are modified. `MomentumPickerSheet` is retired once replaced by `CongratsHalfSheet` + `ActionPickerSheet`. No external services change. Supabase schema is untouched.
 
 **Major components:**
-1. `JourneyPathView` — vertical scroll canvas with staggered node layout and connecting path lines; replaces `ActionPlanDetailView` body
-2. `JourneyNodeView` — single node: emoji icon, locked/active/done states, tap target, checkmark animation
-3. `CelebrationOverlay` — full-screen ZStack sibling (not child) of journey path; Lottie + Vortex confetti + haptics; auto-dismisses
-4. `PlanCompletionView` — all-done dedicated screen; summary stats; reuses CelebrationOverlay animation components
-5. `ActionDetailSheet` — bottom sheet expanding one action's details; replaces expanded `MicroActionRow`
-6. `ProgressRingView` — `Circle().trim()` progress ring observing `viewModel.progress`
-7. `ActionIconMapper` — pure function, `MicroAction.actionType` → SF Symbol + accent color
-8. `HapticEngine` — static pre-configured haptic helpers; called from ViewModel on `@MainActor`
-
-**Key pattern — ZStack overlay coordination:**
-`ActionPlanDetailView` wraps content in a `ZStack`. `CelebrationOverlay` and `PlanCompletionView` are siblings of `JourneyPathView` in that stack, driven by `celebrationState`. They are not pushed onto the `NavigationStack` (transient, no navigation history). This is the critical architectural decision that prevents Lottie from being embedded inside the scroll hierarchy.
+1. `ActionPlanViewModel` (modified) — adds `activeNodeId`, `userOrderedIds`, `orderedActions`, `PostCompletionSheet` enum, `pickAction()`, `dismissCongrats()`
+2. `NodeBubbleView` (new) — callout bubble overlay parameterised by `NodeState`; communicates via `onCTA` closure, no direct ViewModel coupling
+3. `ActionPickerSheet` (new) — `LazyVGrid` 2-column layout of all incomplete actions; calls `viewModel.pickAction(_:)` on confirm; shown on first visit and after each non-final completion
+4. `CongratsHalfSheet` (new) — `.medium` detent half-sheet; Lottie trophy animation; "Keep the momentum?" CTA advances `PostCompletionSheet` enum to `.picker`
+5. `JourneyPathView` (modified) — switches from `viewModel.microActions` to `viewModel.orderedActions`; passes `activeNodeId` to each node; background tap clears `activeNodeId`
+6. `JourneyNodeView` (modified) — tap sets `viewModel.activeNodeId` instead of directly opening `ActionDetailSheet`; overlays `NodeBubbleView` when `activeNodeId == action.id`
 
 ### Critical Pitfalls
 
-1. **Lottie recreated on every SwiftUI re-render** — Use `LottieView` (official API from Lottie 4.3.0+), never a hand-rolled `UIViewRepresentable`. Never place `LottieView` in scrollable list cells — use native SwiftUI animations for card idle states. Reserve Lottie for triggered celebration moments only. Cache `LottieAnimation` objects so JSON is parsed once per session.
+1. **User ordering corrupts `nodeState` machine** — `nodeState(at:actions:)` uses `firstIndex(where: !isCompleted)` on the raw array. Any user reordering not reflected in the array passed to this function produces two simultaneous `.active` nodes. Prevention: switch `JourneyPathView` to pass `viewModel.orderedActions` to `nodeState()` before building the picker UI.
 
-2. **Core Animation silent fallback to main thread** — Lottie's `.automatic` rendering silently falls back when animation files use After Effects expressions, time remapping, or unsupported trim paths. During development, force `.coreAnimation` mode (no fallback) to confirm asset compatibility. Vet every `.json` or `.lottie` file in LottieFiles before integrating.
+2. **Two sheet booleans cause presentation queue race** — SwiftUI processes one `.sheet` per run loop. Setting `showCongratsSheet = false; showActionPicker = true` synchronously drops the second. Prevention: model both steps as a single `PostCompletionSheet` enum; one `.sheet(item:)` reads from it; user's explicit CTA tap advances the enum — no timers, no race.
 
-3. **Celebration modal blocking flow between micro-actions** — A full-screen modal after every micro-action becomes friction (not reward) in a multi-action session. Use inline non-blocking celebration (haptic + checkmark morph, 1.5-2s auto-dismiss) for individual action completions. Full blocking celebration screen is appropriate only for plan completion.
+3. **Tap bubble gesture conflicts with node `Button`** — Overlays rendered inside a `Button` compete for tap gestures. If the bubble has its own CTA `Button`, the parent node `Button` may consume the gesture first. Prevention: drive all bubble visibility from `viewModel.activeNodeId` (mutual exclusion built-in); if conflicts appear, render bubbles at `JourneyPathView` level in a `ZStack`.
 
-4. **`accessibilityReduceMotion` ignored across animation sites** — Create a shared `AnimationPolicy` wrapper at the start of the milestone; all animation sites check it instead of calling UIAccessibility directly. Treat this as foundational infrastructure, not a polish step. Every Lottie call site, `withAnimation` block, and Vortex trigger must route through it.
+4. **`CelebrationState` collision on plan completion** — Adding the congrats half-sheet case inside `CelebrationState` will race with `.planComplete` on the last action. Prevention: keep the congrats half-sheet exclusively in `PostCompletionSheet`; when `celebrationState == .planComplete`, `PostCompletionSheet` stays `.none` — the full-screen overlay IS the celebration for plan completion.
 
-5. **Animation interrupted by async Supabase state update** — Separate local animation state from server-confirmed state. A local `@State var isAnimatingCompletion` drives the visual sequence. Only after animation completes does the ViewModel propagate the server-confirmed state. Never bind Lottie `isPlaying` directly to a `@Published` property that changes during network calls.
+5. **Zombie bubbles on completed nodes** — Bubbles driven by local `@State` inside `JourneyNodeView` are not cleared when a node transitions to `.completed`. Prevention: drive bubble visibility exclusively from `viewModel.activeNodeId`; `pickAction()` and `dismissCongrats()` both clear `activeNodeId` as part of their normal flow.
 
 ---
 
 ## Implications for Roadmap
 
-Based on research, the dependency graph is clear and drives the phase order. The journey path cannot be meaningful without card states. Card states require the icon mapper. The celebration overlay must sit outside the scroll hierarchy (architectural constraint discovered in ARCHITECTURE.md). `accessibilityReduceMotion` must be established before any animation is wired. Suggested phase structure:
+The dependency graph in ARCHITECTURE.md and the pitfall-to-phase mapping in PITFALLS.md converge on the same build order: ViewModel data model first, then node rendering changes, then new sheet UI, then full wiring. Each phase is unblocked by the prior one compiling cleanly.
 
-### Phase 1: Foundation Utilities
-**Rationale:** Three utilities have no dependencies and unblock everything else. Building them first means no animation site is ever written without accessibility support, no haptic call is ever written ad-hoc, and no card is ever rendered without a consistent icon. The PITFALLS research is explicit: `AnimationPolicy` must exist before any animation is wired.
-**Delivers:** `ActionIconMapper` (pure function, fully testable), `HapticEngine` (static namespace), `AnimationPolicy` / `accessibilityReduceMotion` wrapper
-**Avoids:** Pitfall 4 (reduce motion ignored across sites), Pitfall 1 (Lottie in wrong context)
+### Phase 1: ViewModel Foundation + Node State Refactor
 
-### Phase 2: Journey Path and Action Card States
-**Rationale:** The journey path is the core spatial metaphor and the highest-complexity component. Card states (locked/current/done) are a dependency of the path — nodes are meaningless without them. Progressive disclosure (expand/collapse) belongs in this phase because card density without it is poor. This phase replaces the existing flat list body.
-**Delivers:** `JourneyPathView`, `JourneyNodeView` (3 states, checkmark animation, offset staggering), `ProgressRingView`, `ActionDetailSheet` (bottom sheet expanding card details)
-**Uses:** `ActionIconMapper` (Phase 1), `scrollTargetBehavior(.viewAligned)`, `KeyframeAnimator`, `withAnimation(.spring)`, `HapticEngine` (commit haptic)
-**Avoids:** Pitfall 3 (GeometryReader in scroll path), Pitfall 7 (local vs. server animation state — define split here)
+**Rationale:** Every downstream view change depends on `viewModel.orderedActions` existing and `nodeState()` consuming it. This is the safest first step — pure Swift with no UI, verifiable by unit tests before any visual work. Doing this last causes Pitfall 1 (node state machine corruption) to be discovered mid-integration.
 
-### Phase 3: Celebration Overlay System
-**Rationale:** Celebration infrastructure requires the journey path to exist (the overlay sits as a ZStack sibling of `JourneyPathView`). The `CelebrationState` enum extends `ActionPlanViewModel` — the ViewModel must already own `microActions` and `toggleMicroAction`. Lottie assets must be vetted for Core Animation compatibility before this phase begins.
-**Delivers:** `CelebrationOverlay` (per-action, non-blocking, auto-dismiss), `CelebrationState` enum on `ActionPlanViewModel`, Lottie asset integration, Vortex confetti, `.sensoryFeedback(.success)` on completion
-**Uses:** `lottie-spm` 4.5.x, `Vortex` 1.0.4, `AnimationPolicy` (Phase 1), `ZStack` overlay pattern (Architecture Pattern 3)
-**Avoids:** Pitfall 1 (Lottie in scroll cells — overlay is a ZStack sibling), Pitfall 2 (Core Animation fallback — assets vetted before this phase), Pitfall 3 (blocking modals on micro-actions), Pitfall 5 (animation/state race)
+**Delivers:** `userOrderedIds: [UUID]`, `orderedActions` computed property, `activeNodeId: UUID?`, `PostCompletionSheet` enum (replacing two boolean flags), `pickAction()`, `dismissCongrats()` on ViewModel. `nodeState()` updated to return `.active` for all incomplete nodes. `JourneyPathView` switched to `orderedActions`.
 
-### Phase 4: Plan Completion Screen and Polish
-**Rationale:** Plan completion screen is a natural extension of the celebration overlay infrastructure. It reuses `LottieView`, confetti, and haptics. Smooth node-unlock transitions and momentum dashboard integration are polish-level additions that belong after the core loop is stable and validated.
-**Delivers:** `PlanCompletionView` (full-screen all-done, summary stats, CTA), smooth node-unlock transition animation, momentum dashboard integration into journey path header
-**Uses:** All prior phases; `matchedTransitionSource` + `.zoom` for iOS 18 hero transition
-**Avoids:** Pitfall 6 (over-gamification — peak moment is clearly distinct from micro-action completions)
+**Addresses:** User-driven ordering (foundational), action picker (foundational)
+
+**Avoids:** Pitfall 1 (node state machine corruption), Pitfall 4 (CelebrationState collision)
+
+### Phase 2: Tap Bubbles on Nodes
+
+**Rationale:** Depends on Phase 1's `activeNodeId` being in place. `NodeBubbleView` is a self-contained UI component with no sheet dependencies — building it before sheet work keeps UI and navigation concerns separate. Gesture conflict testing can happen here before sheet complexity is added.
+
+**Delivers:** `NodeBubbleView` with content parameterised by `NodeState` (active: "Start" CTA; locked: info-only; completed: read-only recap). Modified `JourneyNodeView` tap handler. Background tap dismissal on `JourneyPathView`.
+
+**Uses:** Native SwiftUI `.overlay(alignment:)`, `opacity` transitions, existing `ActionIconMapper` emoji
+
+**Avoids:** Pitfall 3 (gesture conflicts), Pitfall 6 (zombie bubbles), Pitfall 8 (locked node misleads user about availability)
+
+### Phase 3: Action Picker Sheet
+
+**Rationale:** Depends on Phase 1's `pickAction()` and `orderedActions`. The picker is shown on first visit and as step 2 of the completion flow — building it as a standalone sheet before the congrats sheet means Phase 4 wires to a working component rather than two unfinished ones simultaneously.
+
+**Delivers:** `ActionPickerSheet` — `LazyVGrid` 2-column layout of all incomplete actions, radio-select, confirms via `viewModel.pickAction(_:)`. First-visit trigger in `ActionPlanDetailView.task`. Stale-data guard: `remainingActions` excludes `completingActionId` explicitly and is computed in `onAppear` not view body.
+
+**Uses:** `LazyVGrid`, `presentationDetents([.large])`, existing `ActionIconMapper`, existing `MicroAction` list
+
+**Avoids:** Pitfall 5 (stale data showing just-completed action in picker)
+
+### Phase 4: Two-Step Completion Sheet + Full Wiring
+
+**Rationale:** Depends on Phase 3's `ActionPickerSheet` being complete. This phase replaces the existing `toggleMicroAction` → `showMomentumPicker` flow with the `PostCompletionSheet` enum and retires `MomentumPickerSheet`. This is the highest-risk integration step because it touches `evaluateCelebrationState` and requires careful sheet timing.
+
+**Delivers:** `CongratsHalfSheet` at `.medium` detent with Lottie `trophy.json` animation and "Keep the momentum?" CTA. `ActionPlanDetailView` wired to `PostCompletionSheet` enum via a single `.sheet(item:)`. `MomentumPickerSheet` retired. `DispatchQueue.main.asyncAfter(0.05)` gap in `dismissCongrats()` to let SwiftUI process the dismiss before presenting the picker.
+
+**Uses:** Existing `trophy.json` Lottie asset, `presentationDetents`, `interactiveDismissDisabled`, existing Vortex confetti
+
+**Avoids:** Pitfall 2 (sheet queue race), Pitfall 4 (CelebrationState collision on plan complete)
 
 ### Phase Ordering Rationale
 
-- Foundation utilities (Phase 1) before any animation work is non-negotiable per pitfalls research; retrofitting `AnimationPolicy` across 15+ animation sites is a documented cost avoided by doing it first.
-- Journey path (Phase 2) before celebration (Phase 3) because the overlay is architecturally a sibling of the journey view; building in reverse order would require refactoring the ZStack structure.
-- Card states and progressive disclosure belong together (Phase 2) because the journey path's visual coherence depends on both simultaneously — a path with expanded cards but no lock states, or lock states with no card detail, is not a shippable increment.
-- Plan completion (Phase 4) last because it is an extension of celebration infrastructure, not a prerequisite. Delivering a working journey path and per-action celebration loop is the meaningful v1; plan completion is the capstone.
+- ViewModel before views: All three view phases depend on ViewModel state existing — building UI first requires placeholder state that must be refactored later.
+- Bubbles before sheets: `NodeBubbleView` is self-contained; `ActionPickerSheet` is self-contained; `CongratsHalfSheet` depends on both — natural bottom-up order.
+- Picker before congrats sheet: The "Keep the momentum?" CTA opens the picker — building the picker first means the congrats view wires to a working component.
+- Sheet wiring last: `ActionPlanDetailView` changes and `MomentumPickerSheet` retirement are final integration steps; doing them early creates broken intermediate states.
 
 ### Research Flags
 
-Phases likely needing deeper research during planning:
-- **Phase 2 (Journey Path):** Connecting line drawing between nodes (straight vs. curved bezier) may need a prototype spike. ARCHITECTURE.md recommends offset staggering for the zigzag effect and defers true bezier curves to Phase 2+ — confirm the visual fidelity is acceptable before committing to straight lines.
-- **Phase 3 (Lottie Assets):** Animation file sourcing from LottieFiles requires a pre-build vetting step that is easy to skip. Consider making asset compatibility verification (forced `.coreAnimation` mode test) a required checklist item before Phase 3 begins, not during.
+Phases with well-documented patterns (skip `/gsd:research-phase`):
+- **Phase 1 (ViewModel):** All implementation code is already specified concretely in ARCHITECTURE.md including Swift code snippets. Pure Swift — no API ambiguity.
+- **Phase 3 (Action Picker):** `LazyVGrid` and sheet presentation are standard SwiftUI. Pattern is identical to existing `CommitmentSheet` with a wider action list and different card count.
 
-Phases with standard patterns (skip research-phase):
-- **Phase 1 (Foundation Utilities):** `ActionIconMapper` is a pure function, `HapticEngine` is a well-documented pattern, `AnimationPolicy` is a standard environment key wrapper. No research needed.
-- **Phase 4 (Plan Completion):** Reuses all infrastructure from Phase 3. The only new component is the summary stats display and CTA copy, both of which follow established SwiftUI patterns.
+Phases that may benefit from a focused implementation spike before building:
+- **Phase 2 (Tap Bubbles):** Gesture priority between overlays and parent `Button` inside a `ScrollView` is a documented SwiftUI edge case. Recommend a 1-hour throwaway prototype to verify `activeNodeId`-driven overlay does not conflict with `JourneyPathView`'s `ScrollView` gesture recognizer before committing to production implementation.
+- **Phase 4 (Two-Step Sheet):** The `DispatchQueue.main.asyncAfter` timing for sheet chaining must be verified on a physical device, not just Simulator. Recommend an end-to-end device test immediately after Phase 4 is wired before calling it done — rapid completion scenarios (completing 3 actions back-to-back) are the failure mode.
 
 ---
 
@@ -136,46 +145,49 @@ Phases with standard patterns (skip research-phase):
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | MEDIUM-HIGH | Core choices (Lottie, Vortex, built-in SwiftUI APIs) are well-sourced from official docs and high-credibility community authors. Version pinning (lottie-spm 4.5.x, Vortex 1.0.4) relies on WebSearch and should be verified at time of SPM add. |
-| Features | HIGH | Table-stakes features are grounded in multiple Duolingo case studies and behavioral research. Anti-feature exclusions (XP, leaderboards, sound, badges) are explicitly consistent with PROJECT.md. Competitor analysis corroborates the two-tier celebration model. |
-| Architecture | MEDIUM | MVVM patterns and ZStack overlay coordination are solid and well-documented. Duolingo-specific path layout (offset staggering for zigzag) is inferred from SwiftUI primitives rather than confirmed from a published Duolingo implementation. The staggering approach is the correct call but may require visual tweaking. |
-| Pitfalls | MEDIUM-HIGH | Lottie-specific pitfalls are sourced from active GitHub issues with confirmed reproduction. UX pitfalls (over-gamification, celebration fatigue) are grounded in multiple behavioral research sources. Race condition pitfall (animation vs. async state) is a standard MVVM pattern — well understood. |
+| Stack | HIGH | All API availability confirmed against official Apple documentation. lottie-spm 4.6.0 and Vortex 1.0.4 verified via GitHub tags. Existing codebase read directly — no inference. |
+| Features | HIGH | Table stakes confirmed against Duolingo design documentation. Anti-features are explicit, reasoned, and backed by competitor analysis. Feature dependencies traced to actual source files. |
+| Architecture | HIGH | All conclusions drawn from reading actual source files, not inferred. Build order derived from real dependency graph. Code snippets are concrete, not pseudocode. Component boundaries match the live codebase. |
+| Pitfalls | HIGH (SwiftUI/state), MEDIUM (UX) | SwiftUI sheet queue race and gesture priority pitfalls are first-hand codebase analysis confirmed against actual source. UX pitfalls (bubble fatigue, picker fatigue thresholds) are research and analogy — not A/B tested on Abimo's specific users. |
 
-**Overall confidence:** MEDIUM-HIGH
+**Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **Bezier vs. offset path lines:** ARCHITECTURE.md recommends simple offset staggering for the zigzag path and defers true curved connecting lines. Whether straight line segments or curved beziers are visually required for the desired "Duolingo feel" should be prototyped early in Phase 2 before the full node component is built.
-- **Lottie asset acquisition:** No specific animation files have been sourced yet. LottieFiles.com is identified as the source; "celebration", "checkmark", "star burst" are the search terms. Asset selection and Core Animation compatibility vetting must happen as a pre-Phase-3 task, not during implementation.
-- **iOS 18 deployment target confirmation:** `matchedTransitionSource` + `.zoom` NavigationTransition requires iOS 18+. ARCHITECTURE.md recommends confirming the deployment target from `project.pbxproj` before using without `#available` guards. Given the Xcode 26.2 toolchain this is likely fine, but confirm before Phase 4.
-- **Celebration copy strings:** Positive copy ("You did it!", "Keep going!") is listed as a table-stakes feature. No copy has been drafted. This is a content dependency for Phase 3/4 that should be resolved in planning, not during implementation.
+- **UserDefaults persistence for ordering:** PITFALLS.md and FEATURES.md both identify this as a P2 item — the implementation path is clear (merge Supabase array with locally-stored `[UUID]` in `loadActionPlan`), but the decision of whether to include it in v1.1 or defer to v1.x has not been made. Cheapest to add at Phase 1; retroactively adding it to a shipping ViewModel requires re-testing the entire ordering flow.
+
+- **`matchedGeometryEffect` namespace plumbing:** STACK.md recommends `matchedGeometryEffect` for the picker card → journey node transition, but ARCHITECTURE.md does not trace where `@Namespace` is declared and how it is passed to both `ActionPickerSheet` and `JourneyPathView`. This plumbing must be confirmed feasible — both components are presented from `ActionPlanDetailView`, so the namespace should live there — before committing to the animation in Phase 3.
+
+- **`MomentumPickerSheet` retirement vs. component reuse:** ARCHITECTURE.md recommends removing it once `CongratsHalfSheet` + `ActionPickerSheet` replace its behavior. FEATURES.md implies its card row component should be reused inside `ActionPickerSheet`. Resolve before Phase 4: either extract the row component (preferred — avoids duplication) or replace outright. Deleting without checking all references will cause compile errors.
+
+- **`CommitmentSheet` first-visit replacement:** FEATURES.md indicates `ActionPickerSheet` replaces `CommitmentSheet` on first visit. Confirm `CommitmentSheet` is not used in any flow other than first-visit (check `showCommitmentPicker` call sites in the ViewModel) before modifying the first-visit trigger in Phase 3.
 
 ---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Apple Developer Documentation / WWDC23 — ScrollView `scrollTargetBehavior`, `KeyframeAnimator`, `sensoryFeedback` modifier
-- Paul Hudson / Hacking with Swift — `sensoryFeedback` modifier API, `accessibilityReduceMotion` pattern
-- Swiftwithmajid.com — sensoryFeedback trigger-based pattern
-- Duolingo Engineering Blog — Home screen redesign rationale (journey path)
+- `ActionPlanViewModel.swift` — actual source read 2026-03-19 — ViewModel state, completion flow, `evaluateCelebrationState`, `nodeState()` function
+- `JourneyNodeView.swift`, `JourneyPathView.swift` — actual source read 2026-03-19 — `nodeState()` implementation, tap handling, overlay patterns
+- `ActionPlanDetailView.swift` — actual source read 2026-03-19 — three concurrent `.sheet()` presenters and their boolean conditions
+- `CommitmentSheet.swift`, `ActionDetailSheet.swift`, `PlanCompletionView.swift`, `CompletionReflectionSheet.swift` — actual source read 2026-03-19
+- Apple Developer Documentation: `presentationCompactAdaptation(_:)` — iOS 16.4+ confirmed
+- Apple Developer Documentation: `presentationDetents(_:selection:)` — iOS 16+ confirmed
+- Apple Developer Documentation: `interactiveDismissDisabled(_:)` — iOS 15+ confirmed
+- https://github.com/twostraws/Vortex/tags — Vortex 1.0.4 confirmed as latest tag (Aug 2025)
+- https://github.com/airbnb/lottie-spm/releases — lottie-spm 4.6.0 confirmed as latest release (Jan 2025)
+- project.pbxproj — iOS 26.2 deployment target, SPM package versions confirmed
 
 ### Secondary (MEDIUM confidence)
-- airbnb/lottie-spm GitHub — Package URL, size comparison, version confirmation
-- Lottie 4.3.0 SwiftUI discussion — `LottieView` SwiftUI API confirmation
-- Swift Package Index: Vortex — version 1.0.4, platform support
-- twostraws/Vortex GitHub — built-in confetti preset, pure SwiftUI, SPM URL
-- airbnb/lottie-ios GitHub issues #2516, #2517 — Lottie recreation/performance pitfalls
-- airbnb/lottie-ios GitHub issues #1946, #2060 — Core Animation silent fallback
-- Hacking with Swift — matchedGeometryEffect, matchedTransitionSource patterns
-- Multiple Duolingo UX case studies (UserGuiding, uinkits, Duoplanet, Arounda)
-- Smashing Magazine — streak system UX and psychology
+- Duolingo Help Center, Duolingo Blog, Duoplanet, UserGuiding — bubble tooltip behavior, locked node UX, post-completion celebration flow patterns
+- Apple HIG: Popovers — popover usage guidelines for iPhone
+- Plotline, Mockplus, CleverTap — gamification best practices, two-tier celebration model rationale
 
-### Tertiary (LOW confidence)
-- Medium articles on Lottie memory management and iOS performance — corroborate GitHub issues but are secondary accounts
-- exyte.com blog on KeyframeAnimator — implementation pattern example
+### Tertiary (MEDIUM-LOW confidence)
+- SwiftUI sheet presentation queue limitation — community threads (SwiftUI Forum, Hacking with Swift issues tracker); not officially documented by Apple; pattern broadly reproduced and accepted across the community
+- UserDefaults ordering persistence precedent — Things 3, OmniFocus; analogous app behavior, not directly verified for Abimo's data model
 
 ---
 
-*Research completed: 2026-03-18*
+*Research completed: 2026-03-19*
 *Ready for roadmap: yes*

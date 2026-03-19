@@ -1,176 +1,192 @@
 # Pitfalls Research
 
-**Domain:** Gamified SwiftUI app — Lottie animations, journey path UI, celebration screens
-**Researched:** 2026-03-18
-**Confidence:** MEDIUM-HIGH (Lottie issues confirmed via GitHub issues/discussions; gamification UX from research literature; SwiftUI specifics from WWDC and community sources)
+**Domain:** SwiftUI gamified journey path — action picker, node tap bubbles, user-driven ordering, two-step completion sheet
+**Researched:** 2026-03-19
+**Confidence:** HIGH for SwiftUI/state-management pitfalls (first-hand codebase analysis); MEDIUM for UX pitfalls (research + analogous app patterns)
 
 ---
 
 ## Critical Pitfalls
 
-### Pitfall 1: Lottie UIViewRepresentable Recreated on Every State Change
+### Pitfall 1: User-Chosen Order Corrupts the Node State Machine
 
 **What goes wrong:**
-`LottieAnimationView` is constructed fresh on every SwiftUI re-render because `makeUIView` is called too frequently. In scrollable views like `LazyVStack` or `List`, this causes animation layer creation overhead to accumulate — users see hitches and dropped frames when scrolling past action cards on the journey path. With 5+ animations on screen simultaneously, CPU can spike to 70-80% and memory exceeds 300-500 MB.
+The current `nodeState(at:actions:)` function (in `JourneyNodeView.swift`) derives NodeState from array index position: the first incomplete action at the lowest index is `.active`, everything above it is `.completed`, everything below is `.locked`. When user-driven ordering moves an action to "next" position by changing its array index, any action that previously had a lower index and is now skipped over becomes `.active` — or worse, the ordering logic produces two simultaneous `.active` nodes. The zigzag path and unlock animations fire for the wrong nodes.
 
 **Why it happens:**
-SwiftUI's diffing cannot reuse `UIViewRepresentable` instances the same way UIKit reuses cells. When parent state changes (e.g., a task completes, a scroll offset updates), SwiftUI tears down and rebuilds the hosting view, which recreates the `LottieAnimationView` and re-initialises its animation layer. This was confirmed as the root cause in airbnb/lottie-ios issue #2516 and discussion #2517, with reports active as of January 2025.
+The ordering model assumes array index == progression order. That was fine when AI determined order and users only moved forward. User-driven reordering breaks this implicit contract: the function uses `firstIndex(where: !isCompleted)` to find the active node, but if the user has picked an action from position 4 to be next, position 4 is now semantically "active" while positions 1–3 (incomplete, lower index) still satisfy `firstIndex(where: !isCompleted)` and are incorrectly promoted to `.active`.
 
 **How to avoid:**
-- Use `LottieView` (the official SwiftUI component from Lottie 4.3.0+), not a hand-rolled `UIViewRepresentable`. The official wrapper manages lifecycle better.
-- Trigger Lottie animations only at the moment they are needed (celebration screen appears, action tapped) — do not keep idle Lottie views looping in list cells.
-- On the journey path, use SwiftUI-native animations (spring, scale, checkmark morphing) for per-card idle state. Reserve Lottie for one-off celebration moments.
-- Cache `LottieAnimation` objects with `LottieAnimation.named()` so the JSON is parsed once per session, not on each view creation.
+Introduce an explicit `displayOrder` field (or a separate sorted array on the ViewModel) that carries user-chosen position separate from the `priority` field from the AI. When the user picks action X to be next, swap it to `displayOrder = completedCount + 1`; all other incomplete actions shift their display order up by 1. The `nodeState` function must operate on this display-ordered array, not the raw `microActions` array. Do not mutate `priority` in the database for this — it's AI metadata, not display state.
 
 **Warning signs:**
-- Instruments shows repeated `animationLayerCreation` calls during scroll.
-- Memory climbs linearly as user scrolls through more action cards.
-- CPU > 40% while the journey path is idle (no active gesture).
+- Two nodes simultaneously showing `.active` (coral color) in the journey path.
+- The unlock animation plays on the wrong node after a user picks a different action.
+- `firstIndex(where: !isCompleted)` returns a lower index than the user's chosen action.
 
 **Phase to address:**
-Journey Path phase (building the vertical path and action cards). Establish the no-Lottie-in-list-cells rule before any card UI is built.
+Action Picker + User-Driven Ordering phase. Define the display-order model in the ViewModel before building the picker UI or touch handling.
 
 ---
 
-### Pitfall 2: Core Animation Engine Silent Fallback to Main Thread
+### Pitfall 2: Two Sheets Competing on the Same Boolean Cause Undefined Presentation
 
 **What goes wrong:**
-Lottie 4.0+ defaults to `.automatic` rendering, which uses the Core Animation engine (GPU, off-process, 0% CPU overhead). However, if an animation file uses unsupported features — After Effects expressions, trim paths on filled shapes, time remapping keyframes, or rounded corners on combined shapes — Lottie silently falls back to the Main Thread engine with no warning at runtime. The developer assumes they have GPU rendering; they actually have a CPU-blocking animation that degrades under load.
+`ActionPlanDetailView` currently has three `.sheet()` modifiers driven by separate booleans (`showCommitmentSheet`, `showCommitmentPicker`, `showMomentumPicker`) and one driven by `$selectedAction` (Identifiable). The v1.1 design adds a congrats half-sheet and an action picker that slides in after congrats. If both are driven by independent booleans and they activate in rapid succession (congrats triggers on completion, action picker follows after 1–2 seconds), SwiftUI's sheet presentation queue drops or stacks presentations unpredictably. The user sees the congrats sheet get dismissed and nothing appears, or sees both stacked.
 
 **Why it happens:**
-Designers download animations from LottieFiles without knowing which features they use. The `.automatic` fallback is silent by design; there is no console log or assertion to signal the downgrade. Issues #1946 and #2060 in the lottie-ios repo document cases where `.automatic` mode silently dropped to main thread.
+SwiftUI processes `.sheet` presentations one at a time in a queue. When a second `.sheet(isPresented:)` fires while the first is still animating in, the second is silently deferred or ignored. This is a known SwiftUI limitation on iOS 16/17 — documented in multiple community threads and Apple Feedback reports — where presenting two sheets rapidly results in only one showing. The issue is amplified when timers (e.g., auto-advance after 1.5s) drive the second presentation.
 
 **How to avoid:**
-- Source celebration animations from LottieFiles filtered to "Core Animation compatible" or test explicitly.
-- During development, temporarily set `LottieConfiguration.shared.renderingEngine = .coreAnimation` (no fallback) to force a crash-or-render, confirming the file is compatible.
-- Test each `.json` file in the Lottie Sample App before integrating.
-- Avoid After Effects expressions entirely — they are not supported on iOS at all.
+Model the two-step flow as a single enum state, not two booleans:
+```swift
+enum PostCompletionSheet {
+    case none
+    case congrats(actionId: UUID)
+    case actionPicker(actionId: UUID)
+}
+```
+A single `.sheet(item:)` or `.sheet(isPresented:)` reads from this enum. The congrats view contains a "Keep the momentum?" button that calls `viewModel.advancePostCompletionSheet()`, transitioning the enum to `.actionPicker`. No timers, no race — the user controls the transition. This is the same pattern the existing `CelebrationState` enum uses successfully.
 
 **Warning signs:**
-- Instruments shows Lottie CPU usage above 5% during a celebration animation.
-- The animation plays correctly but the main thread shows > 16ms frame time during playback.
-- Animation appears slightly different between simulator and device (expression evaluation differs).
+- Tapping "Keep the momentum?" sometimes shows nothing.
+- Congrats sheet dismisses but action picker never appears.
+- In debug: `[Warning] Attempt to present ... whose view is not in the window hierarchy`.
 
 **Phase to address:**
-Animation Assets phase (before celebration screens are built). Vet every `.json` asset for Core Animation compatibility before wiring it to any SwiftUI view.
+Two-Step Completion Sheet phase. Define the sheet state enum before any sheet view is built.
 
 ---
 
-### Pitfall 3: Celebration Screen Blocks User After Completion
+### Pitfall 3: Tap Bubbles Block Node Taps and Break the Existing Sheet Flow
 
 **What goes wrong:**
-A "Nice job!" screen appears after every micro-action completion and requires an explicit user tap to dismiss. With 5-10 actions per plan, this becomes friction — users start feeling interrupted rather than rewarded. The celebration designed to motivate becomes the obstacle between the user and their next action.
+Duolingo-style bubbles appear on tap (or hover-like press) above each node showing the action name and a CTA. If the bubble is rendered as an `.overlay` or `.popover` inside the `JourneyNodeView`, the bubble's `View` frame captures tap gestures meant for the node itself, or for the `ActionDetailSheet` trigger in `JourneyPathView`. Users tap a bubble CTA but the gesture goes to the node's `onTap` handler instead — or vice versa, the bubble dismisses before they can tap the CTA.
 
 **Why it happens:**
-Designers model celebration screens on Duolingo's lesson-complete screen, which appears once per session. Applied to per-micro-action completions (which happen multiple times in one sitting), the same mechanic creates a different user experience — one of interruption rather than reward. The pattern is borrowed without accounting for frequency.
+SwiftUI gesture priority is determined by z-order and parent-child relationships. A bubble rendered as an overlay on a `Button` competes with the button's implicit `.onTapGesture`. If the bubble has its own `Button` for the CTA, the parent `Button(action: onTap)` in `JourneyNodeView` may eat the gesture first, depending on whether `.buttonStyle(.plain)` or `.highPriorityGesture` is used.
 
 **How to avoid:**
-- Distinguish between micro-action completions (inline celebration: checkmark animation, haptic, brief color flash — no modal) and full plan completions (dedicated celebration screen is appropriate here).
-- Auto-dismiss celebration overlays after 1.5-2 seconds, or use a non-blocking banner that slides in and out.
-- The dedicated celebration screen described in PROJECT.md ("Nice job!" screen) should only block for the full plan completion, not each micro-action.
+Render bubbles outside the `JourneyNodeView` entirely — at the `JourneyPathView` level as a ZStack overlay, keyed to the currently-selected node. This separates bubble gesture handling from node gesture handling cleanly. The node's `onTap` sets `selectedBubbleActionId` on the ViewModel; the bubble reads from that. The bubble's CTA calls `viewModel.selectActionForNext(id:)` directly. No gesture competition.
+
+If bubbles must live in `JourneyNodeView`, use `.simultaneousGesture(TapGesture())` on the bubble's container and call `.allowsHitTesting(false)` on purely decorative parts.
 
 **Warning signs:**
-- User testing shows repeated tapping through celebration screens without reading them.
-- Session logs show celebration screen dismissed within < 500ms of appearing (users treating it as friction, not reward).
-- Completion rate drops after the celebration screen is introduced.
+- Tapping the bubble CTA sometimes opens the `ActionDetailSheet` instead.
+- Bubble appears but CTA button tap does nothing.
+- The bubble disappears on the first tap before the CTA can be pressed.
 
 **Phase to address:**
-Celebration Screens phase. Define the distinction between inline celebration (non-blocking) and full-plan celebration (blocking, one time) before implementation begins.
+Tap Bubbles on Nodes phase. Decide bubble rendering location (node-level vs. path-level) before implementing bubble gesture handling.
 
 ---
 
-### Pitfall 4: `accessibilityReduceMotion` Ignored or Checked Too Late
+### Pitfall 4: CelebrationState Enum Collision — planComplete vs. Congrats Sheet
 
 **What goes wrong:**
-All Lottie animations, confetti particles, progress ring animations, and journey path transitions play regardless of the user's "Reduce Motion" system preference. For users with vestibular disorders, this causes physical discomfort. It is also an App Store review concern — Apple's HIG explicitly requires respecting Reduce Motion. If it is addressed only at the end, every animation touchpoint must be revisited individually.
+The existing `CelebrationState` enum has `.planComplete` which shows the full-screen `PlanCompletionView`. The v1.1 design adds a congrats half-sheet after each individual action completion. If the congrats half-sheet is added to `CelebrationState` as a new case, the `evaluateCelebrationState` logic that currently picks `.planComplete` when all actions are done could produce an ambiguous state: the last action completes → `.planComplete` fires → but the congrats sheet also fires → two celebrations compete. The full-screen completion view and the half-sheet both try to appear.
 
 **Why it happens:**
-Developers add animations first and treat accessibility as a polish step. The check `UIAccessibility.isReduceMotionEnabled` (or SwiftUI's `@Environment(\.accessibilityReduceMotion)`) is a one-liner, but it must be wired into every animation trigger point. Forgetting even one (e.g., the confetti on plan completion) produces an incomplete implementation.
+The existing `evaluateCelebrationState` function is carefully ordered (checks `allDone` first to take priority over milestones). Adding a new case for the congrats half-sheet without updating this priority logic re-introduces the race. The function comment says "allDone FIRST to ensure planComplete takes priority" — that discipline must extend to any new case.
 
 **How to avoid:**
-- Create a shared `AnimationPolicy` service at the start of the milestone: `var shouldAnimate: Bool { !accessibilityReduceMotion }`. All animation sites check this instead of calling UIAccessibility directly.
-- For Lottie: when reduce motion is active, either skip the animation or show a static first frame using `LottieView(...).playing(false)`.
-- For confetti and SwiftUI animations: wrap all `withAnimation` calls through the policy check.
-- Provide static alternatives: a simple filled checkmark instead of the animated morphing checkmark; a static color change instead of a particle burst.
+Keep the congrats half-sheet in a separate state machine from `CelebrationState`. The existing enum handles ambient journey celebrations (confetti burst, milestone banner, plan complete overlay). The new congrats half-sheet is post-completion navigation — it belongs in a `PostCompletionSheet` enum (see Pitfall 2). These are different concerns: `CelebrationState` drives visual effects on the journey path; `PostCompletionSheet` drives sheet navigation. When the last action is completed, `CelebrationState` goes to `.planComplete` and `PostCompletionSheet` stays `.none` — the full-screen overlay IS the celebration for plan completion.
 
 **Warning signs:**
-- No `accessibilityReduceMotion` text appears in a codebase search during code review.
-- Animations trigger in snapshot tests without a reduce-motion variant.
-- VoiceOver testing reveals animations playing when navigating action cards.
+- The full-screen `PlanCompletionView` and a congrats half-sheet both appear on the last action.
+- `celebrationState` is `.planComplete` but a half-sheet is also presenting.
+- Dismissing the congrats sheet kills the `PlanCompletionView` or leaves it orphaned.
 
 **Phase to address:**
-Phase 1 of the milestone (foundation/setup). Establish the `AnimationPolicy` wrapper before any animation is wired up.
+Two-Step Completion Sheet phase. Audit `evaluateCelebrationState` before adding any new celebration-adjacent state.
 
 ---
 
-### Pitfall 5: VoiceOver Cannot Read Action Cards or Journey Path
+### Pitfall 5: Action Picker Stale Data After Picker Is Shown Repeatedly
 
 **What goes wrong:**
-The journey path is a visually rich custom layout — path nodes, progress indicators, card overlays. VoiceOver has no structured way to traverse it. Action cards with emoji icons, status indicators, and swipe-to-reveal interactions are silent to assistive technology. The app becomes unusable for screen reader users.
+The action picker screen lists all incomplete actions for the user to choose from. If the user opens the picker, picks an action, completes it, then another completion triggers the picker again — the picker's `remainingActions` computed property may return stale data. Specifically, the action the user just completed still appears in the list because the `MicroAction` in the ViewModel has not yet been confirmed by the Supabase write (optimistic UI). The user sees a completed action as a selectable option.
 
 **Why it happens:**
-Custom SwiftUI layouts (especially those using `GeometryReader`, `Canvas`, or `ZStack` with absolute positioning for the path) do not produce accessibility elements automatically. Emoji rendered as decorative visuals have no semantic role. Interactive elements hidden behind gestures (long press, swipe) are invisible to VoiceOver.
+`remainingActions` in `MomentumPickerSheet` filters on `!$0.isCompleted`. The ViewModel's `microActions` array is updated optimistically at the start of `confirmCompletion`, so by the time the picker presents, the completed action should be filtered out. However, if the picker pre-selects the first item in `visibleActions` via `onAppear { selectedActionId = visibleActions.first?.id }`, and the list was computed before the optimistic update landed on the MainActor, the pre-selected action could be the one just completed.
 
 **How to avoid:**
-- Attach `.accessibilityLabel`, `.accessibilityValue`, and `.accessibilityHint` to every action card from the first implementation.
-- Mark purely decorative elements (path line, background shapes) with `.accessibilityHidden(true)`.
-- Ensure hidden interactions (swipe to reveal deep links/templates) are also accessible via `.accessibilityAction`.
-- Use `.accessibilityElement(children: .combine)` on card containers to produce a single tappable element with a complete description.
+Filter actions for the picker using `id != completedActionId` explicitly (already done in `MomentumPickerSheet`), not just `!$0.isCompleted`. Also: compute `remainingActions` lazily after the sheet's `onAppear`, not during body evaluation, so it reads the most current ViewModel state. Add a `.task { }` on the picker that re-evaluates if `viewModel.microActions` changes while the picker is open.
 
 **Warning signs:**
-- VoiceOver reads out "Image" for emoji icons without labels.
-- Navigating the journey path with VoiceOver jumps in non-linear order.
-- Interactive elements in collapsed card state are unreachable without swipe gesture.
+- The action the user just completed appears in the picker list.
+- Pre-selected action is one already marked complete (green checkmark state).
+- Tapping "I'm on it" on a completed action causes a no-op or an error.
 
 **Phase to address:**
-Action Card phase. Bake accessibility labels into the card component before the component is reused across the journey path.
+Action Picker phase. Verify the stale data scenario with a unit test for `remainingActions` computed after an optimistic completion.
 
 ---
 
-### Pitfall 6: Over-Gamification Creates Anxiety Instead of Motivation
+### Pitfall 6: Bubble Persistence After Action Completes (Zombie Bubbles)
 
 **What goes wrong:**
-Streaks, completion counts, and progress rings shift user psychology from "I'm making progress" to "I must not break this." When a user misses a day, the broken streak display communicates failure rather than resumption. Combined with too many visual rewards per session, the app starts to feel like a Skinner box — obligation rather than delight.
+A tap bubble is shown on a node. The user completes that action (e.g., via the action detail sheet). The node transitions from `.active` to `.completed`. The bubble, driven by a local `@State var showBubble: Bool`, is still showing because nothing cleared it. The user now sees a bubble on a green completed node saying "Start this action."
 
 **Why it happens:**
-The mechanics that drive Duolingo engagement (streaks, leagues, loss aversion) work in a language-learning context where daily practice is the core loop. This app's micro-actions are tied to specific plans that may naturally have irregular completion patterns. Applying streak mechanics designed for daily habits to project-based work creates misaligned incentives.
+Tap bubbles driven by local `@State` inside `JourneyNodeView` are not automatically dismissed when the node's `state` changes from `.active` to `.completed`. The state change triggers `onChange(of: state)` for color animation, but there's no built-in mechanism to clear `showBubble`. This is guaranteed to happen when the user taps the bubble CTA → opens the detail sheet → marks complete → sheet dismisses → bubble is still up.
 
 **How to avoid:**
-- Keep streak display positive: show current streak when it's active, show "Welcome back" when resuming, not a broken-streak shame state.
-- The `MomentumDashboard` integration into the journey path should celebrate activity, not punish inactivity.
-- Limit celebrations per session — the full-plan celebration screen is the peak moment; multiple micro-action celebrations should be lighter (haptic + checkmark only, not confetti every time).
-- The PROJECT.md explicitly excluded XP/points and leaderboards — maintain that discipline; do not add them as "small enhancements."
+If bubbles are driven by local `@State`, add an `onChange(of: state) { if newValue == .completed { showBubble = false } }` modifier. Better: drive bubble visibility from the ViewModel (`activeBubbleActionId: UUID?`), so any state change that calls `viewModel.clearBubble()` removes it from all nodes simultaneously. The ViewModel already has precedent for this with `justCompletedActionId`.
 
 **Warning signs:**
-- Designs show a "streak broken" red state prominently.
-- Confetti fires on every single micro-action (3-10 times per session).
-- Users describe the app as "stressful" in early feedback rather than "satisfying."
+- Bubble saying "Do this action" appears on a green completed node.
+- Bubble persists after the ActionDetailSheet marks the action done.
+- Multiple nodes show bubbles simultaneously.
 
 **Phase to address:**
-Celebration Screens and Journey Path phases. Define celebration intensity levels (micro, macro) in the design spec before building.
+Tap Bubbles on Nodes phase. Define bubble lifecycle (what dismisses it) before implementing bubble appearance.
 
 ---
 
-### Pitfall 7: Smooth Transitions Break When Data Reloads Mid-Animation
+### Pitfall 7: User-Chosen Ordering Not Persisted Across App Restarts
 
 **What goes wrong:**
-A user taps to complete an action. The animation sequence begins (haptic → checkmark morphs → card color transitions). Simultaneously, the completion triggers an async Supabase write, and when it resolves, the ViewModel publishes new state. SwiftUI re-renders the journey path mid-animation, causing the card to snap to its final state, or worse, the animation plays on the wrong card.
+The user picks action B to go next (instead of the AI-ordered action A). The in-memory `displayOrder` reflects this. The user closes the app. On restart, `loadActionPlan` fetches `microActions` from Supabase ordered by the `priority` column (AI order). The user's custom ordering is lost — the journey path reverts to AI order.
 
 **Why it happens:**
-SwiftUI animations are interrupted when their driving state changes unexpectedly. If `isCompleted` flips to `true` during a local animation sequence that is also driven by `isCompleted`, the animation and state are fighting. This is a classic MVVM problem: the ViewModel is the source of truth but the UI needs local animation state that exists independently of server-confirmed truth.
+`MicroAction` has a `priority` field (used by AI) and no separate `displayOrder` field. If user ordering is only tracked in-memory (e.g., by array re-sorting on the ViewModel), it doesn't survive a reload. The Supabase `fetchMicroActions` query orders by `priority`, so even if items were persisted with updated `priority`, the next fetch reorders by that column.
 
 **How to avoid:**
-- Separate local animation state from server-confirmed state. Use a local `@State var isAnimatingCompletion: Bool` that drives the visual sequence. Only after the animation completes, propagate the confirmed state from the ViewModel.
-- Use `withAnimation(.spring) { ... }` with a completion callback (`iOS 17+: withAnimation(...) { ... } completion: { ... }`) to sequence: (1) animate, (2) then publish new ViewModel state.
-- Do not bind Lottie `isPlaying` directly to a ViewModel `@Published` property that changes during network calls.
+Two acceptable approaches:
+1. Write a `user_display_order` column to the `micro_actions` table when the user re-orders. Cheap write, persists across restarts. Requires a schema migration (acceptable since PROJECT.md says no Supabase schema changes for v1.1 — **flag this as a constraint**).
+2. Store the ordering client-side only (UserDefaults keyed by `actionPlanId`). Survives app restart, no schema change. Caveat: lost if user changes device or deletes the app.
+
+Given PROJECT.md constraint "No Supabase schema changes", option 2 is the v1.1 approach. The ViewModel `loadActionPlan` should merge the Supabase-fetched array with the locally-stored display order after loading.
 
 **Warning signs:**
-- Cards visually "snap" to their completed state instead of transitioning.
-- Completing an action while on a slow network produces inconsistent animation behavior.
-- The same animation plays twice (once optimistically, once when server confirms).
+- Restarting the app after a user reorder shows AI order again.
+- The journey path "jumps" on first load as it re-orders after the initial render.
+- The committed action (from `activeCommitment`) doesn't match the displayed "next" action after a restart.
 
 **Phase to address:**
-Journey Path / Action Card phase. Define the local-vs-server state split in the card component before connecting to ViewModel.
+User-Driven Ordering phase. Decide persistence strategy (UserDefaults vs. schema) before implementing the ordering logic.
+
+---
+
+### Pitfall 8: Locked Node Bubble Misleads Users About Availability
+
+**What goes wrong:**
+The design spec says "all nodes show tap bubbles (including locked/future)" to help users understand the full path. If the bubble on a locked node shows the same CTA ("Start this action" or "Pick this next") as an active/unlocked node, users tap it expecting to be able to do something — and nothing happens, or an error state appears. This creates confusion, especially when user-driven ordering means they expect to be able to pick any action.
+
+**Why it happens:**
+The bubble CTA is defined once and reused across all node states. The developer assumes "all nodes show bubbles" means identical bubbles, but the UX intent is "preview info bubbles" for locked nodes, not "action bubbles." The distinction is not enforced at the code level.
+
+**How to avoid:**
+Parameterise bubble content by `NodeState`. For `.locked` nodes: show a preview bubble with action name and time estimate, no CTA button — or CTA is "Pick this next" which moves it to next position (user-driven ordering entry point). For `.active` nodes: show the action name + "Start now" CTA opening the detail sheet. For `.completed` nodes: show the completion date or a brief outcome. Encode this in a `BubbleContent` value type computed from `NodeState`.
+
+**Warning signs:**
+- Tapping the "Start" CTA on a locked node shows an error or does nothing.
+- Users report they didn't know they could pick any action (CTA was too generic to imply choice).
+- Locked nodes show an identical bubble to active nodes, removing the locked visual metaphor.
+
+**Phase to address:**
+Tap Bubbles on Nodes phase. Spec bubble content per NodeState before implementing bubble view.
 
 ---
 
@@ -178,12 +194,12 @@ Journey Path / Action Card phase. Define the local-vs-server state split in the 
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Hand-rolled `UIViewRepresentable` wrapper for Lottie | Full control over lifecycle | makeUIView called on every re-render, animation flicker, memory growth | Never — use official `LottieView` from Lottie 4.3.0+ |
-| Lottie animations in every action card cell (idle loops) | Visually rich journey path | 300-500 MB memory, 70-80% CPU during scroll | Never — use native SwiftUI for idle states, Lottie for triggered moments only |
-| Single `@Published` bool driving both local animation and server state | Simple code | Race conditions, animation interruptions on network response | Never for animated state — split local and remote truth |
-| No `AnimationPolicy`/`accessibilityReduceMotion` wrapper | Faster first pass | Every animation site must be revisited individually at QA | Never — costs 30 minutes upfront, saves hours in audit |
-| Confetti on every micro-action completion | More "wow" moments | Repetition fatigue, perceived as noise after first session | Never — reserve confetti for plan completion |
-| `AnyView` wrapping in journey path node views | Easier conditional rendering | SwiftUI cannot diff, forces full redraw of all nodes on any state change | Never in hot-path scrollable views |
+| Driving bubble show/hide from local `@State` per node | Simple, no ViewModel changes | Zombie bubbles on completion; can't clear all bubbles centrally | Only for purely cosmetic states with no external dismissal conditions |
+| Sorting `microActions` array in-place for display order | No new data model needed | Supabase reload re-sorts by `priority`, losing user order | Never — use a parallel display-order array or explicit `displayOrder` property |
+| Two separate booleans for congrats + action picker | Quick to add | SwiftUI sheet queue race, unpredictable presentation | Never — use a single enum state |
+| Adding congrats case to existing `CelebrationState` enum | Reuses existing machinery | Disrupts carefully-ordered `evaluateCelebrationState` priority logic; planComplete vs. congrats collision | Never — congrats sheet is navigation, not a journey path effect |
+| Computing `remainingActions` in picker during view body | Simpler code | Stale data if ViewModel updates during presentation | Never — compute in `onAppear` or via `.task` after sheet presents |
+| Identical bubble content for all NodeStates | One view to build | Confuses users about locked vs. actionable nodes; breaks user-driven ordering UX | Never — parameterise by state |
 
 ---
 
@@ -191,12 +207,12 @@ Journey Path / Action Card phase. Define the local-vs-server state split in the 
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| Lottie SPM | Adding package but using old `UIViewRepresentable` wrapper from tutorials | Use `import Lottie` then `LottieView(name: "animation")` directly — official SwiftUI API since 4.3.0 |
-| Lottie + `.automatic` rendering | Assuming `.automatic` always means Core Animation | Test with `.coreAnimation` (no fallback) in DEBUG to verify asset compatibility |
-| `UIImpactFeedbackGenerator` | Creating a new generator instance on every tap | Instantiate once (at `init` or `onAppear`), call `.prepare()` slightly before expected use, then `.impactOccurred()` |
-| SwiftUI `.sensoryFeedback` (iOS 17+) | Using UIKit generator when the declarative modifier is available | Prefer `.sensoryFeedback(.success, trigger: completedCount)` for SwiftUI-idiomatic haptics |
-| Supabase completion write + animation | Triggering ViewModel state update that kills in-flight animation | Sequence: animate locally first, then confirm to server, then update ViewModel state |
-| `accessibilityReduceMotion` environment | Checking it inside a `LottieView` body vs. at call site | Read `@Environment(\.accessibilityReduceMotion)` at the parent view level and pass a `shouldPlay` binding down |
+| SwiftUI `.sheet` (multiple) | Presenting second sheet while first is animating in | Model multi-step sheet flow as a single enum; transition within one sheet presenter |
+| `nodeState(at:actions:)` global function | Passing raw `microActions` (API order) to this function when display order has been customised | Always pass the display-ordered array, not the raw ViewModel array |
+| `MomentumPickerSheet.remainingActions` | Trusting `!$0.isCompleted` alone to exclude just-completed action | Also filter `$0.id != completedActionId` (already coded; verify it runs after ViewModel optimistic update) |
+| `justCompletedActionId` unlock animation | Relying on array index `completedIndex + 1` for the newly unlocked node | After user-driven ordering, the next node is at `displayOrder` position, not `completedIndex + 1` |
+| UserDefaults ordering persistence | Storing `[UUID]` for display order keyed by `actionPlanId` | Merge on load: map Supabase array by `id`, then sort by stored display-order array; fall back to `priority` if key missing |
+| Lottie + two-step sheet | Playing celebration animation in congrats sheet while route to picker is also queued | Ensure Lottie `playbackMode` is set only after the sheet fully presents (`onAppear`, not `task` with 0 delay) |
 
 ---
 
@@ -204,11 +220,10 @@ Journey Path / Action Card phase. Define the local-vs-server state split in the 
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| Multiple concurrent Lottie instances in visible scroll region | 70-80% CPU, frame drops to 30fps during scroll | Lottie only on celebration screens and triggered moments; native SwiftUI for card idle states | 3+ animated views simultaneously visible |
-| `GeometryReader` wrapping every journey path node | Constant layout recalculation, O(n) on every scroll event | Use `GeometryReader` once at the path container level to get total height; pass fixed offsets to nodes | Any path with > 5 nodes |
-| `withAnimation` on a value that changes from async context | Animation plays twice or not at all | Ensure all ViewModel @Published mutations happen on `@MainActor`; use `.receive(on: DispatchQueue.main)` | Any async Supabase callback |
-| Progress ring `trim` animation on `.onChange` of server data | Ring snaps to final position instead of animating | Drive ring via local `@State` that animates, sync to server value with `withAnimation` | Every action completion with network latency > 100ms |
-| Confetti `CAEmitterLayer` or `SpriteKit` SKEmitterNode not stopped | Memory/GPU grows after celebration exits | Stop and remove emitter layer in `onDisappear` or in the view's deinit | Celebration screen shown 3+ times per session |
+| Action picker re-rendering all rows on every ViewModel publish | Picker list stutters on selection; CPU spikes | Ensure `MicroAction: Hashable` (it is) and use `ForEach(actions, id: \.id)` — avoid `AnyView` wrappers in picker row | Picker lists with 7+ actions and frequent ViewModel publishes |
+| Bubble overlays triggering full node re-layout | Frame drops when bubble appears/disappears | Render bubbles with `.overlay(alignment:)` not `GeometryReader`; use `opacity` transitions not `offset` | Visible path with 5+ nodes |
+| Repeated `onChange(of: viewModel.microActions)` inside picker | Picker reconstructed on every action update | Use `.task(id: viewModel.completedCount)` for selective reactivity in picker | Any completion that fires while picker is open |
+| Sorting array on every SwiftUI body eval | `microActions.sorted(by:)` called O(n log n) on every render | Sort once in `loadActionPlan` and when user reorders; store sorted result in a `@Published var displayOrderedActions` | Plans with 8+ actions and frequent body re-evaluations |
 
 ---
 
@@ -216,25 +231,25 @@ Journey Path / Action Card phase. Define the local-vs-server state split in the 
 
 | Pitfall | User Impact | Better Approach |
 |---------|-------------|-----------------|
-| Celebration modal after every single micro-action | Friction between actions; users tap through without reading | Inline non-blocking celebration (haptic + checkmark morph) for micro-actions; full modal only for plan completion |
-| Streak display showing "broken" state prominently | Shame response; users avoid opening app after a missed day | Show streak when active; show encouraging "Welcome back — keep going" when resuming, never a broken-streak state |
-| Journey path nodes all visible and equally weighted | No sense of progression; path feels like a list in disguise | Lock/dim future nodes, apply subtle scale difference to current node, celebrate reaching new nodes |
-| Hiding all action detail behind gestures | Discovery problem; users don't know tap vs. swipe interaction exists | Show a hint affordance (e.g., chevron icon) on first few cards; use `.contextMenu` for secondary actions |
-| Identical celebration for a 2-minute action and a 2-hour action | Reward feels disproportionate; no sense of milestone weight | Use time-estimate or action type to modulate celebration intensity (standard vs. milestone) |
-| Card animations triggered on list initial load | All cards animate in simultaneously; feels chaotic not polished | Stagger entry animations with increasing delay: `delay = index * 0.05s` |
+| Action picker shown every time the user navigates to the journey path | Picker fatigue; feels like an interruption to resuming work | Show picker only on first visit to a plan AND after each completion; never on return navigation without completion |
+| Two-step sheet auto-advances to action picker without user input | Users who want to rest after completing feel pushed | Congrats sheet has an explicit CTA ("Keep the momentum?") to advance to picker; also a "Later" dismiss |
+| Action picker pre-selects first item and "I'm on it" is immediately tappable | Users accidentally commit to the wrong action | Require an explicit tap on an action card to select it before the CTA activates; no pre-selection default |
+| User reorders actions but the journey path still shows the old node as "active" | Visual confusion — coral active node doesn't match committed action | After user picks an action, immediately re-sort the display array and re-derive NodeState so the chosen action becomes the active node |
+| Bubble appears on tap but stays open while user reads | Second tap to dismiss feels like extra work | Bubble auto-dismisses on scroll, on tap-outside, and when the node's detail sheet opens; do not require a separate dismiss gesture |
+| Celebration in congrats sheet conflicts with milestone banner | Two celebrations fire simultaneously (milestone banner slides down + congrats sheet appears) | Milestone banner auto-dismisses after 2.5s (existing); ensure congrats sheet delays its presentation by 300ms to let banner complete |
 
 ---
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **Lottie reduce motion:** `accessibilityReduceMotion` check exists at every Lottie call site, not just the celebration screen — verify with a search for `LottieView` vs `accessibilityReduceMotion` occurrences.
-- [ ] **Core Animation compatibility:** Every `.json` animation file has been tested with `.coreAnimation` rendering engine forced (not `.automatic`) — verify no fallback warnings appear.
-- [ ] **Haptic feedback on silent mode:** Haptics still fire when device is on silent (correct behavior); sound-dependent feedback removed — verify no `AudioServicesPlaySystemSound` calls in completion handlers.
-- [ ] **Journey path scroll position preserved:** After completing an action, scroll position returns to the same node, not the top — verify `ScrollViewReader` `scrollTo` is called with the correct ID.
-- [ ] **Celebration screen auto-dismiss:** The micro-action inline celebration does not require a tap — verify it dismisses after a fixed duration or on next user gesture.
-- [ ] **VoiceOver traversal order:** Journey path nodes are read top-to-bottom matching visual order — verify with VoiceOver enabled in simulator.
-- [ ] **Animation completion callback on spring animations:** Spring `.withAnimation` completions fire after the imperceptible tail ends, not when visually complete — verify using `completionCriteria: .removed` or a fixed-duration animation for sequencing logic.
-- [ ] **Lottie memory released:** `LottieAnimationView` is not retained after the celebration screen is dismissed — verify with Instruments Leaks template after 5 celebration cycles.
+- [ ] **User ordering persisted:** Picked action stays in position after app backgrounding and foreground return — verify by picking action B, backgrounding, reopening, confirming action B is still shown as next node.
+- [ ] **Bubble cleared on completion:** No bubble remains on a node after that action is marked complete — verify by opening a bubble, opening the detail sheet, marking complete, checking node has no bubble.
+- [ ] **Two-step sheet always reachable:** After every non-final action completion, the congrats sheet appears and the "Keep the momentum?" CTA always transitions to the picker — verify with rapid completions (complete 3 actions in quick succession).
+- [ ] **No bubble on completed nodes:** Completed nodes show no bubble or show a read-only recap bubble — verify all 3 NodeState types in the simulator.
+- [ ] **Picker excludes completed actions:** The just-completed action never appears in the picker list — verify with a unit test on `remainingActions` computed after `confirmCompletion`.
+- [ ] **planComplete does not also show congrats sheet:** When the last action is completed, only the full-screen `PlanCompletionView` appears — verify that `PostCompletionSheet` remains `.none` when `celebrationState == .planComplete`.
+- [ ] **Locked node CTA does not trigger ActionDetailSheet completion flow:** Tapping "Pick this next" on a locked node reorders only — it does not open the detail sheet or attempt to mark the action complete.
+- [ ] **Display order survives loadActionPlan refresh:** A background refresh (e.g., returning from another tab) does not revert the user's custom order — verify by picking an action, navigating to Notes tab, returning, confirming order preserved.
 
 ---
 
@@ -242,12 +257,12 @@ Journey Path / Action Card phase. Define the local-vs-server state split in the 
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Lottie in list cells causing scroll jank | MEDIUM | Replace `LottieView` in cells with native SwiftUI animation; move Lottie to a fullscreen overlay triggered on action tap |
-| Core Animation fallback discovered after assets integrated | LOW | Replace the non-compatible `.json` file; check LottieFiles for alternative with same concept that passes compatibility test |
-| Celebration screen causing user friction (found in user testing) | LOW | Convert blocking modal to non-blocking overlay with `ZStack` + `transition(.opacity)` + `onAppear` timer dismiss |
-| `accessibilityReduceMotion` missed across many call sites | MEDIUM | Add `AnimationPolicy` wrapper; grep for all `LottieView`, `withAnimation`, and `CAEmitterLayer` and route through it |
-| Animation interrupted by async state update | MEDIUM | Add local `@State` animation flags to affected views; audit all `@Published` mutations that fire during animation sequences |
-| Over-gamification feedback from users | LOW-MEDIUM | Reduce celebration intensity (remove confetti from micro-actions); adjust streak display to positive framing; no architectural change needed |
+| Node state machine broken by ordering | MEDIUM | Add explicit `displayOrder` sort to ViewModel; refactor `nodeState` to take display-ordered array — no data model changes needed |
+| Two sheets racing (congrats + picker) | LOW | Merge into `PostCompletionSheet` enum; replace two `.sheet` modifiers with one; congrats view gets an explicit advance CTA |
+| Zombie bubbles on completed nodes | LOW | Add `onChange(of: state)` clearing bubble flag; or move bubble state to ViewModel with `clearBubble()` on completion |
+| Stale data in action picker | LOW | Ensure picker computes `remainingActions` in `onAppear`/`.task`; add explicit `id != completedActionId` guard |
+| User ordering not persisting | LOW-MEDIUM | Add UserDefaults persistence layer in `loadActionPlan` and `selectActionForNext`; no schema change needed |
+| CelebrationState collision (planComplete + congrats) | LOW | Move congrats out of `CelebrationState`; use separate `PostCompletionSheet` enum; audit `evaluateCelebrationState` to guard against `.none`-ing `PostCompletionSheet` on planComplete |
 
 ---
 
@@ -255,31 +270,28 @@ Journey Path / Action Card phase. Define the local-vs-server state split in the 
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| Lottie recreated on re-render | Journey Path / Action Cards phase | Instruments scroll test: CPU < 20% with 10-card path visible |
-| Core Animation silent fallback | Animation Assets (pre-building) | Force `.coreAnimation` mode; all animations play without fallback |
-| Celebration screen blocks flow | Celebration Screens phase design spec | Micro-action completion: no modal appears; plan completion: modal appears once |
-| `accessibilityReduceMotion` ignored | Foundation phase (before any animation) | Grep confirms `AnimationPolicy` or `accessibilityReduceMotion` at every animation site |
-| VoiceOver unreadable cards | Action Card phase | VoiceOver traversal test: all cards read label + status + hint |
-| Over-gamification anxiety | Design phase (celebration spec) | User testing: "satisfying" > "stressful" in feedback; no confetti on micro-actions |
-| Animation/state race condition | Journey Path phase | Complete action on airplane mode: animation plays fully before card updates to completed state |
+| User ordering breaks node state machine | User-Driven Ordering phase | Two `.active` nodes never appear simultaneously; picked action becomes the active node |
+| Two sheets racing | Two-Step Completion Sheet phase | Rapid completion x3: congrats sheet + picker appear reliably every time |
+| Bubble tap conflicts with node tap | Tap Bubbles phase | CTA in bubble always fires correct action; node tap only triggers when bubble is not showing |
+| CelebrationState enum collision | Two-Step Completion Sheet phase | Last action completion shows only `PlanCompletionView`, never a congrats half-sheet simultaneously |
+| Action picker stale data | Action Picker phase | Unit test: `remainingActions` excludes just-completed action immediately after `confirmCompletion` |
+| Zombie bubbles | Tap Bubbles phase | Complete an action via bubble CTA: no bubble remains on the completed node |
+| Order not persisted | User-Driven Ordering phase | Background + foreground the app after picking: custom order preserved |
+| Locked bubble misleads user | Tap Bubbles phase | Locked node bubble shows no "complete" CTA; tapping it offers "pick this next" or info only |
 
 ---
 
 ## Sources
 
-- airbnb/lottie-ios GitHub Discussion #2517 — "Lottie performs poorly in SwiftUI" (January 2025 activity): https://github.com/airbnb/lottie-ios/discussions/2517
-- airbnb/lottie-ios Issue #2516 — SwiftUI performance, `makeUIView` called too frequently: https://github.com/airbnb/lottie-ios/issues/2516
-- airbnb/lottie-ios Issue #1946 — `.automatic` mode not working for some animations (silent fallback): https://github.com/airbnb/lottie-ios/issues/1946
-- Announcing Lottie 4.0 for iOS — Core Animation rendering engine, off-process GPU rendering: https://medium.com/airbnb-engineering/announcing-lottie-4-0-for-ios-d4d226862a54
-- Lottie 4.3.0 SwiftUI support announcement (official `LottieView` component): https://github.com/airbnb/lottie-ios/discussions/2189
-- WCAG 2.1 Compliance for Lottie Animations (LottieFiles Developer Portal): https://developers.lottiefiles.com/docs/resources/wcag/
-- SwiftUI Scroll Performance: The 120FPS Challenge (Jacob's Tech Tavern): https://blog.jacobstechtavern.com/p/swiftui-scroll-performance-the-120fps
-- Demystify SwiftUI performance — WWDC23: https://developer.apple.com/videos/play/wwdc2023/10160/
-- "Avoiding the Pitfalls: Best Practices and Ethical Gamification in UX" (Medium): https://medium.com/@gideonlyomu/avoiding-the-pitfalls-best-practices-and-ethical-gamification-in-ux-45ff3f2739ee
-- "The Dark Side of Gamification: Ethical Challenges in UX/UI Design" (Medium): https://medium.com/@jgruver/the-dark-side-of-gamification-ethical-challenges-in-ux-ui-design-576965010dba
-- SwiftUI Animation Completion (withAnimation completion callback, iOS 17+): https://www.hackingwithswift.com/quick-start/swiftui/how-to-run-a-completion-callback-when-an-animation-finishes
-- iOS Advanced Lottie Animation — Memory Management (IDN Engineering): https://medium.com/idn-engineering/ios-advanced-lottie-animation-memory-management-7016402f0b1a
+- Codebase analysis: `ActionPlanViewModel.swift` — `evaluateCelebrationState`, `nodeState(at:actions:)`, `MomentumPickerSheet.remainingActions` (2026-03-19)
+- Codebase analysis: `ActionPlanDetailView.swift` — three concurrent `.sheet()` presenters and their boolean conditions (2026-03-19)
+- Codebase analysis: `JourneyNodeView.swift` — `nodeState` global function relying on `firstIndex(where: !isCompleted)` (2026-03-19)
+- PROJECT.md decision log: "No Supabase schema changes" constraint for v1.1; "user-chosen action slots into next node position" ordering spec (2026-03-19)
+- SwiftUI sheet presentation queue limitations — known iOS 16/17 issue with multiple sheet modifiers presenting in rapid succession: community threads (SwiftUI Forum, Hacking with Swift issues tracker)
+- Duolingo UX pattern analysis: bubble tooltips on nodes (Duolingo app, 2025) — bubbles are non-blocking, state-dependent, dismissed on any interaction outside the bubble
+- SwiftUI gesture priority documentation — `.highPriorityGesture`, `.simultaneousGesture` interaction with `Button` (Apple Developer Documentation, SwiftUI gestures)
+- UserDefaults persistence for transient ordering — precedent in iOS task management apps (Things 3, OmniFocus) for local ordering that does not require server sync
 
 ---
-*Pitfalls research for: Gamified SwiftUI app — Lottie, journey path, celebration screens (Abimo)*
-*Researched: 2026-03-18*
+*Pitfalls research for: SwiftUI gamified journey app — v1.1 action picker, tap bubbles, user-driven ordering, two-step completion sheet (Abimo)*
+*Researched: 2026-03-19*

@@ -1,163 +1,155 @@
 # Stack Research
 
-**Domain:** Gamified UX — Lottie animations, celebrations, haptic feedback, journey-path UI in SwiftUI
-**Researched:** 2026-03-18
-**Confidence:** MEDIUM-HIGH (core framework choices HIGH, version pinning MEDIUM due to WebSearch reliance)
+**Domain:** SwiftUI iOS app — action picker, node tap bubbles, user-driven ordering, two-step completion sheet (v1.1 additions)
+**Researched:** 2026-03-19
+**Confidence:** HIGH — all recommendations verified against existing codebase, official SwiftUI API availability, and confirmed library versions via GitHub tags
 
 ---
 
-## Recommended Stack
+## Current Stack (Do Not Re-Research)
 
-### Core Technologies
+The v1.0 stack is already in the project. This document covers only what changes for v1.1.
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| lottie-spm (Airbnb Lottie) | 4.5.x | JSON-driven celebration animations | Industry standard for expressive animations that designers can author. `LottieView` has native SwiftUI API since 4.3.0. Use `lottie-spm` (not `lottie-ios`) — same XCFramework, <500 KB vs 300+ MB git history. Requires Swift 6 / Xcode 16+, which aligns with the project's Xcode 26.2 toolchain. |
-| Vortex | 1.0.4 | Confetti/particle burst effects | Pure SwiftUI, zero UIKit bridging, by Paul Hudson (Hacking with Swift). Built-in confetti preset works in 3 lines. High-performance Metal-backed rendering. No bundle bloat. Better than ConfettiSwiftUI for this project because it composes with SwiftUI layout naturally. |
-| SwiftUI `.sensoryFeedback` modifier | iOS 17+ (built-in) | Haptic feedback on completions and milestones | Zero-dependency, declarative, trigger-based. Replaced UIKit `UIFeedbackGenerator` for SwiftUI apps. Provides `.success`, `.impact`, `.selection` exactly matching the gamification touch points. No third-party needed. |
-| SwiftUI `withAnimation` + `KeyframeAnimator` | iOS 17+ (built-in) | Checkmark spring, card transitions, state changes | iOS 17's `KeyframeAnimator` enables multi-stage celebration sequences (scale up → overshoot → settle) without chaining callbacks. `withAnimation(.spring(duration:bounce:))` with completion closure drives sequential UI states. |
-| SwiftUI `matchedGeometryEffect` / `matchedTransitionSource` | iOS 17/18 (built-in) | Hero transitions between journey path and detail | `matchedGeometryEffect` for card-to-screen transitions within a NavigationStack. iOS 18 adds `matchedTransitionSource` + `.zoom` NavigationTransition for sheet/push transitions — cleaner for the celebration screen push. |
-| SwiftUI `ScrollView` + `scrollTargetBehavior` | iOS 17+ (built-in) | Journey path vertical scroll with snap-to-node | `scrollTargetBehavior(.viewAligned)` snaps scroll to the active journey node on appearance. No third-party paging library needed. |
+| Technology | Version | Status |
+|------------|---------|--------|
+| SwiftUI + UIKit | iOS 26.2 deployment target | Existing |
+| Vortex | 1.0.4 (latest as of Aug 2025) | Existing — already at latest |
+| lottie-spm | pinned to 4.5.x | Existing — upgrade to 4.6.0 |
+| supabase-swift | existing | Existing — no change |
+| AnimationPolicy | internal utility | Existing — extend for new flows |
+| HapticEngine | internal utility | Existing — no change |
+| ActionIconMapper | internal utility | Existing — no change |
 
-### Supporting Libraries
+---
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| lottie-spm | 4.5.x | Lottie animation runner | Use for all celebration screen animations. Source `.lottie` or `.json` files from LottieFiles.com. Wire via `LottieView(name: "celebration").playing()`. |
-| Vortex | 1.0.4 | Particle confetti burst | Trigger on action completion and plan completion screens. Use `.confetti` preset as baseline; customise shape/color to match app palette. |
+## New Stack Requirements for v1.1
 
-No other third-party libraries are needed. The entire animation, haptics, and journey-path surface is covered by SwiftUI's built-in APIs (iOS 17+) plus the two libraries above.
+**No new SPM dependencies needed.**
 
-### Development Tools
+All four features (action picker, node tap bubbles, user-driven ordering, two-step completion sheet) are fully buildable from:
+- Native SwiftUI APIs, all available at iOS 16.4+ (well within the iOS 26.2 deployment target)
+- The existing lottie-spm and Vortex packages already in the project
+- Pure Swift state management extending the existing ViewModel pattern
 
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| LottieFiles.com | Source and preview Lottie JSON animations | Filter for "celebration", "checkmark", "star burst". Download `.lottie` (dotlottie) format — smaller than `.json`. Verify MIT/free license before use. |
-| Xcode Accessibility Inspector | Test `reduceMotion` behavior | Set "Reduce Motion" on Simulator; verify all animations fall back to instant/static state. |
-| Instruments (Animation Hitches template) | Verify 60fps on iPhone 12 target | Run after adding Lottie animations; check for dropped frames during celebration screens. |
+Adding a third-party tooltip library would introduce a dependency for what is a 30-line custom `Path`. Adding a drag-reorder library is wrong for this feature: user-driven ordering is tap-to-select-next, not physical drag-and-drop. Resist scope creep.
+
+---
+
+## Recommended Stack Changes
+
+### Core Technologies — No New Packages
+
+| Technology | Version | Purpose | Why No Change |
+|------------|---------|---------|---------------|
+| SwiftUI | iOS 26.2 | All UI for all four features | All required APIs present: `.popover` + `.presentationCompactAdaptation`, `LazyVGrid`, `presentationDetents(selection:)`, `@Namespace` + `matchedGeometryEffect` |
+| lottie-spm | 4.6.0 (upgrade from 4.5.x) | Congrats animation in two-step half-sheet | 4.6.0 is current as of January 2025. `LottieView` SwiftUI API is unchanged since 4.3.0. The upgrade is a drop-in and adds task cancellation fixes. Reuse existing `trophy.json` bundle resource |
+| Vortex | 1.0.4 | Confetti in node bubbles and completion steps | Already on latest tag (Aug 2025). No change needed |
+
+### New Usage of Existing Native APIs
+
+These are native SwiftUI APIs the project does not yet use but will need for v1.1. No installation required — they ship with the iOS 26.2 SDK.
+
+| API | Purpose | Why Chosen | Availability |
+|-----|---------|------------|--------------|
+| `.popover(isPresented:attachmentAnchor:)` + `.presentationCompactAdaptation(.popover)` | Tap-to-reveal callout bubble above each journey node showing action name + CTA | Forces true floating popover (not a sheet) on iPhone. `.point(.top)` as `attachmentAnchor` anchors it above the 56pt node circle. The only native approach that produces a positioned, auto-dismissing overlay without a full sheet. | iOS 16.4+ — safe at iOS 26.2 deployment target |
+| `presentationDetents([.medium, .large], selection: $selectedDetent)` | Two-step completion sheet: programmatically expand from congrats (`.medium`) to action picker (`.large`) without dismissing and re-presenting | Selection binding is the only way to change detents from inside the sheet without a dismiss/re-present cycle, which would break the "keep the momentum" UX flow. | iOS 16+ |
+| `interactiveDismissDisabled(_:)` | Lock the sheet during the congrats step so an accidental swipe doesn't kill the celebration. Release when the sheet is at `.large` (action picker) | Already verified working with `presentationDetents`. Combine with detent selection binding: when detent == `.medium`, pass `true`; when `.large`, pass `false`. | iOS 15+ |
+| `@Namespace` + `matchedGeometryEffect` | Animate the chosen action card from the picker grid into its journey node slot | Built-in SwiftUI, zero dependencies. Creates the visual continuity that the chosen action becomes the next node. The same pattern powers segmented control highlights and card-to-grid transitions across the SwiftUI ecosystem. | iOS 14+ |
+| `LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())])` | Action picker grid layout — 2-column card grid showing all incomplete actions | Shows all options at once without scrolling, matching the "see the whole plan" mental model. CommitmentSheet today uses a vertical `ForEach` of top 3; the picker needs all actions in a scannable grid. | iOS 14+ |
 
 ---
 
 ## Installation
 
-The project uses Xcode's built-in SPM integration (no `Package.swift` at root — it's an `.xcodeproj` project).
+No new packages to add. One version bump:
 
-**Add via Xcode: File > Add Package Dependencies**
+In Xcode: **File > Packages > Update to Latest Package Versions**
 
-```
-# Lottie (use lottie-spm, NOT lottie-ios)
-https://github.com/airbnb/lottie-spm
-→ Up to Next Major: 4.5.0
-
-# Vortex
-https://github.com/twostraws/Vortex
-→ Up to Next Major: 1.0.0
-```
-
-No `npm install`. No CocoaPods. Both packages are pure SPM.
+This pulls lottie-spm 4.6.0 if the project is pinned to 4.5.x. Verify the resolved version in Xcode's Package Dependencies pane after update.
 
 ---
 
 ## Alternatives Considered
 
-| Recommended | Alternative | When to Use Alternative |
-|-------------|-------------|-------------------------|
-| lottie-spm | Pure SwiftUI `TimelineView` animations | Only if no designer is producing animation files and all motion must be coded by hand. Lottie's expressive range far exceeds what's practical to hand-code for celebrations. |
-| lottie-spm | Rive (rive-ios) | If animations need interactive state machines (e.g., drag-to-fill progress that responds mid-gesture). Overkill for one-shot celebrations. Adds another large dependency. |
-| Vortex | ConfettiSwiftUI (simibac) | ConfettiSwiftUI is simpler API but less maintained, last major release was 1.1.0 with no recent activity. Vortex is more actively developed and composable. |
-| Vortex | SPConfetti (ivanvorobei) | SPConfetti is UIKit-backed — needs `UIViewRepresentable` bridging. Adds friction. Avoid in a pure SwiftUI project. |
-| Vortex | `CAEmitterLayer` directly | If you need precise physics control (gravity, drag, mass per particle). Acceptable but requires UIKit bridge. Only worth it if Vortex presets are insufficient. |
-| `.sensoryFeedback` modifier | `UIImpactFeedbackGenerator` | If targeting iOS 16 or below. This project targets iOS 26.2+, so `.sensoryFeedback` is always available and is strictly cleaner. |
-| SwiftUI `KeyframeAnimator` | External animation sequencing library | No third-party sequencing library needed. `KeyframeAnimator` + `withAnimation` completion are sufficient for the checkmark, card flip, and state-change sequences in scope. |
+| Recommended | Alternative | Why Not |
+|-------------|-------------|---------|
+| `.popover` + `.presentationCompactAdaptation(.popover)` for node bubbles | Third-party tooltip library (AMPopTip, SwiftUI-Tooltip, EasyTipView) | All three are UIKit wrappers or sporadically maintained. The native `.popover` + `.presentationCompactAdaptation(.popover)` API (iOS 16.4+) does exactly this with zero dependencies and native dismiss behavior. Deployment target is iOS 26.2 — no compatibility risk. |
+| `presentationDetents(selection:)` for two-step sheet | Two separate sheets in sequence (dismiss first, present second) | Dismissing between steps kills the celebration momentum and produces a visual gap. A single sheet that expands detents is the correct UX — matches Apple's own "Rate this app" and App Store purchase flows. |
+| Client-side `[UUID]` array ordering in ViewModel | `position` column on `micro_actions` Supabase table | Supabase schema changes are out of scope per PROJECT.md. Client-side ordering in memory is sufficient: the journey path renders from `viewModel.orderedMicroActions` (computed). Ordering does not need to survive an app restart for v1.1. |
+| `LazyVGrid` for action picker | Vertical `ForEach` list (same as CommitmentSheet) | CommitmentSheet limits to top 3 actions. The full action picker must show all remaining actions. A 2-column grid is denser and faster to scan than a tall vertical list, especially for plans with 7+ actions. |
+| `matchedGeometryEffect` for picker → node transition | Plain `.transition(.scale)` on the selected card | `matchedGeometryEffect` explicitly handles cross-view coordinate spaces, which is the core problem here: the picker card and the journey node are in different parts of the view hierarchy. A plain transition can't track position across them. |
+| Reusing existing `trophy.json` Lottie for congrats half-sheet | Adding new Lottie JSON files for the half-sheet step | The trophy animation already exists in the bundle and is proven to work via `PlanCompletionView`. Reusing it avoids bundle bloat and keeps celebration visual language consistent. Scale it down to fit the `.medium` detent height. |
 
 ---
 
-## What NOT to Use
+## What NOT to Add
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| `lottie-ios` SPM package (the main repo) | 300+ MB git history, slow clone. Same XCFramework as lottie-spm. | `lottie-spm` — identical runtime, ~500 KB package size. |
-| Rive (`rive-ios`) | Heavy dependency, interactive state machine complexity not needed. Celebration animations here are one-shot, not interactive. | Lottie for authored animations, SwiftUI keyframes for coded ones. |
-| SpriteKit particle systems | Requires `SpriteView` bridge, separate coordinate space, poor SwiftUI layout integration. Overkill for burst confetti. | Vortex — pure SwiftUI, composable, zero bridging overhead. |
-| `UIViewPropertyAnimator` for sequence control | Defeats SwiftUI's reactive model, requires imperative lifecycle management. | `withAnimation(.spring(...)) { ... }` + `KeyframeAnimator` — stay declarative. |
-| Third-party haptic libraries (e.g., `Haptica`) | All they do is wrap `UIFeedbackGenerator`. SwiftUI `.sensoryFeedback` modifier is the platform-native, declarative version — no wrapper needed. | `.sensoryFeedback(.success, trigger: isCompleted)` |
-| Sound effects libraries | PROJECT.md explicitly excludes sound effects from scope. | Nothing — out of scope. |
+| Any drag-reorder library (`swiftui-reorderable-foreach`, etc.) | The ordering UX is tap-to-select-next, not physical drag. A drag library adds gesture conflicts with the existing `ScrollView` and node taps, and solves the wrong problem. | Pure Swift array manipulation in ViewModel on action selection. |
+| `SheeKit` (UISheetPresentationController wrapper) | Deployment target is iOS 26.2. Native `presentationDetents` with `selection:` binding covers all required sheet behaviors without a UIKit bridge. SheeKit predates the current native API being sufficient. | Native SwiftUI `presentationDetents`. |
+| `PopoverMessageBubble` / `qusc/SwiftUI-Popover` | Both wrap UIKit popovers. The native `.popover` + `.presentationCompactAdaptation(.popover)` at iOS 16.4+ is the direct SwiftUI-native replacement. | Native SwiftUI `.popover` modifier. |
+| New Lottie JSON animation files | Additional `.json` or `.lottie` files bloat the app bundle and create visual inconsistency. The existing `trophy.json` covers every celebration moment. | Reuse `trophy.json`. Adjust `LottieView` frame size as needed. |
+| Sound effects (`AVAudioPlayer` / `AVFAudio`) | Explicitly excluded from scope in PROJECT.md. | HapticEngine (existing) provides physical feedback. |
+| `@AppStorage` or `UserDefaults` for action order persistence | Out of scope for v1.1. Ordering lives in session memory only. Persisting would require additional design decisions about conflict resolution with server state. | In-memory `@Published var userActionOrder: [UUID]` only. |
 
 ---
 
-## Stack Patterns by Variant
+## Stack Patterns by Feature
 
-**For celebration animations (Lottie):**
-- Use `LottieView(name: "celebration").playing(loopMode: .playOnce)` triggered by `.onChange` on a completion bool
-- Pair `.accessibilityReduceMotion` environment check: skip or shorten animation duration when true
-- Store `.lottie` files in the Xcode asset catalog or as bundle resources in `Abimo/Resources/`
+**Action picker screen (first visit + after each completion):**
+- Present via existing `showCommitmentPicker` / `showMomentumPicker` booleans, or unify into `showActionPicker: Bool` on the ViewModel
+- `LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())])` inside a `.presentationDetents([.large])` sheet
+- `@State var selectedActionId: UUID?` for highlight state inside the sheet
+- `matchedGeometryEffect(id: action.id, in: namespace)` on both picker card and destination journey node for transition
+- Wire "Confirm" button to new `viewModel.selectNextAction(id:)` method
 
-**For confetti burst (Vortex):**
-- Trigger `VortexSystem` with a `@State var confettiTrigger: Int = 0` incremented on completion
-- Layer above the celebration screen content using `.overlay` or `ZStack`
-- Respect `reduceMotion` by guarding the trigger increment
+**Node tap bubbles (action name + CTA on tap, all states):**
+- Add `@State private var showBubble = false` to `JourneyNodeView`
+- In existing `onTap` closure: set `showBubble = true` instead of immediately calling `selectedAction = action`
+- `.popover(isPresented: $showBubble, attachmentAnchor: .point(.top)) { NodeBubbleView(action: action, state: state, onOpen: { showBubble = false; selectedAction = action }) .presentationCompactAdaptation(.popover) }`
+- `NodeBubbleView`: compact VStack with emoji, action name (2 lines max), time pill, and CTA button ("Open" → opens ActionDetailSheet; "Locked" → disabled label)
+- Tapping outside auto-dismisses the bubble (default popover dismiss behavior — correct here)
 
-**For haptics:**
-- Attach `.sensoryFeedback(.success, trigger: actionJustCompleted)` to the completion button
-- Use `.sensoryFeedback(.impact(weight: .heavy), trigger: planAllComplete)` for the final plan completion (heavier = more satisfying)
-- Use `.sensoryFeedback(.selection, trigger: commitToggle)` for the commitment toggle
+**User-driven ordering:**
+- Add `@Published var userActionOrder: [UUID]` to `ActionPlanViewModel`; default empty = server/priority order
+- Add computed `var orderedMicroActions: [MicroAction]` that applies `userActionOrder` on top of `microActions`
+- Add `func selectNextAction(id: UUID)` that moves the chosen ID to front of incomplete IDs in `userActionOrder`
+- `JourneyPathView` renders from `viewModel.orderedMicroActions` instead of `viewModel.microActions`
+- The existing `nodeState(at:actions:)` function works unchanged — "active" is still the first incomplete in the ordered array
 
-**For journey path scroll:**
-- Wrap node list in `ScrollViewReader` + `ScrollView`
-- Call `proxy.scrollTo(activeNodeID, anchor: .center)` on `.onAppear` to position the path at the current node
-- Use `scrollTargetBehavior(.viewAligned)` so manual scrolling snaps cleanly
-
-**For card-to-celebration screen transition:**
-- iOS 18 toolchain: use `matchedTransitionSource` on the action card + `.navigationTransition(.zoom(...))` on the celebration screen push
-- iOS 17 fallback: `matchedGeometryEffect` with `@Namespace` within the same view hierarchy, or a simple `.spring` scale transition on `NavigationStack` push
-
-**For reduce motion accessibility:**
-```swift
-@Environment(\.accessibilityReduceMotion) var reduceMotion
-
-// Pattern: substitute instant state change for animation
-func animate(_ change: () -> Void) {
-    if reduceMotion {
-        change()
-    } else {
-        withAnimation(.spring(duration: 0.4, bounce: 0.3)) {
-            change()
-        }
-    }
-}
-```
+**Two-step completion sheet (congrats → action picker):**
+- `@State var completionSheetDetent: PresentationDetent = .medium`
+- Sheet: `.presentationDetents([.medium, .large], selection: $completionSheetDetent)`
+- `.interactiveDismissDisabled(completionSheetDetent == .medium)` — locked at congrats, dismissable from picker
+- Step 1 (`.medium` height): `LottieView(animation: .named("trophy"))` + congrats copy + "Keep the momentum?" button
+- "Keep the momentum?" tapped → `completionSheetDetent = .large` (sheet expands, no dismiss/re-present)
+- Step 2 (`.large` height): action picker grid slides up via `if completionSheetDetent == .large { ActionPickerGrid(...) }`
+- Wire to existing `celebrationState == .planComplete` path in `ActionPlanDetailView`, replacing or layering over `PlanCompletionView`
 
 ---
 
 ## Version Compatibility
 
-| Package | Requires | Notes |
-|---------|----------|-------|
-| lottie-spm 4.5.x | Xcode 16+ / Swift 6.0+ | Project uses Xcode 26.2, fully compatible. If build fails on strict concurrency, lottie-spm 4.5.x ships as precompiled XCFramework so Swift 6 mode is not a concern. |
-| Vortex 1.0.4 | iOS 16+, Swift 5.9+ | Compatible with project's iOS 26.2+ deployment target. No known issues. |
-| `.sensoryFeedback` | iOS 17+ | Project minimum implied by Xcode 26.2 / iOS 26 deployment. Always available. |
-| `KeyframeAnimator` | iOS 17+ | Same. Always available. |
-| `matchedTransitionSource` + `.zoom` | iOS 18+ | Use with `#available(iOS 18, *)` guard if supporting iOS 17. Given the Xcode 26.2 target in project.pbxproj, iOS 18+ can be assumed as minimum but confirm deployment target before using without guard. |
+| Package | Version | Compatible With | Notes |
+|---------|---------|-----------------|-------|
+| lottie-spm | 4.6.0 | iOS 13+, Swift 5.7+ | `LottieView` SwiftUI API stable since 4.3.0. `playbackMode` and `LottiePlaybackMode` parameters unchanged. Drop-in upgrade from any 4.x version. Verified via GitHub releases. |
+| Vortex | 1.0.4 | iOS 16+, Swift 5.9+ | `VortexView` + `VortexViewReader` API unchanged since 1.0.0. `startTimeOffset` added in 1.0.4 is not required for this milestone. Verified via GitHub tags. |
+| Native SwiftUI APIs | iOS 16.4+ for `.presentationCompactAdaptation` | iOS 26.2 deployment target | All other APIs (`presentationDetents`, `LazyVGrid`, `matchedGeometryEffect`) available iOS 16+/14+. Everything safe at iOS 26.2. |
 
 ---
 
 ## Sources
 
-- [airbnb/lottie-spm GitHub](https://github.com/airbnb/lottie-spm) — Package URL, size comparison, version (WebSearch, MEDIUM confidence)
-- [Lottie 4.3.0 SwiftUI support announcement](https://github.com/airbnb/lottie-ios/discussions/2189) — LottieView SwiftUI API confirmation (WebSearch, MEDIUM confidence)
-- [Swift Package Index: Vortex](https://swiftpackageindex.com/twostraws/Vortex) — Version 1.0.4, platform support (WebSearch, MEDIUM confidence)
-- [twostraws/Vortex GitHub](https://github.com/twostraws/Vortex) — Built-in confetti preset, pure SwiftUI, SPM URL (WebSearch, MEDIUM confidence)
-- [SwiftUI sensoryFeedback — Hacking with Swift](https://www.hackingwithswift.com/quick-start/swiftui/how-to-add-haptic-effects-using-sensory-feedback) — Modifier API, feedback types, iOS 17 availability (WebSearch, HIGH confidence — Paul Hudson is authoritative)
-- [Swift with Majid: Sensory feedback in SwiftUI](https://swiftwithmajid.com/2023/10/10/sensory-feedback-in-swiftui/) — Trigger-based pattern (WebSearch, HIGH confidence)
-- [SwiftUI withAnimation completion — iOS 17](https://medium.com/devtechie/swiftui-withanimation-completion-callback-in-ios-17-3b7f1c7e81ad) — Completion callback API (WebSearch, MEDIUM confidence)
-- [KeyframeAnimator — exyte.com](https://exyte.com/blog/keyframes-ios17) — Keyframe animation pattern for checkmark bounce (WebSearch, MEDIUM confidence)
-- [matchedTransitionSource iOS 18](https://github.com/onmyway133/blog/issues/995) — Zoom navigation transition vs matchedGeometryEffect (WebSearch, MEDIUM confidence)
-- [accessibilityReduceMotion — Hacking with Swift](https://www.hackingwithswift.com/quick-start/swiftui/how-to-detect-the-reduce-motion-accessibility-setting) — Environment key, conditional animation pattern (WebSearch, HIGH confidence)
-- [createwithswift.com: Reduce Motion](https://www.createwithswift.com/ensure-visual-accessibility-supporting-reduced-motion-preferences-in-swiftui/) — SwiftUI reduce motion best practice (WebSearch, MEDIUM confidence)
-- [scrollTargetBehavior — WWDC23](https://developer.apple.com/videos/play/wwdc2023/10159/) — Scroll snapping API, iOS 17 availability (Official Apple, HIGH confidence)
-- project.pbxproj — Confirmed Xcode 26.2 toolchain, Supabase-only existing dependencies, SPM-only package management
+- https://github.com/twostraws/Vortex/tags — Vortex 1.0.4 confirmed as latest tag (Aug 2025) — HIGH confidence
+- https://github.com/airbnb/lottie-spm/releases — lottie-spm 4.6.0 confirmed as latest release (Jan 2025) — HIGH confidence
+- Apple Developer Documentation: `presentationCompactAdaptation(_:)` — iOS 16.4+ availability confirmed — HIGH confidence
+- Apple Developer Documentation: `presentationDetents(_:selection:)` — iOS 16+ availability confirmed — HIGH confidence
+- Apple Developer Documentation: `interactiveDismissDisabled(_:)` — iOS 15+ availability confirmed — HIGH confidence
+- Existing codebase audit (CommitmentSheet.swift, ActionDetailSheet.swift, JourneyNodeView.swift, ActionPlanDetailView.swift, PlanCompletionView.swift) — Integration points and existing patterns confirmed by direct file reads — HIGH confidence
+- project.pbxproj — iOS 26.2 deployment target, Vortex 1.0.4 and lottie-spm as only animation SPM packages — HIGH confidence
 
 ---
 
-*Stack research for: Gamified UX layer on Abimo SwiftUI app*
-*Researched: 2026-03-18*
+*Stack research for: Abimo v1.1 — action picker, node tap bubbles, user-driven ordering, two-step completion sheet*
+*Researched: 2026-03-19*
