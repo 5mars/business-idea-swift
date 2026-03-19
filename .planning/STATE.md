@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Actions Flow UX
-status: executing
-stopped_at: "Completed 06-01-PLAN.md"
-last_updated: "2026-03-19T18:52:00Z"
+status: unknown
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-03-19T20:40:10.698Z"
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 3
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Users actually complete their micro-actions because the experience is engaging, rewarding, and fun
-**Current focus:** Phase 06 — tap-bubbles-on-nodes
+**Current focus:** Phase 07 — action-picker-sheet
 
 ## Current Position
 
-Phase: 06 (tap-bubbles-on-nodes) — COMPLETE
-Plan: 1 of 1 — DONE
+Phase: 07 (action-picker-sheet) — EXECUTING
+Plan: 1 of 1
 
 ## Accumulated Context
 
@@ -45,6 +45,8 @@ Recent decisions affecting current work:
 - [Phase 06-01]: activeBubbleId at JourneyPathView level (view-local @State) drives single-selection bubble — not ViewModel property
 - [Phase 06-01]: Bubble overlay rendered via .overlay on inner VStack (not in JourneyNodeView) to avoid gesture competition
 - [Phase 06-01]: Index-based position arithmetic (162pt header + 136pt*index) used instead of GeometryReader for bubble positioning
+- [Phase 07-action-picker-sheet]: Single ActionPickerSheet view handles both firstVisit and postCompletion modes via PickerMode enum parameter
+- [Phase 07-action-picker-sheet]: excludedActionId: UUID? = nil pattern filters the just-completed action from post-completion picker without ViewModel changes
 
 ### Pending Todos
 
@@ -62,5 +64,5 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T18:52:00Z
-Stopped at: Completed 06-01-PLAN.md — Phase 06 tap-bubbles-on-nodes complete
+Last session: 2026-03-19T20:40:10.696Z
+Stopped at: Completed 07-01-PLAN.md

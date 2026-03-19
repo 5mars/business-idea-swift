@@ -19,9 +19,9 @@ Requirements for Actions Flow UX milestone. Each maps to roadmap phases.
 
 ### Action Picker
 
-- [ ] **PICK-01**: User sees a full action list when first viewing a new plan, and can pick their first action
-- [ ] **PICK-02**: User sees remaining actions after completing an action, with "Keep the momentum?" framing
-- [ ] **PICK-03**: Action picker cards show action name, type icon, and time estimate
+- [x] **PICK-01**: User sees a full action list when first viewing a new plan, and can pick their first action
+- [x] **PICK-02**: User sees remaining actions after completing an action, with "Keep the momentum?" framing
+- [x] **PICK-03**: Action picker cards show action name, type icon, and time estimate
 
 ### User-Driven Ordering
 
@@ -71,9 +71,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DISC-01 | Phase 6 | Complete |
 | DISC-02 | Phase 6 | Complete |
 | DISC-03 | Phase 6 | Complete |
-| PICK-01 | Phase 7 | Pending |
-| PICK-02 | Phase 7 | Pending |
-| PICK-03 | Phase 7 | Pending |
+| PICK-01 | Phase 7 | Complete |
+| PICK-02 | Phase 7 | Complete |
+| PICK-03 | Phase 7 | Complete |
 | ORDR-01 | Phase 5 | Complete |
 | ORDR-02 | Phase 5 | Complete |
 | ORDR-03 | Phase 5 | Complete |

@@ -146,5 +146,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 4. Polish | v1.0 | 1/1 | Complete | 2026-03-19 |
 | 5. ViewModel Foundation and Ordering Model | 2/2 | Complete   | 2026-03-19 | - |
 | 6. Tap Bubbles on Nodes | 1/1 | Complete   | 2026-03-19 | - |
-| 7. Action Picker Sheet | v1.1 | 0/1 | Not started | - |
+| 7. Action Picker Sheet | 1/1 | Complete   | 2026-03-19 | - |
 | 8. Two-Step Completion Sheet and Full Wiring | v1.1 | 0/1 | Not started | - |
