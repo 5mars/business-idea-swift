@@ -164,8 +164,10 @@ class ActionPlanViewModel: ObservableObject {
         if allDone {
             // planComplete takes priority — skip milestone even if count is 3, 5, or 7
             celebrationState = .planComplete
+            HapticEngine.success()
         } else if [3, 5, 7].contains(newCompletedCount) {
             celebrationState = .milestone(count: newCompletedCount)
+            HapticEngine.impact(style: .medium)
             // Auto-clear after 2.5s
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak self] in
                 if self?.celebrationState == .milestone(count: newCompletedCount) {
@@ -174,6 +176,7 @@ class ActionPlanViewModel: ObservableObject {
             }
         } else {
             celebrationState = .inlineConfetti(actionId: completedId)
+            HapticEngine.success()
             // Auto-clear after 1.5s
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
                 if self?.celebrationState == .inlineConfetti(actionId: completedId) {
