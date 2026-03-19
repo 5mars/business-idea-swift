@@ -6,6 +6,17 @@
 import Foundation
 import Combine
 
+// MARK: - CelebrationState
+
+/// Drives all celebration UI in Phase 3. Views are purely reactive to this state.
+/// Equatable conformance is required for `.animation(value:)` transitions.
+enum CelebrationState: Equatable {
+    case idle
+    case inlineConfetti(actionId: UUID)   // per-action node burst, auto-clears after 1.5s
+    case milestone(count: Int)            // 3, 5, or 7 — banner + heavier confetti, auto-clears after 2.5s
+    case planComplete                     // full-screen overlay, user-dismissed via Done button
+}
+
 @MainActor
 class ActionPlanViewModel: ObservableObject {
     @Published var actionPlan: ActionPlan?
@@ -19,6 +30,7 @@ class ActionPlanViewModel: ObservableObject {
     @Published var showMomentumPicker = false
     @Published var completingActionId: UUID?
     @Published var justCompletedActionId: UUID? = nil
+    @Published var celebrationState: CelebrationState = .idle
 
     private let supabase = SupabaseService.shared
     private let aiService = AIAnalysisService()
@@ -28,6 +40,13 @@ class ActionPlanViewModel: ObservableObject {
     var completedCount: Int { microActions.filter(\.isCompleted).count }
     var totalCount: Int { microActions.count }
     var progress: Double { totalCount > 0 ? Double(completedCount) / Double(totalCount) : 0 }
+
+    /// Sum of timeEstimateMinutes for completed actions only (used in plan completion summary).
+    var completedMinutes: Int {
+        microActions
+            .filter(\.isCompleted)
+            .reduce(0) { $0 + $1.timeEstimateMinutes }
+    }
 
     var nextRecommendedAction: MicroAction? {
         microActions.first(where: { !$0.isCompleted })
@@ -113,6 +132,9 @@ class ActionPlanViewModel: ObservableObject {
             self?.justCompletedActionId = nil
         }
 
+        // Celebration state (Phase 3)
+        evaluateCelebrationState(completedId: id)
+
         do {
             try await supabase.toggleMicroAction(id: id, isCompleted: true, outcome: outcome, note: note)
 
@@ -128,6 +150,35 @@ class ActionPlanViewModel: ObservableObject {
                 microActions[idx].completedAt = nil
                 microActions[idx].completionOutcome = nil
                 microActions[idx].completionNote = nil
+            }
+        }
+    }
+
+    /// Evaluates and sets celebrationState after an action is marked complete.
+    /// Checks allDone FIRST to ensure planComplete takes priority over milestone
+    /// (critical for 7-action plans where 7th == both milestone and last action).
+    func evaluateCelebrationState(completedId: UUID) {
+        let newCompletedCount = microActions.filter(\.isCompleted).count
+        let allDone = newCompletedCount == microActions.count && !microActions.isEmpty
+
+        if allDone {
+            // planComplete takes priority — skip milestone even if count is 3, 5, or 7
+            celebrationState = .planComplete
+        } else if [3, 5, 7].contains(newCompletedCount) {
+            celebrationState = .milestone(count: newCompletedCount)
+            // Auto-clear after 2.5s
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak self] in
+                if self?.celebrationState == .milestone(count: newCompletedCount) {
+                    self?.celebrationState = .idle
+                }
+            }
+        } else {
+            celebrationState = .inlineConfetti(actionId: completedId)
+            // Auto-clear after 1.5s
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                if self?.celebrationState == .inlineConfetti(actionId: completedId) {
+                    self?.celebrationState = .idle
+                }
             }
         }
     }
