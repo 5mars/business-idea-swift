@@ -57,16 +57,10 @@ struct ActionPlanDetailView: View {
             .presentationBackground(Color.appBg)
         }
         .sheet(isPresented: $viewModel.showActionPicker) {
-            // Phase 7 builds ActionPickerSheet; placeholder for first-visit trigger
-            VStack(spacing: 16) {
-                Text("Pick your first action")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                Text("Coming in Phase 7")
-                    .foregroundColor(.secondary)
-            }
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
-            .presentationBackground(Color.appBg)
+            ActionPickerSheet(viewModel: viewModel, mode: .firstVisit)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Color.appBg)
         }
         .sheet(item: $viewModel.postCompletionSheet) { sheet in
             switch sheet {
@@ -86,13 +80,11 @@ struct ActionPlanDetailView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.appBg)
             case .actionPicker:
-                // Phase 7 builds ActionPickerSheet; placeholder for now
-                VStack(spacing: 16) {
-                    Text("Pick your next action")
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                    Text("Coming in Phase 7")
-                        .foregroundColor(.secondary)
-                }
+                ActionPickerSheet(
+                    viewModel: viewModel,
+                    mode: .postCompletion,
+                    excludedActionId: viewModel.completingActionId
+                )
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.appBg)
