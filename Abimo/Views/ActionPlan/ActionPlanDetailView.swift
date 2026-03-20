@@ -62,33 +62,11 @@ struct ActionPlanDetailView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.appBg)
         }
-        .sheet(item: $viewModel.postCompletionSheet) { sheet in
-            switch sheet {
-            case .congrats(let actionId):
-                // Phase 8 builds CongratsHalfSheet; placeholder for now
-                VStack(spacing: 16) {
-                    Text("Nice work!")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
-                    Text("Action completed")
-                        .foregroundColor(.secondary)
-                    Button("Keep the momentum?") {
-                        viewModel.advanceToActionPicker()
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-                .presentationBackground(Color.appBg)
-            case .actionPicker:
-                ActionPickerSheet(
-                    viewModel: viewModel,
-                    mode: .postCompletion,
-                    excludedActionId: viewModel.completingActionId
-                )
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-                .presentationBackground(Color.appBg)
-            }
+        .sheet(item: $viewModel.postCompletionSheet) { _ in
+            PostCompletionSheetContent(
+                viewModel: viewModel,
+                completingActionId: viewModel.completingActionId
+            )
         }
         .task {
             await viewModel.loadActionPlan(analysisId: analysisId)

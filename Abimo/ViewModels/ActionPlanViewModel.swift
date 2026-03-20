@@ -142,9 +142,15 @@ class ActionPlanViewModel: ObservableObject {
 
             // Only show congrats sheet if there are remaining actions (not plan complete)
             let hasRemaining = microActions.contains(where: { !$0.isCompleted && $0.id != id })
-            let allDone = !microActions.contains(where: { !$0.isCompleted && $0.id != id })
-            if hasRemaining && !allDone {
-                postCompletionSheet = .congrats(actionId: id)
+            if hasRemaining {
+                if postCompletionSheet == nil {
+                    postCompletionSheet = .congrats(actionId: id)
+                } else {
+                    // Previous sheet still animating out — defer one runloop tick
+                    DispatchQueue.main.async { [weak self] in
+                        self?.postCompletionSheet = .congrats(actionId: id)
+                    }
+                }
             }
         } else {
             // Unchecking — just toggle directly
@@ -290,14 +296,9 @@ class ActionPlanViewModel: ObservableObject {
         Task { await silentCommit(actionId: id) }
     }
 
-    func advanceToActionPicker() {
-        postCompletionSheet = nil
-        let hasRemaining = microActions.contains(where: { !$0.isCompleted })
-        guard hasRemaining else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-            self?.postCompletionSheet = .actionPicker
-        }
-    }
+    /// Deprecated: In-sheet content swap replaces dismiss+re-present pattern.
+    /// PostCompletionSheetContent.advance() handles the transition locally.
+    func advanceToActionPicker() { }
 
     func dismissPostCompletionSheet() {
         postCompletionSheet = nil

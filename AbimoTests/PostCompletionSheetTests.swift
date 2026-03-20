@@ -102,4 +102,33 @@ final class PostCompletionSheetTests: XCTestCase {
         XCTAssertFalse(vm.showActionPicker,
                        "showActionPicker must default to false on a fresh ViewModel")
     }
+
+    // MARK: - Rapid Completion Guard
+
+    func testRapidCompletionNeverProducesStuckSheet() {
+        let vm = makeViewModel(actionCount: 5)
+        // Complete 3 actions in rapid succession
+        simulateCompletion(vm: vm, at: 0)
+        simulateCompletion(vm: vm, at: 1)
+        simulateCompletion(vm: vm, at: 2)
+        // postCompletionSheet must be non-nil (last completion set it)
+        XCTAssertNotNil(vm.postCompletionSheet,
+                        "After rapid completions, postCompletionSheet must be set to the latest .congrats")
+        if case .congrats(let actionId) = vm.postCompletionSheet {
+            XCTAssertEqual(actionId, vm.microActions[2].id,
+                           "Rapid completion must set congrats to the LAST completed action")
+        } else {
+            XCTFail("Expected .congrats but got \(String(describing: vm.postCompletionSheet))")
+        }
+    }
+
+    func testAdvanceToPickerIsNoOp() {
+        let vm = makeViewModel(actionCount: 3)
+        simulateCompletion(vm: vm, at: 0)
+        let sheetBefore = vm.postCompletionSheet
+        vm.advanceToActionPicker()
+        // advanceToActionPicker is now a no-op — verify state unchanged
+        XCTAssertEqual(vm.postCompletionSheet, sheetBefore,
+                       "advanceToActionPicker() must be a no-op — in-sheet swap handles transition")
+    }
 }
