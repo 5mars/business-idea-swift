@@ -22,6 +22,8 @@
 		C7D8E9F0A1B2C3D4E5F6A7B8 /* OrderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D8E9F0A1B2C3D4E5F6A7B9 /* OrderingTests.swift */; };
 		D8E9F0A1B2C3D4E5F6A7B8C9 /* PostCompletionSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E9F0A1B2C3D4E5F6A7B8CA /* PostCompletionSheetTests.swift */; };
 		E1F2A3B4C5D6E7F8A9B0C1D2 /* CongratsHalfSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F2A3B4C5D6E7F8A9B0C1D3 /* CongratsHalfSheetTests.swift */; };
+		F1A2B3C4D5E6F7A8B9C0D1E2 /* ActionPickerSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7A8B9C0D1E3 /* ActionPickerSheetTests.swift */; };
+		F2A3B4C5D6E7F8A9B0C1D2E3 /* NavigationCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A3B4C5D6E7F8A9B0C1D2E4 /* NavigationCoordinatorTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +46,8 @@
 		C826A6FCE48478DCB74F2135 /* ActionIconMapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionIconMapperTests.swift; sourceTree = "<group>"; };
 		D8E9F0A1B2C3D4E5F6A7B8CA /* PostCompletionSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostCompletionSheetTests.swift; sourceTree = "<group>"; };
 		E1F2A3B4C5D6E7F8A9B0C1D3 /* CongratsHalfSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CongratsHalfSheetTests.swift; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F7A8B9C0D1E3 /* ActionPickerSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionPickerSheetTests.swift; sourceTree = "<group>"; };
+		F2A3B4C5D6E7F8A9B0C1D2E4 /* NavigationCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationCoordinatorTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -121,6 +125,8 @@
 				C7D8E9F0A1B2C3D4E5F6A7B9 /* OrderingTests.swift */,
 				D8E9F0A1B2C3D4E5F6A7B8CA /* PostCompletionSheetTests.swift */,
 				E1F2A3B4C5D6E7F8A9B0C1D3 /* CongratsHalfSheetTests.swift */,
+				F1A2B3C4D5E6F7A8B9C0D1E3 /* ActionPickerSheetTests.swift */,
+				F2A3B4C5D6E7F8A9B0C1D2E4 /* NavigationCoordinatorTests.swift */,
 			);
 			path = AbimoTests;
 			sourceTree = "<group>";
@@ -256,6 +262,8 @@
 				C7D8E9F0A1B2C3D4E5F6A7B8 /* OrderingTests.swift in Sources */,
 				D8E9F0A1B2C3D4E5F6A7B8C9 /* PostCompletionSheetTests.swift in Sources */,
 				E1F2A3B4C5D6E7F8A9B0C1D2 /* CongratsHalfSheetTests.swift in Sources */,
+				F1A2B3C4D5E6F7A8B9C0D1E2 /* ActionPickerSheetTests.swift in Sources */,
+				F2A3B4C5D6E7F8A9B0C1D2E3 /* NavigationCoordinatorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

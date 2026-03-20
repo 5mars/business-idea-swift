@@ -7,6 +7,7 @@ import SwiftUI
 
 struct RootView: View {
     @StateObject private var authViewModel = AuthViewModel()
+    @StateObject private var coordinator = NavigationCoordinator()
 
     var body: some View {
         ZStack {
@@ -16,6 +17,7 @@ struct RootView: View {
             } else if authViewModel.isAuthenticated {
                 MainTabView()
                     .environmentObject(authViewModel)
+                    .environmentObject(coordinator)
                     .transition(.opacity)
             } else {
                 LoginView()
@@ -32,6 +34,7 @@ struct RootView: View {
 
 struct MainTabView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var coordinator: NavigationCoordinator
 
     init() {
         let appearance = UITabBarAppearance()
@@ -42,13 +45,14 @@ struct MainTabView: View {
     }
 
     var body: some View {
-        TabView {
+        TabView(selection: $coordinator.selectedTab) {
             NavigationStack {
                 NotesListView()
             }
             .tabItem {
                 Label("Notes", systemImage: "note.text")
             }
+            .tag(AppTab.notes)
 
             NavigationStack {
                 RecordingView()
@@ -56,6 +60,7 @@ struct MainTabView: View {
             .tabItem {
                 Label("Record", systemImage: "mic.fill")
             }
+            .tag(AppTab.record)
 
             NavigationStack {
                 ActionsTabView()
@@ -63,11 +68,13 @@ struct MainTabView: View {
             .tabItem {
                 Label("Actions", systemImage: "bolt.fill")
             }
+            .tag(AppTab.actions)
 
             ProfileView()
                 .tabItem {
                     Label("Profile", systemImage: "person.fill")
                 }
+                .tag(AppTab.profile)
         }
         .tint(.brand)
     }

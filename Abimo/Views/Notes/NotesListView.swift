@@ -6,6 +6,7 @@
 import SwiftUI
 
 struct NotesListView: View {
+    @EnvironmentObject var coordinator: NavigationCoordinator
     @StateObject private var viewModel = NotesViewModel()
 
     var body: some View {
@@ -20,6 +21,14 @@ struct NotesListView: View {
                 } else {
                     ideaList
                 }
+            }
+        }
+        .navigationDestination(isPresented: Binding(
+            get: { coordinator.pendingNote != nil },
+            set: { if !$0 { coordinator.pendingNote = nil } }
+        )) {
+            if let note = coordinator.pendingNote {
+                NoteDetailView(note: note)
             }
         }
         .navigationTitle("")
@@ -215,4 +224,5 @@ struct IdeaCardView: View {
     NavigationStack {
         NotesListView()
     }
+    .environmentObject(NavigationCoordinator())
 }
