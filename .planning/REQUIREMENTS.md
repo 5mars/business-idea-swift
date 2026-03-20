@@ -21,7 +21,7 @@ Requirements for Actions Flow UX milestone. Each maps to roadmap phases.
 
 - [x] **PICK-01**: User sees a full action list when first viewing a new plan, and can pick their first action
 - [x] **PICK-02**: User sees remaining actions after completing an action, with "Keep the momentum?" framing
-- [x] **PICK-03**: Action picker cards show action name, type icon, and time estimate
+- [x] **PICK-03**: Action picker cards show action name and type icon
 
 ### User-Driven Ordering
 
@@ -31,8 +31,8 @@ Requirements for Actions Flow UX milestone. Each maps to roadmap phases.
 
 ### Completion Flow
 
-- [ ] **CELB-01**: After completing an action, a congrats half-sheet appears with celebration animation and playful CTA
-- [ ] **CELB-02**: Tapping the CTA slides the congrats sheet into the action picker ("Keep the momentum?" view)
+- [x] **CELB-01**: After completing an action, a congrats half-sheet appears with celebration animation and playful CTA
+- [x] **CELB-02**: Tapping the CTA slides the congrats sheet into the action picker ("Keep the momentum?" view)
 - [x] **CELB-03**: Two-step flow uses a single sheet with enum-driven state (no boolean sheet races)
 
 ## Future Requirements
@@ -77,8 +77,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ORDR-01 | Phase 5 | Complete |
 | ORDR-02 | Phase 5 | Complete |
 | ORDR-03 | Phase 5 | Complete |
-| CELB-01 | Phase 8 | Pending |
-| CELB-02 | Phase 8 | Pending |
+| CELB-01 | Phase 8 | Complete |
+| CELB-02 | Phase 8 | Complete |
 | CELB-03 | Phase 5 | Complete |
 
 **Coverage:**

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Actions Flow UX
 status: unknown
-stopped_at: Completed 07-01-PLAN.md
-last_updated: "2026-03-19T20:40:10.698Z"
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-03-20T16:53:59.261Z"
 progress:
   total_phases: 4
-  completed_phases: 3
-  total_plans: 4
-  completed_plans: 4
+  completed_phases: 4
+  total_plans: 5
+  completed_plans: 5
 ---
 
 # Project State
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Users actually complete their micro-actions because the experience is engaging, rewarding, and fun
-**Current focus:** Phase 07 — action-picker-sheet
+**Current focus:** Phase 08 — two-step-completion-sheet-and-full-wiring
 
 ## Current Position
 
-Phase: 07 (action-picker-sheet) — EXECUTING
+Phase: 08 (two-step-completion-sheet-and-full-wiring) — EXECUTING
 Plan: 1 of 1
 
 ## Accumulated Context
@@ -47,6 +47,8 @@ Recent decisions affecting current work:
 - [Phase 06-01]: Index-based position arithmetic (162pt header + 136pt*index) used instead of GeometryReader for bubble positioning
 - [Phase 07-action-picker-sheet]: Single ActionPickerSheet view handles both firstVisit and postCompletion modes via PickerMode enum parameter
 - [Phase 07-action-picker-sheet]: excludedActionId: UUID? = nil pattern filters the just-completed action from post-completion picker without ViewModel changes
+- [Phase 08-two-step-completion-sheet-and-full-wiring]: PostCompletionSheetContent owns its own .presentationDetents — in-sheet swap avoids dismiss+re-present race by never dismissing the sheet
+- [Phase 08-two-step-completion-sheet-and-full-wiring]: advanceToActionPicker() deprecated to no-op — PostCompletionSheetContent.advance() handles transition locally
 
 ### Pending Todos
 
@@ -64,5 +66,5 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T20:40:10.696Z
-Stopped at: Completed 07-01-PLAN.md
+Last session: 2026-03-20T16:53:59.258Z
+Stopped at: Completed 08-01-PLAN.md

@@ -131,7 +131,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 08-01-PLAN.md — Build `CongratsHalfSheet` with Lottie trophy animation and "Keep the momentum?" CTA; wire `PostCompletionSheet` enum into `ActionPlanDetailView` via single `.sheet(item:)`; retire `MomentumPickerSheet`
+- [ ] 08-01-PLAN.md — Build `CongratsHalfSheet` with Lottie star burst animation and "Keep the momentum?" CTA; wire `PostCompletionSheet` enum into `ActionPlanDetailView` via single `.sheet(item:)`; retire `MomentumPickerSheet`
 
 ## Progress
 
@@ -147,4 +147,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 5. ViewModel Foundation and Ordering Model | 2/2 | Complete   | 2026-03-19 | - |
 | 6. Tap Bubbles on Nodes | 1/1 | Complete   | 2026-03-19 | - |
 | 7. Action Picker Sheet | 1/1 | Complete   | 2026-03-19 | - |
-| 8. Two-Step Completion Sheet and Full Wiring | v1.1 | 0/1 | Not started | - |
+| 8. Two-Step Completion Sheet and Full Wiring | 1/1 | Complete   | 2026-03-20 | - |
