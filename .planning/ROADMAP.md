@@ -72,7 +72,7 @@ Plans:
 
 </details>
 
-### 🚧 v1.1 Actions Flow UX (In Progress)
+### v1.1 Actions Flow UX (In Progress)
 
 **Milestone Goal:** Make the journey path intuitive — users understand their actions, choose their own order, and get celebrated properly between completions.
 
@@ -128,15 +128,16 @@ Plans:
   2. Tapping the CTA on the congrats sheet transitions to the action picker within the same sheet — no sheet dismiss/re-present gap is visible
   3. Completing the final action in a plan shows the full-screen plan completion overlay (not the congrats half-sheet) — the two flows are mutually exclusive
   4. Rapidly completing multiple actions back-to-back (3 in a row) never produces a broken or stuck sheet state
-**Plans**: 1 plan
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Build `CongratsHalfSheet` with Lottie star burst animation and "Keep the momentum?" CTA; wire `PostCompletionSheet` enum into `ActionPlanDetailView` via single `.sheet(item:)`; retire `MomentumPickerSheet`
+- [x] 08-01-PLAN.md — Build `CongratsHalfSheet` with Lottie star burst animation and "Keep the momentum?" CTA; wire `PostCompletionSheet` enum into `ActionPlanDetailView` via single `.sheet(item:)`; retire `MomentumPickerSheet`
+- [ ] 08-02-PLAN.md — Fix blank animation: add reduce-motion fallback (final frame) and nil-guard static trophy fallback to CongratsHalfSheet
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -144,7 +145,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 2. Journey Path and Action Cards | v1.0 | 3/3 | Complete | 2026-03-19 |
 | 3. Celebration System | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 4. Polish | v1.0 | 1/1 | Complete | 2026-03-19 |
-| 5. ViewModel Foundation and Ordering Model | 2/2 | Complete   | 2026-03-19 | - |
-| 6. Tap Bubbles on Nodes | 1/1 | Complete   | 2026-03-19 | - |
-| 7. Action Picker Sheet | 1/1 | Complete   | 2026-03-19 | - |
-| 8. Two-Step Completion Sheet and Full Wiring | 1/1 | Complete   | 2026-03-20 | - |
+| 5. ViewModel Foundation and Ordering Model | v1.1 | 2/2 | Complete | 2026-03-19 |
+| 6. Tap Bubbles on Nodes | v1.1 | 1/1 | Complete | 2026-03-19 |
+| 7. Action Picker Sheet | v1.1 | 1/1 | Complete | 2026-03-19 |
+| 8. Two-Step Completion Sheet and Full Wiring | 2/2 | Complete   | 2026-03-20 | - |

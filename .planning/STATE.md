@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Actions Flow UX
 status: unknown
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-03-20T16:53:59.261Z"
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-03-20T18:20:00.000Z"
 progress:
   total_phases: 4
   completed_phases: 4
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 6
+  completed_plans: 6
 ---
 
 # Project State
@@ -23,8 +23,8 @@ See: .planning/PROJECT.md (updated 2026-03-19)
 
 ## Current Position
 
-Phase: 08 (two-step-completion-sheet-and-full-wiring) — EXECUTING
-Plan: 1 of 1
+Phase: 08 (two-step-completion-sheet-and-full-wiring) — COMPLETE
+Plan: 2 of 2 (DONE)
 
 ## Accumulated Context
 
@@ -49,6 +49,8 @@ Recent decisions affecting current work:
 - [Phase 07-action-picker-sheet]: excludedActionId: UUID? = nil pattern filters the just-completed action from post-completion picker without ViewModel changes
 - [Phase 08-two-step-completion-sheet-and-full-wiring]: PostCompletionSheetContent owns its own .presentationDetents — in-sheet swap avoids dismiss+re-present race by never dismissing the sheet
 - [Phase 08-two-step-completion-sheet-and-full-wiring]: advanceToActionPicker() deprecated to no-op — PostCompletionSheetContent.advance() handles transition locally
+- [Phase 08-02]: LottieAnimation.named() nil-guard shows trophy.fill SF Symbol fallback — animation load failure never leaves blank space
+- [Phase 08-02]: Reduce-motion uses .paused(at: .progress(1)) — shows fully-visible final frame instead of invisible frame 0
 
 ### Pending Todos
 
@@ -66,5 +68,5 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T16:53:59.258Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-03-20T18:20:00.000Z
+Stopped at: Completed 08-02-PLAN.md
