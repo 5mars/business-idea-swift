@@ -35,9 +35,23 @@ struct CongratsHalfSheet: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            LottieView(animation: .named("starburst"))
-                .playbackMode(playbackMode)
-                .frame(width: 200, height: 200)
+            Group {
+                if let animation = LottieAnimation.named("starburst") {
+                    LottieView(animation: animation)
+                        .playbackMode(playbackMode)
+                } else {
+                    Image(systemName: "trophy.fill")
+                        .font(.system(size: 80))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.yellow, .orange],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                }
+            }
+            .frame(width: 200, height: 200)
 
             Text(message)
                 .font(.system(size: 20, weight: .bold, design: .rounded))
@@ -61,7 +75,9 @@ struct CongratsHalfSheet: View {
         .background(Color.appBg)
         .onAppear {
             HapticEngine.impact(style: .light)
-            if !AnimationPolicy.reduceMotion {
+            if AnimationPolicy.reduceMotion {
+                playbackMode = .paused(at: .progress(1))
+            } else {
                 playbackMode = .playing(.fromProgress(0, toProgress: 1, loopMode: .playOnce))
             }
         }
