@@ -21,6 +21,7 @@
 		B3C4D5E6F7A8B9C0D1E2F3A4 /* CelebrationStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C4D5E6F7A8B9C0D1E2F3A5 /* CelebrationStateTests.swift */; };
 		C7D8E9F0A1B2C3D4E5F6A7B8 /* OrderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D8E9F0A1B2C3D4E5F6A7B9 /* OrderingTests.swift */; };
 		D8E9F0A1B2C3D4E5F6A7B8C9 /* PostCompletionSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E9F0A1B2C3D4E5F6A7B8CA /* PostCompletionSheetTests.swift */; };
+		E1F2A3B4C5D6E7F8A9B0C1D2 /* CongratsHalfSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F2A3B4C5D6E7F8A9B0C1D3 /* CongratsHalfSheetTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +43,7 @@
 		C7D8E9F0A1B2C3D4E5F6A7B9 /* OrderingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderingTests.swift; sourceTree = "<group>"; };
 		C826A6FCE48478DCB74F2135 /* ActionIconMapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionIconMapperTests.swift; sourceTree = "<group>"; };
 		D8E9F0A1B2C3D4E5F6A7B8CA /* PostCompletionSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostCompletionSheetTests.swift; sourceTree = "<group>"; };
+		E1F2A3B4C5D6E7F8A9B0C1D3 /* CongratsHalfSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CongratsHalfSheetTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -118,6 +120,7 @@
 				B3C4D5E6F7A8B9C0D1E2F3A5 /* CelebrationStateTests.swift */,
 				C7D8E9F0A1B2C3D4E5F6A7B9 /* OrderingTests.swift */,
 				D8E9F0A1B2C3D4E5F6A7B8CA /* PostCompletionSheetTests.swift */,
+				E1F2A3B4C5D6E7F8A9B0C1D3 /* CongratsHalfSheetTests.swift */,
 			);
 			path = AbimoTests;
 			sourceTree = "<group>";
@@ -252,6 +255,7 @@
 				B3C4D5E6F7A8B9C0D1E2F3A4 /* CelebrationStateTests.swift in Sources */,
 				C7D8E9F0A1B2C3D4E5F6A7B8 /* OrderingTests.swift in Sources */,
 				D8E9F0A1B2C3D4E5F6A7B8C9 /* PostCompletionSheetTests.swift in Sources */,
+				E1F2A3B4C5D6E7F8A9B0C1D2 /* CongratsHalfSheetTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
