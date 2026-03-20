@@ -1,72 +1,72 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Actions Flow UX
+milestone: v1.2
+milestone_name: Flow Polish
 status: unknown
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-03-20T18:20:00.000Z"
+stopped_at: "09-01: Tasks 1-2 complete, paused at Task 3 (human-verify checkpoint)"
+last_updated: "2026-03-20T21:26:31.821Z"
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 6
-  completed_plans: 6
+  total_phases: 2
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-19)
+See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** Users actually complete their micro-actions because the experience is engaging, rewarding, and fun
-**Current focus:** Phase 08 — two-step-completion-sheet-and-full-wiring
+**Current focus:** Phase 09 — recording-flow-polish
 
 ## Current Position
 
-Phase: 08 (two-step-completion-sheet-and-full-wiring) — COMPLETE
-Plan: 2 of 2 (DONE)
+Phase: 09 (recording-flow-polish) — EXECUTING
+Plan: 1 of 1
+
+## Performance Metrics
+
+**Velocity:**
+
+- Total plans completed: 0 (this milestone)
+- Average duration: —
+- Total execution time: —
+
+**By Phase:**
+
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| - | - | - | - |
+
+*Updated after each plan completion*
 
 ## Accumulated Context
 
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
 
-- [v1.1 scoping]: PostCompletionSheet enum replaces boolean flags — avoids SwiftUI sheet queue race
-- [v1.1 scoping]: JourneyPathView must switch to orderedActions before any picker UI is built — prevents duplicate .active nodes
-- [v1.1 scoping]: Bubbles built before sheets — NodeBubbleView is self-contained, no sheet dependencies
-- [v1.1 scoping]: Action picker built before congrats sheet — congrats CTA opens picker, picker must exist first
-- [v1.1 scoping]: CongratsHalfSheet is separate from CelebrationState — plan completion uses full-screen overlay, not half-sheet
-- [Phase 05-01]: PostCompletionSheet enum on ViewModel drives single .sheet(item:) in ActionPlanDetailView — eliminates boolean sheet races
-- [Phase 05-01]: userOrderedIds @Published + orderedActions computed property — user order separate from microActions, mergeUserOrder handles stale/new IDs on every loadActionPlan
-- [Phase 05-02]: JourneyPathView uses orderedActions exclusively — view layer no longer references microActions directly
-- [Phase 05-02]: Single .sheet(item: postCompletionSheet) replaces all boolean CommitmentSheet/MomentumPickerSheet modifiers in ActionPlanDetailView
-- [Phase 06-01]: activeBubbleId at JourneyPathView level (view-local @State) drives single-selection bubble — not ViewModel property
-- [Phase 06-01]: Bubble overlay rendered via .overlay on inner VStack (not in JourneyNodeView) to avoid gesture competition
-- [Phase 06-01]: Index-based position arithmetic (162pt header + 136pt*index) used instead of GeometryReader for bubble positioning
-- [Phase 07-action-picker-sheet]: Single ActionPickerSheet view handles both firstVisit and postCompletion modes via PickerMode enum parameter
-- [Phase 07-action-picker-sheet]: excludedActionId: UUID? = nil pattern filters the just-completed action from post-completion picker without ViewModel changes
-- [Phase 08-two-step-completion-sheet-and-full-wiring]: PostCompletionSheetContent owns its own .presentationDetents — in-sheet swap avoids dismiss+re-present race by never dismissing the sheet
-- [Phase 08-two-step-completion-sheet-and-full-wiring]: advanceToActionPicker() deprecated to no-op — PostCompletionSheetContent.advance() handles transition locally
-- [Phase 08-02]: LottieAnimation.named() nil-guard shows trophy.fill SF Symbol fallback — animation load failure never leaves blank space
-- [Phase 08-02]: Reduce-motion uses .paused(at: .progress(1)) — shows fully-visible final frame instead of invisible frame 0
+- [Phase 09-recording-flow-polish]: NavigationCoordinator as @MainActor ObservableObject injected as @EnvironmentObject enables cross-tab deep-link from Record to Notes without prop drilling
+- [Phase 09-recording-flow-polish]: Async test methods required in @MainActor XCTestCase for Xcode 26 Swift 6 strict concurrency — synchronous @MainActor class instantiation crashes with signal abrt
+- [Phase 09-recording-flow-polish]: Static shouldShowTranscribingPlaceholder helper on NoteDetailView struct enables XCTest behavioral coverage without ViewInspector
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
 - CelebrationStateTests have timer-related failures in test runner (app logic works correctly)
 - 2 direct `withAnimation` calls in ActionDetailSheet bypass AnimationPolicy (copy button feedback)
-- CelebrationStateTests have timer-related failures in test runner (app logic works correctly)
-- 2 direct `withAnimation` calls in ActionDetailSheet bypass AnimationPolicy (copy button feedback)
-- Phase 6 RESOLVED: Gesture priority handled by rendering NodeBubbleView at JourneyPathView level (not inside JourneyNodeView) — no gesture competition observed
-- UIScreen.main deprecation warning on iOS 26 SDK (bubble x-positioning) — deferred, cosmetic warning only
-- Phase 8: Sheet chaining timing (DispatchQueue.main.asyncAfter gap) must be verified on physical device, not just Simulator
+- UIScreen.main deprecation warning on iOS 26 SDK (bubble x-positioning) — cosmetic warning only
+- PostCompletionSheet.actionPicker enum case is dead code
+- CommitmentSheet.swift is unreachable stale file
+- loadActionPlan doesn't re-trigger picker on reload (PICK-01 edge case)
 
 ## Session Continuity
 
-Last session: 2026-03-20T18:20:00.000Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-03-20T21:26:14.822Z
+Stopped at: 09-01: Tasks 1-2 complete, paused at Task 3 (human-verify checkpoint)
+Resume file: None
