@@ -1,39 +1,29 @@
 # Requirements: Abimo
 
-**Defined:** 2026-03-19
+**Defined:** 2026-03-20
 **Core Value:** Users actually complete their micro-actions because the experience is engaging, rewarding, and fun — not another abandoned to-do list.
 
-## v1.0 Requirements (Validated)
+## v1.2 Requirements
 
-All v1.0 requirements shipped. See MILESTONES.md for details.
+Requirements for Flow Polish milestone. Each maps to roadmap phases.
 
-## v1.1 Requirements
+### Navigation & Routing
 
-Requirements for Actions Flow UX milestone. Each maps to roadmap phases.
+- [x] **NAV-01**: After saving a recording, app switches to Notes tab and deep-links to the new idea's detail view
+- [ ] **NAV-02**: "Get your action plan" button navigates to the action plan in the Actions tab (not just dismiss)
 
-### Node Discoverability
+### Loading & Feedback
 
-- [x] **DISC-01**: User can tap any journey node to see a bubble with the action name and a CTA button
-- [x] **DISC-02**: Bubble shows "Complete!" button on the active node and "See more" on completed nodes
-- [x] **DISC-03**: Only one bubble is visible at a time (tapping another node dismisses the previous)
+- [x] **LOAD-01**: Transcription-in-progress shows a loading indicator (spinner or skeleton) so the user knows the app is working
 
-### Action Picker
+### Flow Simplification
 
-- [x] **PICK-01**: User sees a full action list when first viewing a new plan, and can pick their first action
-- [x] **PICK-02**: User sees remaining actions after completing an action, with "Keep the momentum?" framing
-- [x] **PICK-03**: Action picker cards show action name and type icon
+- [ ] **FLOW-01**: SWOT analysis triggers with a single button tap (no intermediate page with second button)
+- [ ] **FLOW-02**: After SWOT sheet dismisses, the idea's note view refreshes to show the SWOT card and "Ready to act" button without manual navigation
 
-### User-Driven Ordering
+### Naming Consistency
 
-- [x] **ORDR-01**: When user picks an action from the picker, it becomes the next node on the journey path
-- [x] **ORDR-02**: Remaining unpicked actions keep their relative AI-generated order below the chosen one
-- [x] **ORDR-03**: User's chosen order persists across app restarts (UserDefaults, keyed by plan ID)
-
-### Completion Flow
-
-- [x] **CELB-01**: After completing an action, a congrats half-sheet appears with celebration animation and playful CTA
-- [x] **CELB-02**: Tapping the CTA slides the congrats sheet into the action picker ("Keep the momentum?" view)
-- [x] **CELB-03**: Two-step flow uses a single sheet with enum-driven state (no boolean sheet races)
+- [ ] **NAME-01**: Action plan title inherits the idea's recording title — "Idea A" → "Idea A's action plan" everywhere it appears
 
 ## Future Requirements
 
@@ -42,25 +32,17 @@ Requirements for Actions Flow UX milestone. Each maps to roadmap phases.
 - **DISC-04**: "Pick this next" bubble on unchosen/locked nodes as ordering entry point
 - **CELB-04**: Voice note CTA ("What's next" edge function) — Supabase not ready
 
-### Deferred from v1.0
-
-- **GAME-01**: Streak celebration on new streak milestones (3-day, 7-day, 30-day)
-- **GAME-02**: Card flip animation variant (alternate celebration styles to prevent fatigue)
-- **GAME-03**: Sound effects for celebrations (opt-in toggle)
-- **ADVP-01**: Bezier curved connecting lines between nodes
-- **ADVP-02**: Parallax scrolling effect on path background
-
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Drag-to-reorder nodes on path | Over-engineered; picker-based selection is simpler and fits the game metaphor |
 | XP/points system | Adds complexity without clear value for this use case |
-| Sound effects on celebrations | Adds bundle size, may annoy users (revisit later) |
-| Supabase schema changes for ordering | Client-side UserDefaults sufficient for v1.1; sync deferred |
-| matchedGeometryEffect card-to-node | Nice-to-have animation polish, not core UX fix |
 | Leaderboards/social | App is personal, not competitive |
+| Sound effects | Adds bundle size, may annoy users (revisit later) |
 | Manual action creation | Keeping SWOT origin, not becoming a general todo app |
+| "What's next" AI edge function | Supabase not ready |
+| Cross-device ordering sync | UserDefaults sufficient for now |
+| Full SWOT/recording redesign | v1.2 fixes friction points, not a full redesign |
 
 ## Traceability
 
@@ -68,24 +50,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DISC-01 | Phase 6 | Complete |
-| DISC-02 | Phase 6 | Complete |
-| DISC-03 | Phase 6 | Complete |
-| PICK-01 | Phase 7 | Complete |
-| PICK-02 | Phase 7 | Complete |
-| PICK-03 | Phase 7 | Complete |
-| ORDR-01 | Phase 5 | Complete |
-| ORDR-02 | Phase 5 | Complete |
-| ORDR-03 | Phase 5 | Complete |
-| CELB-01 | Phase 8 | Complete |
-| CELB-02 | Phase 8 | Complete |
-| CELB-03 | Phase 5 | Complete |
+| NAV-01 | Phase 9 | Complete |
+| LOAD-01 | Phase 9 | Complete |
+| FLOW-01 | Phase 10 | Pending |
+| FLOW-02 | Phase 10 | Pending |
+| NAME-01 | Phase 10 | Pending |
+| NAV-02 | Phase 10 | Pending |
 
 **Coverage:**
-- v1.1 requirements: 12 total
-- Mapped to phases: 12
-- Unmapped: 0 ✓
+- v1.2 requirements: 6 total
+- Mapped to phases: 6
+- Unmapped: 0
 
 ---
-*Requirements defined: 2026-03-19*
-*Last updated: 2026-03-19 after v1.1 roadmap creation*
+*Requirements defined: 2026-03-20*
+*Last updated: 2026-03-20 after roadmap creation*

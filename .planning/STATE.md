@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Flow Polish
 status: unknown
-stopped_at: "09-01: Tasks 1-2 complete, paused at Task 3 (human-verify checkpoint)"
-last_updated: "2026-03-20T21:26:31.821Z"
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-03-21T01:07:28.566Z"
 progress:
   total_phases: 2
   completed_phases: 1
@@ -41,6 +41,7 @@ Plan: 1 of 1
 | - | - | - | - |
 
 *Updated after each plan completion*
+| Phase 09-recording-flow-polish P01 | 24min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -48,6 +49,9 @@ Plan: 1 of 1
 
 Decisions are logged in PROJECT.md Key Decisions table.
 
+- [Phase 09-recording-flow-polish]: NavigationCoordinator as @MainActor ObservableObject injected as @EnvironmentObject enables cross-tab deep-link from Record to Notes without prop drilling
+- [Phase 09-recording-flow-polish]: Async test methods required in @MainActor XCTestCase for Xcode 26 Swift 6 strict concurrency — synchronous @MainActor class instantiation crashes with signal abrt
+- [Phase 09-recording-flow-polish]: Static shouldShowTranscribingPlaceholder helper on NoteDetailView struct enables XCTest behavioral coverage without ViewInspector
 - [Phase 09-recording-flow-polish]: NavigationCoordinator as @MainActor ObservableObject injected as @EnvironmentObject enables cross-tab deep-link from Record to Notes without prop drilling
 - [Phase 09-recording-flow-polish]: Async test methods required in @MainActor XCTestCase for Xcode 26 Swift 6 strict concurrency — synchronous @MainActor class instantiation crashes with signal abrt
 - [Phase 09-recording-flow-polish]: Static shouldShowTranscribingPlaceholder helper on NoteDetailView struct enables XCTest behavioral coverage without ViewInspector
@@ -67,6 +71,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-20T21:26:14.822Z
-Stopped at: 09-01: Tasks 1-2 complete, paused at Task 3 (human-verify checkpoint)
+Last session: 2026-03-21T01:07:28.564Z
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None

@@ -32,7 +32,7 @@
 
 **Milestone Goal:** Remove friction from the recording → SWOT → action plan pipeline and fix navigation/refresh bugs so the full idea-to-action flow works seamlessly.
 
-- [ ] **Phase 9: Recording Flow Polish** - Loading indicator during transcription and deep-link routing after save
+- [x] **Phase 9: Recording Flow Polish** - Loading indicator during transcription and deep-link routing after save (completed 2026-03-21)
 - [ ] **Phase 10: SWOT and Action Plan Flow** - Single-button SWOT trigger, post-SWOT refresh, action plan naming, and navigation to action plan
 
 ## Phase Details
@@ -47,7 +47,7 @@
   3. The loading state clears and the idea detail view shows when transcription completes
 **Plans**: 1 plan
 Plans:
-- [ ] 09-01-PLAN.md — NavigationCoordinator, cross-tab deep-link, transcription placeholder card
+- [x] 09-01-PLAN.md — NavigationCoordinator, cross-tab deep-link, transcription placeholder card
 
 ### Phase 10: SWOT and Action Plan Flow
 **Goal**: The full idea → SWOT → action plan pipeline works in one continuous forward flow with no dead ends or stale views
@@ -72,5 +72,5 @@ Plans:
 | 6. Tap Bubbles on Nodes | v1.1 | 1/1 | Complete | 2026-03-19 |
 | 7. Action Picker Sheet | v1.1 | 1/1 | Complete | 2026-03-19 |
 | 8. Two-Step Completion Sheet and Full Wiring | v1.1 | 2/2 | Complete | 2026-03-20 |
-| 9. Recording Flow Polish | v1.2 | 0/1 | Planning complete | - |
+| 9. Recording Flow Polish | v1.2 | 1/1 | Complete   | 2026-03-21 |
 | 10. SWOT and Action Plan Flow | v1.2 | 0/? | Not started | - |
