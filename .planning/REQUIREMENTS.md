@@ -1,29 +1,38 @@
 # Requirements: Abimo
 
-**Defined:** 2026-03-20
+**Defined:** 2026-03-21
 **Core Value:** Users actually complete their micro-actions because the experience is engaging, rewarding, and fun — not another abandoned to-do list.
 
-## v1.2 Requirements
+## v1.3 Requirements
 
-Requirements for Flow Polish milestone. Each maps to roadmap phases.
+Requirements for Actions Polish milestone. Each maps to roadmap phases.
 
-### Navigation & Routing
+### Actions Tab Layout
 
-- [x] **NAV-01**: After saving a recording, app switches to Notes tab and deep-links to the new idea's detail view
-- [ ] **NAV-02**: "Get your action plan" button navigates to the action plan in the Actions tab (not just dismiss)
+- [ ] **TABS-01**: Actions tab cards show plan title + progress + clean committed action preview (not todo-style circle)
+- [ ] **TABS-02**: Committed action preview dropdown expands to show full title and description
+- [ ] **TABS-03**: Streak section does not show a "commitment" button
 
-### Loading & Feedback
+### All-Actions View
 
-- [x] **LOAD-01**: Transcription-in-progress shows a loading indicator (spinner or skeleton) so the user knows the app is working
+- [ ] **LIST-01**: Button on journey path header opens a full-screen list of all micro-actions with descriptions, templates, and action buttons (copy, select as next)
+- [ ] **LIST-02**: User can select any incomplete action as "next" from the all-actions view, syncing with the journey path
 
-### Flow Simplification
+### Action Switching
 
-- [x] **FLOW-01**: SWOT analysis triggers with a single button tap (no intermediate page with second button)
-- [ ] **FLOW-02**: After SWOT sheet dismisses, the idea's note view refreshes to show the SWOT card and "Ready to act" button without manual navigation
+- [x] **SWAP-01**: User can switch their next action from the tooltip on the journey path without completing the current one
+- [ ] **SWAP-02**: Switching next action from either tooltip or all-actions view updates the journey path node order immediately
 
-### Naming Consistency
+### Path Visuals
 
-- [x] **NAME-01**: Action plan title inherits the idea's recording title — "Idea A" → "Idea A's action plan" everywhere it appears
+- [ ] **PATH-01**: Connecting lines between journey nodes use Bezier curves instead of straight lines
+
+### Tooltip Overhaul
+
+- [x] **TIPS-01**: Tooltips are larger and show the full action title without truncation
+- [x] **TIPS-02**: Tooltips expand inline to show description, template text, and action buttons (copy, etc.)
+- [x] **TIPS-03**: Tooltips include "Do this next" (switch) and "Complete" buttons
+- [x] **TIPS-04**: Tooltip arrow tip is aligned with the center of the tapped node, with no offset drift
 
 ## Future Requirements
 
@@ -42,7 +51,6 @@ Requirements for Flow Polish milestone. Each maps to roadmap phases.
 | Manual action creation | Keeping SWOT origin, not becoming a general todo app |
 | "What's next" AI edge function | Supabase not ready |
 | Cross-device ordering sync | UserDefaults sufficient for now |
-| Full SWOT/recording redesign | v1.2 fixes friction points, not a full redesign |
 
 ## Traceability
 
@@ -50,18 +58,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| NAV-01 | Phase 9 | Complete |
-| LOAD-01 | Phase 9 | Complete |
-| FLOW-01 | Phase 10 | Complete |
-| FLOW-02 | Phase 10 | Pending |
-| NAME-01 | Phase 10 | Complete |
-| NAV-02 | Phase 10 | Pending |
+| TABS-01 | Phase 12 | Pending |
+| TABS-02 | Phase 12 | Pending |
+| TABS-03 | Phase 12 | Pending |
+| LIST-01 | Phase 13 | Pending |
+| LIST-02 | Phase 13 | Pending |
+| SWAP-01 | Phase 11 | Complete |
+| SWAP-02 | Phase 13 | Pending |
+| PATH-01 | Phase 12 | Pending |
+| TIPS-01 | Phase 11 | Complete |
+| TIPS-02 | Phase 11 | Complete |
+| TIPS-03 | Phase 11 | Complete |
+| TIPS-04 | Phase 11 | Complete |
 
 **Coverage:**
-- v1.2 requirements: 6 total
-- Mapped to phases: 6
+- v1.3 requirements: 12 total
+- Mapped to phases: 12
 - Unmapped: 0
 
 ---
-*Requirements defined: 2026-03-20*
-*Last updated: 2026-03-20 after roadmap creation*
+*Requirements defined: 2026-03-21*
+*Last updated: 2026-03-21 after roadmap creation*

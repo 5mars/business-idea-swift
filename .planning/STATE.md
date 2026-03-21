@@ -1,30 +1,30 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Flow Polish
+milestone: v1.3
+milestone_name: Actions Polish
 status: unknown
-stopped_at: Completed 10-02-PLAN.md
-last_updated: "2026-03-21T03:04:42.244Z"
+stopped_at: "Checkpoint: Task 3 visual verification — awaiting human approval for 11-01-PLAN.md"
+last_updated: "2026-03-21T19:48:00.959Z"
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 3
-  completed_plans: 3
+  total_phases: 3
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-20)
+See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Users actually complete their micro-actions because the experience is engaging, rewarding, and fun
-**Current focus:** Phase 10 — swot-and-action-plan-flow
+**Current focus:** Phase 11 — tooltip-overhaul-and-action-switching
 
 ## Current Position
 
-Phase: 10 (swot-and-action-plan-flow) — EXECUTING
-Plan: 2 of 2
+Phase: 11 (tooltip-overhaul-and-action-switching) — EXECUTING
+Plan: 1 of 1
 
 ## Performance Metrics
 
@@ -40,10 +40,12 @@ Plan: 2 of 2
 |-------|-------|-------|----------|
 | - | - | - | - |
 
+**Recent Trend:**
+
+- Last 5 plans: —
+- Trend: —
+
 *Updated after each plan completion*
-| Phase 09-recording-flow-polish P01 | 24min | 3 tasks | 8 files |
-| Phase 10-swot-and-action-plan-flow P01 | 25min | 1 tasks | 7 files |
-| Phase 10-swot-and-action-plan-flow P02 | 25min | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -51,16 +53,8 @@ Plan: 2 of 2
 
 Decisions are logged in PROJECT.md Key Decisions table.
 
-- [Phase 09-recording-flow-polish]: NavigationCoordinator as @MainActor ObservableObject injected as @EnvironmentObject enables cross-tab deep-link from Record to Notes without prop drilling
-- [Phase 09-recording-flow-polish]: Async test methods required in @MainActor XCTestCase for Xcode 26 Swift 6 strict concurrency — synchronous @MainActor class instantiation crashes with signal abrt
-- [Phase 09-recording-flow-polish]: Static shouldShowTranscribingPlaceholder helper on NoteDetailView struct enables XCTest behavioral coverage without ViewInspector
-- [Phase 09-recording-flow-polish]: NavigationCoordinator as @MainActor ObservableObject injected as @EnvironmentObject enables cross-tab deep-link from Record to Notes without prop drilling
-- [Phase 09-recording-flow-polish]: Async test methods required in @MainActor XCTestCase for Xcode 26 Swift 6 strict concurrency — synchronous @MainActor class instantiation crashes with signal abrt
-- [Phase 09-recording-flow-polish]: Static shouldShowTranscribingPlaceholder helper on NoteDetailView struct enables XCTest behavioral coverage without ViewInspector
-- [Phase 10-swot-and-action-plan-flow]: Static shouldAutoGenerate helper on SWOTAnalysisView guards auto-generate: only triggers when analysis is nil AND no error exists, preventing retry loops
-- [Phase 10-swot-and-action-plan-flow]: planTitle static helper trims whitespace before empty check so whitespace-only noteTitle falls back to AI title rather than producing malformed strings
-- [Phase 10-swot-and-action-plan-flow]: Fire-and-forget Task in SWOTAnalysisView captures values before dismiss and calls AIAnalysisService directly (not viewModel) to survive sheet teardown
-- [Phase 10-swot-and-action-plan-flow]: pendingPlanGeneration flag on NavigationCoordinator bridges loading state across sheet dismiss boundary to ActionsTabView
+- [Phase 11]: arrowOffset computed as nodeCenterX - xPos after clamping (not hardcoded 110) — fixes tooltip arrow alignment bug for all zigzag positions
+- [Phase 11]: NodeBubbleView width 290pt, bubbleEstimatedHeight 130pt — fits full titles without overflow, accommodates button row
 
 ### Pending Todos
 
@@ -70,13 +64,13 @@ None.
 
 - CelebrationStateTests have timer-related failures in test runner (app logic works correctly)
 - 2 direct `withAnimation` calls in ActionDetailSheet bypass AnimationPolicy (copy button feedback)
-- UIScreen.main deprecation warning on iOS 26 SDK (bubble x-positioning) — cosmetic warning only
 - PostCompletionSheet.actionPicker enum case is dead code
 - CommitmentSheet.swift is unreachable stale file
 - loadActionPlan doesn't re-trigger picker on reload (PICK-01 edge case)
+- NoteDetailView onDismiss after SWOT doesn't refresh (user navigates to Actions tab instead)
 
 ## Session Continuity
 
-Last session: 2026-03-21T03:04:42.243Z
-Stopped at: Completed 10-02-PLAN.md
+Last session: 2026-03-21T19:47:53.236Z
+Stopped at: Checkpoint: Task 3 visual verification — awaiting human approval for 11-01-PLAN.md
 Resume file: None
