@@ -12,6 +12,7 @@ struct SWOTAnalysisView: View {
 
     @StateObject private var viewModel: AnalysisViewModel
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var coordinator: NavigationCoordinator
 
     init(transcription: Transcription, preloadedAnalysis: SWOTAnalysis? = nil, noteTitle: String = "") {
         self.transcription = transcription
@@ -219,7 +220,33 @@ struct SWOTAnalysisView: View {
             }
 
             Button {
+                // Capture all values before dismiss
+                let capturedAnalysis = analysis
+                let capturedTranscriptionText = transcription.text
+                let capturedTitle = noteTitle
+
+                // Signal loading state to Actions tab
+                coordinator.pendingPlanGeneration = true
+                // Navigate to Actions tab
+                coordinator.selectedTab = .actions
+                // Dismiss SWOT sheet
                 dismiss()
+
+                // Fire-and-forget: generate plan in background
+                // Using AIAnalysisService directly (not viewModel) to survive sheet dismissal
+                Task { @MainActor in
+                    let service = AIAnalysisService()
+                    do {
+                        _ = try await service.generateAndSaveActionPlan(
+                            analysis: capturedAnalysis,
+                            transcriptionText: capturedTranscriptionText,
+                            noteTitle: capturedTitle
+                        )
+                    } catch {
+                        // Silent failure — plan won't appear; user can retry from NoteDetailView
+                    }
+                    coordinator.pendingPlanGeneration = false
+                }
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "bolt.fill")

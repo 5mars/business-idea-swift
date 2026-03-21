@@ -7,6 +7,7 @@ import SwiftUI
 
 struct ActionsTabView: View {
     @StateObject private var viewModel = ActionsTabViewModel()
+    @EnvironmentObject var coordinator: NavigationCoordinator
 
     var body: some View {
         ZStack {
@@ -18,9 +19,21 @@ struct ActionsTabView: View {
 
                     if viewModel.isLoading {
                         LoadingView(text: "Loading your actions...")
-                    } else if viewModel.plans.isEmpty {
+                    } else if viewModel.plans.isEmpty && !coordinator.pendingPlanGeneration {
                         emptyState
                             .cardEntrance(delay: 0.1)
+                    } else if viewModel.plans.isEmpty && coordinator.pendingPlanGeneration {
+                        // First plan being generated
+                        VStack(spacing: 16) {
+                            Spacer().frame(height: 40)
+                            ProgressView()
+                                .tint(.brand)
+                                .scaleEffect(1.2)
+                            Text("Cooking up your action plan...")
+                                .font(.system(size: 17, weight: .medium, design: .rounded))
+                                .foregroundColor(.textSec)
+                            Spacer().frame(height: 40)
+                        }
                     } else {
                         // Momentum Dashboard
                         if !viewModel.allCompletionDates.isEmpty || viewModel.activeCommitment != nil {
@@ -34,6 +47,21 @@ struct ActionsTabView: View {
                             )
                             .padding(.horizontal, 16)
                             .cardEntrance(delay: 0)
+                        }
+
+                        if coordinator.pendingPlanGeneration {
+                            HStack(spacing: 12) {
+                                ProgressView()
+                                    .tint(.brand)
+                                Text("Cooking up your action plan...")
+                                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                                    .foregroundColor(.textSec)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(Color.brand.opacity(0.06))
+                            .cornerRadius(16)
+                            .padding(.horizontal, 16)
                         }
 
                         ForEach(Array(viewModel.plans.enumerated()), id: \.element.id) { index, plan in
@@ -51,6 +79,16 @@ struct ActionsTabView: View {
         .toolbarBackground(Color.appBg, for: .navigationBar)
         .task {
             await viewModel.loadAllPlans()
+        }
+        .onChange(of: coordinator.selectedTab) { _, newTab in
+            if newTab == .actions {
+                Task { await viewModel.loadAllPlans() }
+            }
+        }
+        .onChange(of: coordinator.pendingPlanGeneration) { _, isPending in
+            if !isPending {
+                Task { await viewModel.loadAllPlans() }
+            }
         }
     }
 

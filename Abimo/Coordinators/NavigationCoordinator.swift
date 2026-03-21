@@ -17,6 +17,7 @@ enum AppTab: Int {
 final class NavigationCoordinator: ObservableObject {
     @Published var selectedTab: AppTab = .notes
     @Published var pendingNote: VoiceNote? = nil
+    @Published var pendingPlanGeneration: Bool = false
 
     func navigateToNote(_ note: VoiceNote) {
         selectedTab = .notes
