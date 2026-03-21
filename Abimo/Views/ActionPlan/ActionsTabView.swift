@@ -36,14 +36,11 @@ struct ActionsTabView: View {
                         }
                     } else {
                         // Momentum Dashboard
-                        if !viewModel.allCompletionDates.isEmpty || viewModel.activeCommitment != nil {
+                        if !viewModel.allCompletionDates.isEmpty {
                             MomentumDashboard(
                                 streak: viewModel.currentStreak,
                                 weekActivity: viewModel.weekActivity,
-                                totalCompletedThisWeek: viewModel.totalCompletedThisWeek,
-                                activeCommitmentText: viewModel.activeCommitmentText,
-                                activeCommitmentPlanId: viewModel.committedActionPlanId(),
-                                activeCommitmentAnalysisId: viewModel.committedActionAnalysisId()
+                                totalCompletedThisWeek: viewModel.totalCompletedThisWeek
                             )
                             .padding(.horizontal, 16)
                             .cardEntrance(delay: 0)
