@@ -60,7 +60,9 @@ struct JourneyPathView: View {
                 .padding(.horizontal, 60)
                 .padding(.bottom, 100)
                 .overlay(alignment: .topLeading) {
-                    bubbleOverlay
+                    GeometryReader { geo in
+                        bubbleOverlay(containerWidth: geo.size.width)
+                    }
                 }
                 .task {
                     // Defer scroll to after first layout pass
@@ -82,12 +84,19 @@ struct JourneyPathView: View {
                 }
             }
         )
+        .onTapGesture {
+            if activeBubbleId != nil {
+                AnimationPolicy.animate(.easeOut(duration: 0.2)) {
+                    activeBubbleId = nil
+                }
+            }
+        }
     }
 
     // MARK: - Bubble Overlay
 
     @ViewBuilder
-    private var bubbleOverlay: some View {
+    private func bubbleOverlay(containerWidth: CGFloat) -> some View {
         if let id = activeBubbleId,
            let index = viewModel.orderedActions.firstIndex(where: { $0.id == id }) {
             let action = viewModel.orderedActions[index]
@@ -95,27 +104,23 @@ struct JourneyPathView: View {
             let zigzagOffset: CGFloat = index.isMultiple(of: 2) ? -60 : 60
 
             // Positioning constants
-            // Header: 16pt top + ProgressRingView(~80pt) + 12pt spacing + title(~22pt) + 32pt bottom = ~162pt
             let headerHeight: CGFloat = 162
-            let nodeStride: CGFloat = 136   // 56pt node + 80pt connecting line
+            let nodeStride: CGFloat = 136
             let bubbleWidth: CGFloat = 290
             let bubbleEstimatedHeight: CGFloat = 130
             let arrowHeight: CGFloat = 8
             let gapAboveNode: CGFloat = 4
 
             // Vertical: place bubble so its arrow tip is just above the node center
-            let nodeCenterY = headerHeight + CGFloat(index) * nodeStride + 28  // +28 = half of 56pt node
+            let nodeCenterY = headerHeight + CGFloat(index) * nodeStride + 28
             let yPos = nodeCenterY - 28 - arrowHeight - gapAboveNode - bubbleEstimatedHeight
 
-            // Horizontal: center bubble on node center, clamped to avoid screen edges
-            // VStack has .padding(.horizontal, 60) so usable width = screenWidth - 120
-            let screenWidth = UIScreen.main.bounds.width - 120
-            let nodeCenterX = screenWidth / 2 + zigzagOffset
+            // Horizontal: use actual container width from GeometryReader (not UIScreen)
+            let nodeCenterX = containerWidth / 2 + zigzagOffset
             let rawX = nodeCenterX - bubbleWidth / 2
-            let xPos = max(8, min(screenWidth - bubbleWidth - 8, rawX))
+            let xPos = max(8, min(containerWidth - bubbleWidth - 8, rawX))
 
-            // Dynamic arrow offset: distance from bubble left edge to node center (TIPS-04)
-            // BubbleShape.path(in:) clamps arrowTipX internally so extreme values are safe
+            // Dynamic arrow offset: distance from bubble left edge to node center
             let arrowOffset = nodeCenterX - xPos
 
             NodeBubbleView(
@@ -126,9 +131,9 @@ struct JourneyPathView: View {
                     activeBubbleId = nil
                     Task { await viewModel.toggleMicroAction(id: action.id, isCompleted: true) }
                 },
-                onSwitch: {                  // SWAP-01 — calls pickAction to make this the next action
-                    viewModel.pickAction(id: action.id)
+                onSwitch: {                  // SWAP-01 — opens action picker so user can choose next action
                     activeBubbleId = nil
+                    viewModel.showActionPicker = true
                 },
                 onSeeMore: {
                     activeBubbleId = nil
