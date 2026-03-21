@@ -11,7 +11,7 @@ Requirements for Actions Polish milestone. Each maps to roadmap phases.
 
 - [ ] **TABS-01**: Actions tab cards show plan title + progress + clean committed action preview (not todo-style circle)
 - [ ] **TABS-02**: Committed action preview dropdown expands to show full title and description
-- [ ] **TABS-03**: Streak section does not show a "commitment" button
+- [x] **TABS-03**: Streak section does not show a "commitment" button
 
 ### All-Actions View
 
@@ -25,7 +25,7 @@ Requirements for Actions Polish milestone. Each maps to roadmap phases.
 
 ### Path Visuals
 
-- [ ] **PATH-01**: Connecting lines between journey nodes use Bezier curves instead of straight lines
+- [x] **PATH-01**: Connecting lines between journey nodes use Bezier curves instead of straight lines
 
 ### Tooltip Overhaul
 
@@ -60,12 +60,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | TABS-01 | Phase 12 | Pending |
 | TABS-02 | Phase 12 | Pending |
-| TABS-03 | Phase 12 | Pending |
+| TABS-03 | Phase 12 | Complete |
 | LIST-01 | Phase 13 | Pending |
 | LIST-02 | Phase 13 | Pending |
 | SWAP-01 | Phase 11 | Complete |
 | SWAP-02 | Phase 13 | Pending |
-| PATH-01 | Phase 12 | Pending |
+| PATH-01 | Phase 12 | Complete |
 | TIPS-01 | Phase 11 | Complete |
 | TIPS-02 | Phase 11 | Complete |
 | TIPS-03 | Phase 11 | Complete |

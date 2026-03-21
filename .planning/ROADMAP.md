@@ -70,9 +70,9 @@ Plans:
   2. Each action plan card in the Actions tab shows the plan title, progress indicator, and a clean committed-action preview — not a to-do-style circle
   3. The committed action preview expands to show the full title and description when tapped
   4. The Actions tab streak section has no "commitment" button visible
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
-- [ ] 12-01-PLAN.md — Bezier S-curves for path lines + remove commitment section from MomentumDashboard
+- [x] 12-01-PLAN.md — Bezier S-curves for path lines + remove commitment section from MomentumDashboard
 - [ ] 12-02-PLAN.md — Bolt icon committed action preview with expand/collapse in ideaCards
 
 ### Phase 13: All-Actions View and Unified Switching
@@ -100,5 +100,5 @@ Plans:
 | 9. Recording Flow Polish | v1.2 | 1/1 | Complete | 2026-03-21 |
 | 10. SWOT and Action Plan Flow | v1.2 | 2/2 | Complete | 2026-03-21 |
 | 11. Tooltip Overhaul and Action Switching | v1.3 | 1/1 | Complete    | 2026-03-21 |
-| 12. Path Curves and Actions Tab Cleanup | v1.3 | 0/2 | Not started | - |
+| 12. Path Curves and Actions Tab Cleanup | v1.3 | 1/2 | In Progress|  |
 | 13. All-Actions View and Unified Switching | v1.3 | 0/? | Not started | - |
