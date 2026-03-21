@@ -98,8 +98,8 @@ struct JourneyPathView: View {
             // Header: 16pt top + ProgressRingView(~80pt) + 12pt spacing + title(~22pt) + 32pt bottom = ~162pt
             let headerHeight: CGFloat = 162
             let nodeStride: CGFloat = 136   // 56pt node + 80pt connecting line
-            let bubbleWidth: CGFloat = 220
-            let bubbleEstimatedHeight: CGFloat = 100
+            let bubbleWidth: CGFloat = 290
+            let bubbleEstimatedHeight: CGFloat = 130
             let arrowHeight: CGFloat = 8
             let gapAboveNode: CGFloat = 4
 
@@ -110,15 +110,25 @@ struct JourneyPathView: View {
             // Horizontal: center bubble on node center, clamped to avoid screen edges
             // VStack has .padding(.horizontal, 60) so usable width = screenWidth - 120
             let screenWidth = UIScreen.main.bounds.width - 120
-            let rawX = (screenWidth / 2 - bubbleWidth / 2) + zigzagOffset
+            let nodeCenterX = screenWidth / 2 + zigzagOffset
+            let rawX = nodeCenterX - bubbleWidth / 2
             let xPos = max(8, min(screenWidth - bubbleWidth - 8, rawX))
+
+            // Dynamic arrow offset: distance from bubble left edge to node center (TIPS-04)
+            // BubbleShape.path(in:) clamps arrowTipX internally so extreme values are safe
+            let arrowOffset = nodeCenterX - xPos
 
             NodeBubbleView(
                 action: action,
                 state: state,
+                arrowOffset: arrowOffset,
                 onComplete: {
                     activeBubbleId = nil
                     Task { await viewModel.toggleMicroAction(id: action.id, isCompleted: true) }
+                },
+                onSwitch: {                  // SWAP-01 — calls pickAction to make this the next action
+                    viewModel.pickAction(id: action.id)
+                    activeBubbleId = nil
                 },
                 onSeeMore: {
                     activeBubbleId = nil
