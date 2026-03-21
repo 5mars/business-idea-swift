@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Flow Polish
 status: unknown
-stopped_at: Completed 10-01-PLAN.md
-last_updated: "2026-03-21T02:36:57.046Z"
+stopped_at: Completed 10-02-PLAN.md
+last_updated: "2026-03-21T03:04:42.244Z"
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -43,6 +43,7 @@ Plan: 2 of 2
 *Updated after each plan completion*
 | Phase 09-recording-flow-polish P01 | 24min | 3 tasks | 8 files |
 | Phase 10-swot-and-action-plan-flow P01 | 25min | 1 tasks | 7 files |
+| Phase 10-swot-and-action-plan-flow P02 | 25min | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -58,6 +59,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 09-recording-flow-polish]: Static shouldShowTranscribingPlaceholder helper on NoteDetailView struct enables XCTest behavioral coverage without ViewInspector
 - [Phase 10-swot-and-action-plan-flow]: Static shouldAutoGenerate helper on SWOTAnalysisView guards auto-generate: only triggers when analysis is nil AND no error exists, preventing retry loops
 - [Phase 10-swot-and-action-plan-flow]: planTitle static helper trims whitespace before empty check so whitespace-only noteTitle falls back to AI title rather than producing malformed strings
+- [Phase 10-swot-and-action-plan-flow]: Fire-and-forget Task in SWOTAnalysisView captures values before dismiss and calls AIAnalysisService directly (not viewModel) to survive sheet teardown
+- [Phase 10-swot-and-action-plan-flow]: pendingPlanGeneration flag on NavigationCoordinator bridges loading state across sheet dismiss boundary to ActionsTabView
 
 ### Pending Todos
 
@@ -74,6 +77,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T02:36:57.044Z
-Stopped at: Completed 10-01-PLAN.md
+Last session: 2026-03-21T03:04:42.243Z
+Stopped at: Completed 10-02-PLAN.md
 Resume file: None
