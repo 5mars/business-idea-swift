@@ -72,4 +72,22 @@ final class NavigationCoordinatorTests: XCTestCase {
         XCTAssertNil(coordinator.pendingNote,
                      "pendingNote must be nil after clearing")
     }
+
+    func testPendingPlanGenerationDefaultsFalse() async {
+        let coordinator = NavigationCoordinator()
+        XCTAssertFalse(coordinator.pendingPlanGeneration,
+                       "NavigationCoordinator must initialize with pendingPlanGeneration == false")
+    }
+
+    func testPendingPlanGenerationToggle() async {
+        let coordinator = NavigationCoordinator()
+
+        coordinator.pendingPlanGeneration = true
+        XCTAssertTrue(coordinator.pendingPlanGeneration,
+                      "pendingPlanGeneration must be true after setting to true")
+
+        coordinator.pendingPlanGeneration = false
+        XCTAssertFalse(coordinator.pendingPlanGeneration,
+                       "pendingPlanGeneration must be false after setting to false")
+    }
 }
