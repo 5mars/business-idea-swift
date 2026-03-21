@@ -8,6 +8,7 @@ import SwiftUI
 struct ActionsTabView: View {
     @StateObject private var viewModel = ActionsTabViewModel()
     @EnvironmentObject var coordinator: NavigationCoordinator
+    @State private var expandedCommitmentPlanId: UUID? = nil
 
     var body: some View {
         ZStack {
@@ -94,7 +95,7 @@ struct ActionsTabView: View {
     private func ideaCard(_ plan: ActionPlan) -> some View {
         let completed = viewModel.completedCount(for: plan.id)
         let total = viewModel.totalCount(for: plan.id)
-        let committedText = viewModel.committedActionText(for: plan.id)
+        let committedAction = viewModel.committedMicroAction(for: plan.id)
 
         return VStack(alignment: .leading, spacing: 18) {
             // Idea title + progress
@@ -112,27 +113,48 @@ struct ActionsTabView: View {
             }
 
             // Committed action (highlighted)
-            if let committed = committedText {
-                HStack(spacing: 12) {
-                    Circle()
-                        .stroke(Color.brand, lineWidth: 2)
-                        .frame(width: 22, height: 22)
+            if let action = committedAction {
+                let isExpanded = expandedCommitmentPlanId == plan.id
 
-                    Text(committed)
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(.textPri)
-                        .lineLimit(2)
+                Button {
+                    AnimationPolicy.animate(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        expandedCommitmentPlanId = isExpanded ? nil : plan.id
+                    }
+                } label: {
+                    VStack(alignment: .leading, spacing: isExpanded ? 10 : 0) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "bolt.fill")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.brand)
 
-                    Spacer()
+                            Text(action.text)
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(.textPri)
+                                .lineLimit(isExpanded ? nil : 2)
+                                .multilineTextAlignment(.leading)
 
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.textSec.opacity(0.5))
+                            Spacer()
+
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.textSec.opacity(0.5))
+                                .rotationEffect(.degrees(isExpanded ? -180 : 0))
+                        }
+
+                        if isExpanded {
+                            Text(action.doneCriteria)
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundColor(.textSec)
+                                .multilineTextAlignment(.leading)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.cardDarkTeal)
+                    .cornerRadius(16)
                 }
-                .padding(14)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.cardDarkTeal)
-                .cornerRadius(16)
+                .buttonStyle(.plain)
             }
 
             // See all actions
@@ -140,7 +162,7 @@ struct ActionsTabView: View {
                 ActionPlanDetailView(planId: plan.id, analysisId: plan.analysisId)
             } label: {
                 HStack(spacing: 6) {
-                    Text(committedText != nil ? "See all actions" : "Pick an action")
+                    Text(committedAction != nil ? "See all actions" : "Pick an action")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.brand)
                     Image(systemName: "arrow.right")
