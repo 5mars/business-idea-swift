@@ -491,6 +491,12 @@ class ActionsTabViewModel: ObservableObject {
             .text
     }
 
+    func committedMicroAction(for planId: UUID) -> MicroAction? {
+        guard let commitment = activeCommitment else { return nil }
+        return microActionsByPlan[planId]?
+            .first(where: { $0.id == commitment.microActionId })
+    }
+
     /// Find which plan contains the committed action
     func committedActionPlanId() -> UUID? {
         guard let commitment = activeCommitment else { return nil }
