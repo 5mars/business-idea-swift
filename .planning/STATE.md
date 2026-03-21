@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Actions Polish
 status: unknown
-stopped_at: Completed 12-01-PLAN.md
-last_updated: "2026-03-21T21:31:50.255Z"
+stopped_at: Completed 12-02-PLAN.md
+last_updated: "2026-03-21T21:35:38.796Z"
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -48,6 +48,7 @@ Plan: 2 of 2
 *Updated after each plan completion*
 | Phase 11-tooltip-overhaul-and-action-switching P01 | 60 | 3 tasks | 2 files |
 | Phase 12-path-curves-and-actions-tab-cleanup P01 | 2 | 2 tasks | 3 files |
+| Phase 12-path-curves-and-actions-tab-cleanup P02 | 5 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -62,6 +63,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 11]: Tap-to-dismiss added on tooltip overlay background via onTapGesture — missing critical UX for any overlay
 - [Phase 12]: S-curve control points at 0.45*height vertically — gentle curve within 80pt frame
 - [Phase 12]: MomentumDashboard simplified to 3 props — commitment section removed, visibility condition uses allCompletionDates only
+- [Phase 12]: expandedCommitmentPlanId as UUID? optional — nil means all collapsed, matching planId means that card is expanded
+- [Phase 12]: committedMicroAction(for:) returns full MicroAction so view can access doneCriteria without extra ViewModel properties
 
 ### Pending Todos
 
@@ -78,6 +81,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T21:31:50.254Z
-Stopped at: Completed 12-01-PLAN.md
+Last session: 2026-03-21T21:35:38.794Z
+Stopped at: Completed 12-02-PLAN.md
 Resume file: None

@@ -42,7 +42,7 @@
 **Milestone Goal:** Make the Actions tab and journey path feel polished — clean layout, better tooltips, flexible action switching, and curved path lines.
 
 - [x] **Phase 11: Tooltip Overhaul and Action Switching** - Redesigned tooltips with full titles, icon buttons, switch/complete actions, and fixed arrow alignment (completed 2026-03-21)
-- [ ] **Phase 12: Path Curves and Actions Tab Cleanup** - Bezier curves between nodes and simplified Actions tab card layout
+- [x] **Phase 12: Path Curves and Actions Tab Cleanup** - Bezier curves between nodes and simplified Actions tab card layout (completed 2026-03-21)
 - [ ] **Phase 13: All-Actions View and Unified Switching** - Full action list accessible from path header with select-as-next wired to both surfaces
 
 ## Phase Details
@@ -70,10 +70,10 @@ Plans:
   2. Each action plan card in the Actions tab shows the plan title, progress indicator, and a clean committed-action preview — not a to-do-style circle
   3. The committed action preview expands to show the full title and description when tapped
   4. The Actions tab streak section has no "commitment" button visible
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [x] 12-01-PLAN.md — Bezier S-curves for path lines + remove commitment section from MomentumDashboard
-- [ ] 12-02-PLAN.md — Bolt icon committed action preview with expand/collapse in ideaCards
+- [x] 12-02-PLAN.md — Bolt icon committed action preview with expand/collapse in ideaCards
 
 ### Phase 13: All-Actions View and Unified Switching
 **Goal**: Users can open a full list of all micro-actions from the journey path header and select any incomplete action as their next, with the path updating immediately regardless of which surface triggered the switch
@@ -100,5 +100,5 @@ Plans:
 | 9. Recording Flow Polish | v1.2 | 1/1 | Complete | 2026-03-21 |
 | 10. SWOT and Action Plan Flow | v1.2 | 2/2 | Complete | 2026-03-21 |
 | 11. Tooltip Overhaul and Action Switching | v1.3 | 1/1 | Complete    | 2026-03-21 |
-| 12. Path Curves and Actions Tab Cleanup | v1.3 | 1/2 | In Progress|  |
+| 12. Path Curves and Actions Tab Cleanup | v1.3 | 2/2 | Complete   | 2026-03-21 |
 | 13. All-Actions View and Unified Switching | v1.3 | 0/? | Not started | - |
