@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Actions Polish
 status: unknown
-stopped_at: "Checkpoint: Task 3 visual verification — awaiting human approval for 11-01-PLAN.md"
-last_updated: "2026-03-21T19:48:00.959Z"
+stopped_at: Completed 11-01-PLAN.md — phase 11 complete
+last_updated: "2026-03-21T20:30:19.024Z"
 progress:
   total_phases: 3
   completed_phases: 1
@@ -46,6 +46,7 @@ Plan: 1 of 1
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 11-tooltip-overhaul-and-action-switching P01 | 60 | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -55,6 +56,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 
 - [Phase 11]: arrowOffset computed as nodeCenterX - xPos after clamping (not hardcoded 110) — fixes tooltip arrow alignment bug for all zigzag positions
 - [Phase 11]: NodeBubbleView width 290pt, bubbleEstimatedHeight 130pt — fits full titles without overflow, accommodates button row
+- [Phase 11]: GeometryReader containerWidth replaces UIScreen.main.bounds.width for accurate arrowOffset computation in bubbleOverlay
+- [Phase 11]: onSwitch opens ActionPickerSheet (showActionPicker = true) instead of calling pickAction directly — user chooses replacement action from full list
+- [Phase 11]: Tap-to-dismiss added on tooltip overlay background via onTapGesture — missing critical UX for any overlay
 
 ### Pending Todos
 
@@ -71,6 +75,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T19:47:53.236Z
-Stopped at: Checkpoint: Task 3 visual verification — awaiting human approval for 11-01-PLAN.md
+Last session: 2026-03-21T20:30:19.022Z
+Stopped at: Completed 11-01-PLAN.md — phase 11 complete
 Resume file: None
