@@ -17,7 +17,7 @@ struct JourneyPathView: View {
         ScrollView(showsIndicators: false) {
             ScrollViewReader { proxy in
                 VStack(spacing: 0) {
-                    // Header: ProgressRingView + plan title
+                    // Header: ProgressRingView + plan title + list button
                     VStack(spacing: 12) {
                         ProgressRingView(
                             progress: viewModel.progress,
@@ -25,10 +25,25 @@ struct JourneyPathView: View {
                             total: viewModel.totalCount
                         )
                         if let plan = viewModel.actionPlan {
-                            Text(plan.title)
-                                .font(.system(size: 18, weight: .bold, design: .rounded))
-                                .foregroundColor(.textPri)
-                                .multilineTextAlignment(.center)
+                            HStack {
+                                Spacer()
+                                Text(plan.title)
+                                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                                    .foregroundColor(.textPri)
+                                    .multilineTextAlignment(.center)
+                                Spacer()
+                                Button {
+                                    viewModel.showActionPicker = true
+                                } label: {
+                                    Image(systemName: "list.bullet")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.brand)
+                                        .padding(10)
+                                        .background(Color.brand.opacity(0.1))
+                                        .clipShape(Circle())
+                                }
+                                .buttonStyle(PlayfulButtonStyle())
+                            }
                         }
                     }
                     .padding(.top, 16)

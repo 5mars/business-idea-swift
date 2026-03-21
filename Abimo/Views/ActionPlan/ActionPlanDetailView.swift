@@ -11,6 +11,7 @@ struct ActionPlanDetailView: View {
 
     @StateObject private var viewModel = ActionPlanViewModel()
     @State private var selectedAction: MicroAction? = nil
+    @State private var pickerMode: PickerMode = .browse
 
     var body: some View {
         ZStack {
@@ -57,7 +58,7 @@ struct ActionPlanDetailView: View {
             .presentationBackground(Color.appBg)
         }
         .sheet(isPresented: $viewModel.showActionPicker) {
-            ActionPickerSheet(viewModel: viewModel, mode: .firstVisit)
+            ActionPickerSheet(viewModel: viewModel, mode: pickerMode)
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.appBg)
@@ -70,6 +71,7 @@ struct ActionPlanDetailView: View {
         }
         .task {
             await viewModel.loadActionPlan(analysisId: analysisId)
+            pickerMode = viewModel.userOrderedIds.isEmpty ? .firstVisit : .browse
         }
     }
 
