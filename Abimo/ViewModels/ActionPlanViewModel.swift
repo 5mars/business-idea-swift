@@ -91,7 +91,7 @@ class ActionPlanViewModel: ObservableObject {
 
     // MARK: - Generate Action Plan (one-tap activation energy)
 
-    func generateActionPlan(analysis: SWOTAnalysis, transcriptionText: String) async {
+    func generateActionPlan(analysis: SWOTAnalysis, transcriptionText: String, noteTitle: String = "") async {
         isGenerating = true
         errorMessage = nil
         defer { isGenerating = false }
@@ -99,7 +99,8 @@ class ActionPlanViewModel: ObservableObject {
         do {
             let (plan, actions) = try await aiService.generateAndSaveActionPlan(
                 analysis: analysis,
-                transcriptionText: transcriptionText
+                transcriptionText: transcriptionText,
+                noteTitle: noteTitle
             )
             actionPlan = plan
             microActions = actions

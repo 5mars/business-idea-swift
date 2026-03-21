@@ -8,17 +8,25 @@ import Charts
 
 struct SWOTAnalysisView: View {
     let transcription: Transcription
+    let noteTitle: String
 
     @StateObject private var viewModel: AnalysisViewModel
     @Environment(\.dismiss) var dismiss
 
-    init(transcription: Transcription, preloadedAnalysis: SWOTAnalysis? = nil) {
+    init(transcription: Transcription, preloadedAnalysis: SWOTAnalysis? = nil, noteTitle: String = "") {
         self.transcription = transcription
+        self.noteTitle = noteTitle
         if let existing = preloadedAnalysis {
             _viewModel = StateObject(wrappedValue: AnalysisViewModel(preloadedAnalysis: existing))
         } else {
             _viewModel = StateObject(wrappedValue: AnalysisViewModel())
         }
+    }
+
+    /// Returns true when SWOT generation should start automatically on appear.
+    /// Auto-generates only when there is no existing analysis and no prior error.
+    static func shouldAutoGenerate(analysis: SWOTAnalysis?, errorMessage: String?) -> Bool {
+        return analysis == nil && errorMessage == nil
     }
 
     var body: some View {
@@ -31,8 +39,6 @@ struct SWOTAnalysisView: View {
                         analysisContent(analysis)
                     } else if viewModel.errorMessage != nil {
                         errorView
-                    } else {
-                        readyView
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -51,7 +57,12 @@ struct SWOTAnalysisView: View {
                         .buttonStyle(PlayfulButtonStyle())
                 }
             }
-            .task { await viewModel.loadAnalysis(transcriptionId: transcription.id) }
+            .task {
+                await viewModel.loadAnalysis(transcriptionId: transcription.id)
+                if Self.shouldAutoGenerate(analysis: viewModel.analysis, errorMessage: viewModel.errorMessage) {
+                    await viewModel.generateAnalysis(transcription: transcription)
+                }
+            }
         }
     }
 
@@ -147,44 +158,6 @@ struct SWOTAnalysisView: View {
             rotatingMessages: cookingMessages,
             subtitle: "This might take 15–30 seconds"
         )
-    }
-
-    private var readyView: some View {
-        VStack(spacing: 20) {
-            Spacer().frame(height: 40)
-
-            ZStack {
-                Circle()
-                    .fill(Color.brand.opacity(0.08))
-                    .frame(width: 100, height: 100)
-
-                Image(systemName: "sparkles")
-                    .font(.system(size: 38))
-                    .foregroundStyle(LinearGradient(
-                        colors: [.brand, .brandLight],
-                        startPoint: .top, endPoint: .bottom
-                    ))
-                    .symbolEffect(.pulse)
-            }
-
-            Text("Let's stress-test this")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
-                .foregroundColor(.textPri)
-
-            Text("Drop your idea in The Lab and\nwe'll break it down for you")
-                .font(.system(size: 15))
-                .foregroundColor(.textSec)
-                .multilineTextAlignment(.center)
-                .lineSpacing(3)
-
-            GradientButton(title: "Run the numbers") {
-                Task { await viewModel.generateAnalysis(transcription: transcription) }
-            }
-            .padding(.horizontal, 32)
-            .padding(.top, 8)
-
-            Spacer().frame(height: 40)
-        }
     }
 
     private var errorView: some View {

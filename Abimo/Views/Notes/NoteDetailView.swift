@@ -366,7 +366,7 @@ struct NoteDetailView: View {
             // Force scroll state cleanup after sheet dismissal
         }) {
             if let transcription = transcription {
-                SWOTAnalysisView(transcription: transcription, preloadedAnalysis: swotAnalysis)
+                SWOTAnalysisView(transcription: transcription, preloadedAnalysis: swotAnalysis, noteTitle: noteTitle)
             }
         }
         .task {
