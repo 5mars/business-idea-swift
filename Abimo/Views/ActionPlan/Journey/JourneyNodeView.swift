@@ -173,7 +173,9 @@ struct ConnectingLineView: View {
 
             var path = Path()
             path.move(to: from)
-            path.addLine(to: to)
+            let control1 = CGPoint(x: from.x, y: from.y + size.height * 0.45)
+            let control2 = CGPoint(x: to.x, y: to.y - size.height * 0.45)
+            path.addCurve(to: to, control1: control1, control2: control2)
 
             if isCompleted {
                 context.stroke(path, with: .color(lineColor), lineWidth: 2.5)
