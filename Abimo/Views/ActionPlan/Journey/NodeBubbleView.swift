@@ -10,7 +10,7 @@ import SwiftUI
 /// Rounded rectangle with a downward-pointing triangle arrow at bottom center.
 struct BubbleShape: Shape {
     /// Horizontal offset of the arrow center within the full bubble width.
-    var arrowOffset: CGFloat = 110
+    var arrowOffset: CGFloat
 
     func path(in rect: CGRect) -> Path {
         let cornerRadius: CGFloat = 12
@@ -50,7 +50,9 @@ struct BubbleShape: Shape {
 struct NodeBubbleView: View {
     let action: MicroAction
     let state: NodeState
+    let arrowOffset: CGFloat        // Injected from bubbleOverlay — computed from node position
     let onComplete: () -> Void
+    let onSwitch: () -> Void        // Calls pickAction(id:) to make this the next action
     let onSeeMore: () -> Void
     let onDismiss: () -> Void
 
@@ -58,22 +60,23 @@ struct NodeBubbleView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Action name
+            // Action name — full title, no truncation (TIPS-01)
             Text(action.text)
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .foregroundColor(.textPri)
-                .lineLimit(2)
-                .minimumScaleFactor(0.85)
                 .fixedSize(horizontal: false, vertical: true)
 
-            // State-driven bottom content
+            Divider()
+                .padding(.vertical, 4)
+
+            // State-driven button row
             stateContent
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .frame(width: 220, alignment: .leading)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .frame(width: 290, alignment: .leading)
         .background(
-            BubbleShape(arrowOffset: 110)
+            BubbleShape(arrowOffset: arrowOffset)
                 .fill(Color.white)
                 .shadow(color: Color.textPri.opacity(0.12), radius: 12, x: 0, y: 4)
         )
@@ -93,20 +96,45 @@ struct NodeBubbleView: View {
     private var stateContent: some View {
         switch state {
         case .active:
-            Button(action: onComplete) {
-                Text("Complete!")
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+            // Active: Complete + See More (D-10 — no Switch button)
+            HStack(spacing: 12) {
+                // Complete button
+                Button(action: onComplete) {
+                    VStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 22, weight: .medium))
+                        Text("Done")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    }
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(minHeight: 44)
+                    .frame(height: 52)
                     .background(Color.brand)
-                    .cornerRadius(10)
+                    .cornerRadius(12)
+                }
+                .buttonStyle(PlayfulButtonStyle())
+
+                // See more button
+                Button(action: onSeeMore) {
+                    VStack(spacing: 4) {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 22, weight: .medium))
+                        Text("More")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundColor(.textSec)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(Color.textSec.opacity(0.06))
+                    .cornerRadius(12)
+                }
+                .buttonStyle(PlayfulButtonStyle())
             }
-            .buttonStyle(PlayfulButtonStyle())
 
         case .completed:
+            // Completed: Done badge + See More (D-12 — no Complete, no Switch)
             HStack {
-                // "Done" badge
+                // Done badge (green capsule)
                 HStack(spacing: 4) {
                     Image(systemName: "checkmark")
                         .font(.system(size: 12, weight: .semibold))
@@ -115,25 +143,63 @@ struct NodeBubbleView: View {
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
                         .foregroundColor(.white)
                 }
-                .padding(.horizontal, 6)
-                .padding(.vertical, 4)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 6)
                 .background(Capsule().fill(Color.brandGreen))
 
                 Spacer()
 
-                // "See more" link
+                // See more button (compact)
                 Button(action: onSeeMore) {
-                    Text("See more")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundColor(.brand)
+                    VStack(spacing: 4) {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 22, weight: .medium))
+                        Text("More")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundColor(.textSec)
+                    .frame(width: 60, height: 52)
+                    .background(Color.textSec.opacity(0.06))
+                    .cornerRadius(12)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(PlayfulButtonStyle())
             }
 
         case .locked:
-            Text("Coming up")
-                .font(.system(size: 14, weight: .regular, design: .rounded))
-                .foregroundColor(.textSec)
+            // Locked: Switch ("Do this next") + See More (D-11 — no Complete button)
+            HStack(spacing: 12) {
+                // Switch button — makes this the next action
+                Button(action: onSwitch) {
+                    VStack(spacing: 4) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 22, weight: .medium))
+                        Text("Next")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundColor(.brand)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(Color.brand.opacity(0.08))
+                    .cornerRadius(12)
+                }
+                .buttonStyle(PlayfulButtonStyle())
+
+                // See more button (same as active state)
+                Button(action: onSeeMore) {
+                    VStack(spacing: 4) {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 22, weight: .medium))
+                        Text("More")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundColor(.textSec)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(Color.textSec.opacity(0.06))
+                    .cornerRadius(12)
+                }
+                .buttonStyle(PlayfulButtonStyle())
+            }
         }
     }
 }
@@ -208,7 +274,9 @@ struct NodeBubbleView: View {
         NodeBubbleView(
             action: baseAction,
             state: .active,
+            arrowOffset: 145,
             onComplete: {},
+            onSwitch: {},
             onSeeMore: {},
             onDismiss: {}
         )
@@ -216,7 +284,9 @@ struct NodeBubbleView: View {
         NodeBubbleView(
             action: completedAction,
             state: .completed,
+            arrowOffset: 145,
             onComplete: {},
+            onSwitch: {},
             onSeeMore: {},
             onDismiss: {}
         )
@@ -224,7 +294,9 @@ struct NodeBubbleView: View {
         NodeBubbleView(
             action: lockedAction,
             state: .locked,
+            arrowOffset: 145,
             onComplete: {},
+            onSwitch: {},
             onSeeMore: {},
             onDismiss: {}
         )
