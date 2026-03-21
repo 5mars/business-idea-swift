@@ -9,19 +9,19 @@ Requirements for Actions Polish milestone. Each maps to roadmap phases.
 
 ### Actions Tab Layout
 
-- [ ] **TABS-01**: Actions tab cards show plan title + progress + clean committed action preview (not todo-style circle)
-- [ ] **TABS-02**: Committed action preview dropdown expands to show full title and description
+- [x] **TABS-01**: Actions tab cards show plan title + progress + clean committed action preview (not todo-style circle)
+- [x] **TABS-02**: Committed action preview dropdown expands to show full title and description
 - [x] **TABS-03**: Streak section does not show a "commitment" button
 
 ### All-Actions View
 
-- [ ] **LIST-01**: Button on journey path header opens a full-screen list of all micro-actions with descriptions, templates, and action buttons (copy, select as next)
-- [ ] **LIST-02**: User can select any incomplete action as "next" from the all-actions view, syncing with the journey path
+- [x] **LIST-01**: Button on journey path header opens a full-screen list of all micro-actions with descriptions, templates, and action buttons (copy, select as next)
+- [x] **LIST-02**: User can select any incomplete action as "next" from the all-actions view, syncing with the journey path
 
 ### Action Switching
 
 - [x] **SWAP-01**: User can switch their next action from the tooltip on the journey path without completing the current one
-- [ ] **SWAP-02**: Switching next action from either tooltip or all-actions view updates the journey path node order immediately
+- [x] **SWAP-02**: Switching next action from either tooltip or all-actions view updates the journey path node order immediately
 
 ### Path Visuals
 
@@ -58,13 +58,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TABS-01 | Phase 12 | Pending |
-| TABS-02 | Phase 12 | Pending |
+| TABS-01 | Phase 12 | Complete |
+| TABS-02 | Phase 12 | Complete |
 | TABS-03 | Phase 12 | Complete |
-| LIST-01 | Phase 13 | Pending |
-| LIST-02 | Phase 13 | Pending |
+| LIST-01 | Phase 13 | Complete |
+| LIST-02 | Phase 13 | Complete |
 | SWAP-01 | Phase 11 | Complete |
-| SWAP-02 | Phase 13 | Pending |
+| SWAP-02 | Phase 13 | Complete |
 | PATH-01 | Phase 12 | Complete |
 | TIPS-01 | Phase 11 | Complete |
 | TIPS-02 | Phase 11 | Complete |

@@ -43,7 +43,7 @@
 
 - [x] **Phase 11: Tooltip Overhaul and Action Switching** - Redesigned tooltips with full titles, icon buttons, switch/complete actions, and fixed arrow alignment (completed 2026-03-21)
 - [x] **Phase 12: Path Curves and Actions Tab Cleanup** - Bezier curves between nodes and simplified Actions tab card layout (completed 2026-03-21)
-- [ ] **Phase 13: All-Actions View and Unified Switching** - Full action list accessible from path header with select-as-next wired to both surfaces
+- [x] **Phase 13: All-Actions View and Unified Switching** - Full action list accessible from path header with select-as-next wired to both surfaces (completed 2026-03-21)
 
 ## Phase Details
 
@@ -83,7 +83,9 @@ Plans:
   1. A button in the journey path header opens a full-screen list showing all micro-actions with descriptions, templates, and action buttons (copy, select as next)
   2. Tapping "Select as next" on any incomplete action in the all-actions view updates which node is active on the journey path immediately
   3. Switching next action from either the tooltip (Phase 11) or the all-actions view produces identical journey path state — both surfaces stay in sync
-**Plans**: TBD
+**Plans:** 1/1 plans complete
+Plans:
+- [x] 13-01-PLAN.md — Enhance ActionPickerSheet with expand/collapse detail cards + header button + unified switching
 
 ## Progress
 
@@ -100,5 +102,5 @@ Plans:
 | 9. Recording Flow Polish | v1.2 | 1/1 | Complete | 2026-03-21 |
 | 10. SWOT and Action Plan Flow | v1.2 | 2/2 | Complete | 2026-03-21 |
 | 11. Tooltip Overhaul and Action Switching | v1.3 | 1/1 | Complete    | 2026-03-21 |
-| 12. Path Curves and Actions Tab Cleanup | v1.3 | 2/2 | Complete   | 2026-03-21 |
-| 13. All-Actions View and Unified Switching | v1.3 | 0/? | Not started | - |
+| 12. Path Curves and Actions Tab Cleanup | v1.3 | 2/2 | Complete    | 2026-03-21 |
+| 13. All-Actions View and Unified Switching | v1.3 | 1/1 | Complete   | 2026-03-21 |

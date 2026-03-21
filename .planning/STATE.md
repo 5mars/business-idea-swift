@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Actions Polish
 status: unknown
-stopped_at: Completed 12-02-PLAN.md
-last_updated: "2026-03-21T21:35:38.796Z"
+stopped_at: Completed 13-01-PLAN.md
+last_updated: "2026-03-21T22:23:30.233Z"
 progress:
   total_phases: 3
-  completed_phases: 2
-  total_plans: 3
-  completed_plans: 3
+  completed_phases: 3
+  total_plans: 4
+  completed_plans: 4
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Users actually complete their micro-actions because the experience is engaging, rewarding, and fun
-**Current focus:** Phase 12 — path-curves-and-actions-tab-cleanup
+**Current focus:** Phase 13 — all-actions-view-and-unified-switching
 
 ## Current Position
 
-Phase: 12 (path-curves-and-actions-tab-cleanup) — EXECUTING
-Plan: 2 of 2
+Phase: 13 (all-actions-view-and-unified-switching) — EXECUTING
+Plan: 1 of 1
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Plan: 2 of 2
 | Phase 11-tooltip-overhaul-and-action-switching P01 | 60 | 3 tasks | 2 files |
 | Phase 12-path-curves-and-actions-tab-cleanup P01 | 2 | 2 tasks | 3 files |
 | Phase 12-path-curves-and-actions-tab-cleanup P02 | 5 | 2 tasks | 2 files |
+| Phase 13-all-actions-view-and-unified-switching P01 | 22 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -65,6 +66,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 12]: MomentumDashboard simplified to 3 props — commitment section removed, visibility condition uses allCompletionDates only
 - [Phase 12]: expandedCommitmentPlanId as UUID? optional — nil means all collapsed, matching planId means that card is expanded
 - [Phase 12]: committedMicroAction(for:) returns full MicroAction so view can access doneCriteria without extra ViewModel properties
+- [Phase 13-all-actions-view-and-unified-switching]: PickerMode.browse is the default for returning users; .firstVisit only when userOrderedIds.isEmpty after load
+- [Phase 13-all-actions-view-and-unified-switching]: browseCard expand/collapse: expandedActionId UUID? toggled via AnimationPolicy.animate(.spring), nil = all collapsed
 
 ### Pending Todos
 
@@ -81,6 +84,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T21:35:38.794Z
-Stopped at: Completed 12-02-PLAN.md
+Last session: 2026-03-21T22:23:30.232Z
+Stopped at: Completed 13-01-PLAN.md
 Resume file: None
