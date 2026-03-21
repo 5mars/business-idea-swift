@@ -18,12 +18,12 @@ Requirements for Flow Polish milestone. Each maps to roadmap phases.
 
 ### Flow Simplification
 
-- [ ] **FLOW-01**: SWOT analysis triggers with a single button tap (no intermediate page with second button)
+- [x] **FLOW-01**: SWOT analysis triggers with a single button tap (no intermediate page with second button)
 - [ ] **FLOW-02**: After SWOT sheet dismisses, the idea's note view refreshes to show the SWOT card and "Ready to act" button without manual navigation
 
 ### Naming Consistency
 
-- [ ] **NAME-01**: Action plan title inherits the idea's recording title — "Idea A" → "Idea A's action plan" everywhere it appears
+- [x] **NAME-01**: Action plan title inherits the idea's recording title — "Idea A" → "Idea A's action plan" everywhere it appears
 
 ## Future Requirements
 
@@ -52,9 +52,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | NAV-01 | Phase 9 | Complete |
 | LOAD-01 | Phase 9 | Complete |
-| FLOW-01 | Phase 10 | Pending |
+| FLOW-01 | Phase 10 | Complete |
 | FLOW-02 | Phase 10 | Pending |
-| NAME-01 | Phase 10 | Pending |
+| NAME-01 | Phase 10 | Complete |
 | NAV-02 | Phase 10 | Pending |
 
 **Coverage:**

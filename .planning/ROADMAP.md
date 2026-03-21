@@ -60,7 +60,7 @@ Plans:
   4. Tapping "Get your action plan" navigates to the action plan in the Actions tab, not just dismisses the sheet
 **Plans**: 2 plans
 Plans:
-- [ ] 10-01-PLAN.md — Auto-generate SWOT on appear, remove readyView, thread noteTitle for plan naming
+- [x] 10-01-PLAN.md — Auto-generate SWOT on appear, remove readyView, thread noteTitle for plan naming
 - [ ] 10-02-PLAN.md — Wire actionPlanCTA to navigate to Actions tab with background generation
 
 ## Progress
@@ -76,4 +76,4 @@ Plans:
 | 7. Action Picker Sheet | v1.1 | 1/1 | Complete | 2026-03-19 |
 | 8. Two-Step Completion Sheet and Full Wiring | v1.1 | 2/2 | Complete | 2026-03-20 |
 | 9. Recording Flow Polish | v1.2 | 1/1 | Complete   | 2026-03-21 |
-| 10. SWOT and Action Plan Flow | v1.2 | 0/2 | Not started | - |
+| 10. SWOT and Action Plan Flow | v1.2 | 1/2 | In Progress|  |
