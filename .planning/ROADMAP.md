@@ -65,7 +65,7 @@
   5. Every screen that previously said "Notes" now says "Ideas" with no remaining "Notes" references visible to the user
 **Plans**: 2 plans
 Plans:
-- [ ] 14-01-PLAN.md — Build CustomTabBar, replace TabView, rename Notes to Ideas
+- [x] 14-01-PLAN.md — Build CustomTabBar, replace TabView, rename Notes to Ideas
 - [ ] 14-02-PLAN.md — On-device visual and haptic verification (checkpoint)
 
 ## Progress
@@ -85,4 +85,4 @@ Plans:
 | 11. Tooltip Overhaul and Action Switching | v1.3 | 1/1 | Complete | 2026-03-21 |
 | 12. Path Curves and Actions Tab Cleanup | v1.3 | 2/2 | Complete | 2026-03-21 |
 | 13. All-Actions View and Unified Switching | v1.3 | 1/1 | Complete | 2026-03-21 |
-| 14. Custom Tab Bar | v1.4 | 0/2 | Not started | - |
+| 14. Custom Tab Bar | v1.4 | 1/2 | In Progress|  |

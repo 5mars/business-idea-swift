@@ -3,36 +3,22 @@
 **Defined:** 2026-03-21
 **Core Value:** Users actually complete their micro-actions because the experience is engaging, rewarding, and fun — not another abandoned to-do list.
 
-## v1.3 Requirements
+## v1.4 Requirements
 
-Requirements for Actions Polish milestone. Each maps to roadmap phases.
+Requirements for Custom Tab Bar milestone. Each maps to roadmap phases.
 
-### Actions Tab Layout
+### Custom Tab Bar
 
-- [x] **TABS-01**: Actions tab cards show plan title + progress + clean committed action preview (not todo-style circle)
-- [x] **TABS-02**: Committed action preview dropdown expands to show full title and description
-- [x] **TABS-03**: Streak section does not show a "commitment" button
+- [x] **TBAR-01**: Custom flat bottom tab bar replaces the system TabView chrome — no native tab bar visible
+- [x] **TBAR-02**: 4 tabs with SF Symbol icons only (no text labels): Ideas, Record, Actions, Profile
+- [x] **TBAR-03**: Plain colors — selected icon is brand color, unselected is gray. No gradients.
+- [x] **TBAR-04**: Haptic feedback fires on every tab switch (HapticEngine.selection)
+- [x] **TBAR-05**: Selected icon plays a shake/bounce animation (Telegram/Duolingo-style)
+- [x] **TBAR-06**: Subtle filled circle or pill indicator behind the selected icon
 
-### All-Actions View
+### Naming
 
-- [x] **LIST-01**: Button on journey path header opens a full-screen list of all micro-actions with descriptions, templates, and action buttons (copy, select as next)
-- [x] **LIST-02**: User can select any incomplete action as "next" from the all-actions view, syncing with the journey path
-
-### Action Switching
-
-- [x] **SWAP-01**: User can switch their next action from the tooltip on the journey path without completing the current one
-- [x] **SWAP-02**: Switching next action from either tooltip or all-actions view updates the journey path node order immediately
-
-### Path Visuals
-
-- [x] **PATH-01**: Connecting lines between journey nodes use Bezier curves instead of straight lines
-
-### Tooltip Overhaul
-
-- [x] **TIPS-01**: Tooltips are larger and show the full action title without truncation
-- [x] **TIPS-02**: Tooltips expand inline to show description, template text, and action buttons (copy, etc.)
-- [x] **TIPS-03**: Tooltips include "Do this next" (switch) and "Complete" buttons
-- [x] **TIPS-04**: Tooltip arrow tip is aligned with the center of the tapped node, with no offset drift
+- [x] **NAME-02**: "Notes" tab renamed to "Ideas" throughout the app (tab label, view titles, any references)
 
 ## Future Requirements
 
@@ -45,37 +31,27 @@ Requirements for Actions Polish milestone. Each maps to roadmap phases.
 
 | Feature | Reason |
 |---------|--------|
-| XP/points system | Adds complexity without clear value for this use case |
-| Leaderboards/social | App is personal, not competitive |
-| Sound effects | Adds bundle size, may annoy users (revisit later) |
-| Manual action creation | Keeping SWOT origin, not becoming a general todo app |
-| "What's next" AI edge function | Supabase not ready |
-| Cross-device ordering sync | UserDefaults sufficient for now |
+| XP/points system | Adds complexity without clear value |
+| Sound effects | Adds bundle size, may annoy users |
+| Text labels on tabs | User wants icon-only, Duolingo-style |
+| Gradient tab bar background | User specified plain colors, no gradients |
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TABS-01 | Phase 12 | Complete |
-| TABS-02 | Phase 12 | Complete |
-| TABS-03 | Phase 12 | Complete |
-| LIST-01 | Phase 13 | Complete |
-| LIST-02 | Phase 13 | Complete |
-| SWAP-01 | Phase 11 | Complete |
-| SWAP-02 | Phase 13 | Complete |
-| PATH-01 | Phase 12 | Complete |
-| TIPS-01 | Phase 11 | Complete |
-| TIPS-02 | Phase 11 | Complete |
-| TIPS-03 | Phase 11 | Complete |
-| TIPS-04 | Phase 11 | Complete |
+| TBAR-01 | Phase 14 | Complete |
+| TBAR-02 | Phase 14 | Complete |
+| TBAR-03 | Phase 14 | Complete |
+| TBAR-04 | Phase 14 | Complete |
+| TBAR-05 | Phase 14 | Complete |
+| TBAR-06 | Phase 14 | Complete |
+| NAME-02 | Phase 14 | Complete |
 
 **Coverage:**
-- v1.3 requirements: 12 total
-- Mapped to phases: 12
+- v1.4 requirements: 7 total
+- Mapped to phases: 7
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-21*
-*Last updated: 2026-03-21 after roadmap creation*
