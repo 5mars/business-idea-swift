@@ -49,7 +49,7 @@
 
 ### v1.4 Custom Tab Bar
 
-- [ ] **Phase 14: Custom Tab Bar** - Replace system tab bar with Duolingo-style flat bottom bar; rename Notes to Ideas
+- [x] **Phase 14: Custom Tab Bar** - Replace system tab bar with Duolingo-style flat bottom bar; rename Notes to Ideas (completed 2026-03-22)
 
 ## Phase Details
 
@@ -66,7 +66,7 @@
 **Plans**: 2 plans
 Plans:
 - [x] 14-01-PLAN.md — Build CustomTabBar, replace TabView, rename Notes to Ideas
-- [ ] 14-02-PLAN.md — On-device visual and haptic verification (checkpoint)
+- [x] 14-02-PLAN.md — On-device visual and haptic verification (checkpoint)
 
 ## Progress
 
@@ -85,4 +85,4 @@ Plans:
 | 11. Tooltip Overhaul and Action Switching | v1.3 | 1/1 | Complete | 2026-03-21 |
 | 12. Path Curves and Actions Tab Cleanup | v1.3 | 2/2 | Complete | 2026-03-21 |
 | 13. All-Actions View and Unified Switching | v1.3 | 1/1 | Complete | 2026-03-21 |
-| 14. Custom Tab Bar | v1.4 | 1/2 | In Progress|  |
+| 14. Custom Tab Bar | v1.4 | 2/2 | Complete   | 2026-03-22 |

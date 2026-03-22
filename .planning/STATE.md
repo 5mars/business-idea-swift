@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Custom Tab Bar
 status: unknown
-stopped_at: Completed 14-01-PLAN.md (custom tab bar + ideas rename)
-last_updated: "2026-03-22T01:32:53.296Z"
+stopped_at: Completed 14-02-PLAN.md (human verification, flash fix, stronger haptic)
+last_updated: "2026-03-22T01:47:33.267Z"
 progress:
   total_phases: 1
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -35,6 +35,7 @@ Plan: 2 of 2
 | Plans complete | 0 |
 | Requirements mapped | 7/7 |
 | Phase 14-custom-tab-bar P01 | 46min | 2 tasks | 6 files |
+| Phase 14-custom-tab-bar P02 | 15min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -45,6 +46,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase 14-custom-tab-bar]: ZStack opacity switching preserves all tab view state across switches (vs. switch/if)
 - [Phase 14-custom-tab-bar]: safeAreaInset(edge: .bottom) for CustomTabBar — adapts automatically to all device safe areas
 - [Phase 14-custom-tab-bar]: AppTab conforms to CaseIterable for ForEach-driven CustomTabBar rendering
+- [Phase 14-custom-tab-bar]: .animation(nil) on ZStack content eliminates tab-switch icon flash by suppressing implicit animation bleed
+- [Phase 14-custom-tab-bar]: UIImpactFeedbackGenerator(.medium) for tab haptic: stronger tactile feel than UISelectionFeedbackGenerator
 
 ### Pending Todos
 
@@ -59,6 +62,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-22T01:32:53.294Z
-Stopped at: Completed 14-01-PLAN.md (custom tab bar + ideas rename)
+Last session: 2026-03-22T01:47:33.265Z
+Stopped at: Completed 14-02-PLAN.md (human verification, flash fix, stronger haptic)
 Next: `/gsd:plan-phase 14`
