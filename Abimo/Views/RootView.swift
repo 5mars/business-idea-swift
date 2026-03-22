@@ -38,6 +38,8 @@ struct MainContentView: View {
 
     var body: some View {
         ZStack {
+            // All views stay alive (preserving navigation state).
+            // Opacity switches instantly — no animation to avoid flash/dark flicker.
             NavigationStack { NotesListView() }
                 .opacity(coordinator.selectedTab == .ideas ? 1 : 0)
                 .allowsHitTesting(coordinator.selectedTab == .ideas)
@@ -51,6 +53,7 @@ struct MainContentView: View {
                 .opacity(coordinator.selectedTab == .profile ? 1 : 0)
                 .allowsHitTesting(coordinator.selectedTab == .profile)
         }
+        .animation(nil, value: coordinator.selectedTab) // Disable animation on content — prevents flash
         .safeAreaInset(edge: .bottom) {
             CustomTabBar(selectedTab: $coordinator.selectedTab)
         }

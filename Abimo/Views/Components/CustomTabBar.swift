@@ -18,7 +18,7 @@ struct CustomTabBar: View {
                     isSelected: selectedTab == tab,
                     action: {
                         guard selectedTab != tab else { return }
-                        HapticEngine.selection()
+                        HapticEngine.impact(style: .medium)
                         AnimationPolicy.animate(.spring(response: 0.35, dampingFraction: 0.6)) {
                             selectedTab = tab
                         }
