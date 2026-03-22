@@ -15,7 +15,7 @@ struct RootView: View {
                 LoadingView()
                     .transition(.opacity)
             } else if authViewModel.isAuthenticated {
-                MainTabView()
+                MainContentView()
                     .environmentObject(authViewModel)
                     .environmentObject(coordinator)
                     .transition(.opacity)
@@ -30,53 +30,30 @@ struct RootView: View {
     }
 }
 
-// MARK: - Main Tab View
+// MARK: - Main Content View
 
-struct MainTabView: View {
+struct MainContentView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var coordinator: NavigationCoordinator
 
-    init() {
-        let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.white
-        UITabBar.appearance().standardAppearance = appearance
-        UITabBar.appearance().scrollEdgeAppearance = appearance
-    }
-
     var body: some View {
-        TabView(selection: $coordinator.selectedTab) {
-            NavigationStack {
-                NotesListView()
-            }
-            .tabItem {
-                Label("Notes", systemImage: "note.text")
-            }
-            .tag(AppTab.notes)
-
-            NavigationStack {
-                RecordingView()
-            }
-            .tabItem {
-                Label("Record", systemImage: "mic.fill")
-            }
-            .tag(AppTab.record)
-
-            NavigationStack {
-                ActionsTabView()
-            }
-            .tabItem {
-                Label("Actions", systemImage: "bolt.fill")
-            }
-            .tag(AppTab.actions)
-
+        ZStack {
+            NavigationStack { NotesListView() }
+                .opacity(coordinator.selectedTab == .ideas ? 1 : 0)
+                .allowsHitTesting(coordinator.selectedTab == .ideas)
+            NavigationStack { RecordingView() }
+                .opacity(coordinator.selectedTab == .record ? 1 : 0)
+                .allowsHitTesting(coordinator.selectedTab == .record)
+            NavigationStack { ActionsTabView() }
+                .opacity(coordinator.selectedTab == .actions ? 1 : 0)
+                .allowsHitTesting(coordinator.selectedTab == .actions)
             ProfileView()
-                .tabItem {
-                    Label("Profile", systemImage: "person.fill")
-                }
-                .tag(AppTab.profile)
+                .opacity(coordinator.selectedTab == .profile ? 1 : 0)
+                .allowsHitTesting(coordinator.selectedTab == .profile)
         }
-        .tint(.brand)
+        .safeAreaInset(edge: .bottom) {
+            CustomTabBar(selectedTab: $coordinator.selectedTab)
+        }
     }
 }
 
@@ -131,7 +108,7 @@ struct ProfileView: View {
                                 Text("—")
                                     .font(.system(size: 28, weight: .bold, design: .rounded))
                                     .foregroundColor(.textPri)
-                                Text("notes")
+                                Text("ideas")
                                     .font(.system(size: 12))
                                     .foregroundColor(.textSec)
                             }

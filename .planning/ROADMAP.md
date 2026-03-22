@@ -5,7 +5,8 @@
 - ✅ **v1.0 Actions Flow Revamp** - Phases 1-4 (shipped 2026-03-19)
 - ✅ **v1.1 Actions Flow UX** - Phases 5-8 (shipped 2026-03-20)
 - ✅ **v1.2 Flow Polish** - Phases 9-10 (shipped 2026-03-21)
-- 🚧 **v1.3 Actions Polish** - Phases 11-13 (in progress)
+- ✅ **v1.3 Actions Polish** - Phases 11-13 (shipped 2026-03-21)
+- 🔄 **v1.4 Custom Tab Bar** - Phase 14 (in progress)
 
 ## Phases
 
@@ -37,55 +38,35 @@
 
 </details>
 
-### 🚧 v1.3 Actions Polish (In Progress)
+<details>
+<summary>✅ v1.3 Actions Polish (Phases 11-13) - SHIPPED 2026-03-21</summary>
 
-**Milestone Goal:** Make the Actions tab and journey path feel polished — clean layout, better tooltips, flexible action switching, and curved path lines.
+- [x] Phase 11: Tooltip Overhaul and Action Switching (1/1 plan) — completed 2026-03-21
+- [x] Phase 12: Path Curves and Actions Tab Cleanup (2/2 plans) — completed 2026-03-21
+- [x] Phase 13: All-Actions View and Unified Switching (1/1 plan) — completed 2026-03-21
 
-- [x] **Phase 11: Tooltip Overhaul and Action Switching** - Redesigned tooltips with full titles, icon buttons, switch/complete actions, and fixed arrow alignment (completed 2026-03-21)
-- [x] **Phase 12: Path Curves and Actions Tab Cleanup** - Bezier curves between nodes and simplified Actions tab card layout (completed 2026-03-21)
-- [x] **Phase 13: All-Actions View and Unified Switching** - Full action list accessible from path header with select-as-next wired to both surfaces (completed 2026-03-21)
+</details>
+
+### v1.4 Custom Tab Bar
+
+- [ ] **Phase 14: Custom Tab Bar** - Replace system tab bar with Duolingo-style flat bottom bar; rename Notes to Ideas
 
 ## Phase Details
 
-### Phase 11: Tooltip Overhaul and Action Switching
-**Goal**: Users see larger, fully-readable tooltips with Duolingo-style icon buttons and can switch their next action directly from the tooltip
-**Depends on**: Phase 10
-**Requirements**: TIPS-01, TIPS-02, TIPS-03, TIPS-04, SWAP-01
+### Phase 14: Custom Tab Bar
+**Goal**: Users navigate the app through a custom Duolingo-style tab bar with brand color selection, shake animations, haptic feedback, and a filled indicator — with the Ideas tab name used throughout
+**Depends on**: Phase 13 (shipped v1.3)
+**Requirements**: TBAR-01, TBAR-02, TBAR-03, TBAR-04, TBAR-05, TBAR-06, NAME-02
 **Success Criteria** (what must be TRUE):
-  1. Tapping a journey node opens a tooltip large enough to show the full action title without truncation
-  2. Tapping an expand control inside the tooltip reveals the action description, template text, and copy button inline — without opening a separate sheet
-  3. The tooltip contains a "Do this next" button that switches the active action and updates the journey path immediately — without completing the current action
-  4. The tooltip contains a "Complete" button that marks the action done
-  5. The tooltip arrow tip visually points to the center of the tapped node with no horizontal or vertical offset drift
-**Plans:** 1/1 plans complete
+  1. The native iOS tab bar chrome is gone — no system tab bar appears anywhere in the app
+  2. Tapping any tab plays haptic feedback and the selected icon shakes/bounces visibly
+  3. The selected tab icon renders in brand color with a filled circle/pill behind it; unselected icons are gray with no indicator
+  4. All 4 tabs show SF Symbol icons only (no text labels): Ideas, Record, Actions, Profile
+  5. Every screen that previously said "Notes" now says "Ideas" with no remaining "Notes" references visible to the user
+**Plans**: 2 plans
 Plans:
-- [x] 11-01-PLAN.md — Rewrite NodeBubbleView + fix arrow alignment + wire action switching
-
-### Phase 12: Path Curves and Actions Tab Cleanup
-**Goal**: The journey path uses smooth Bezier curves between nodes and the Actions tab shows clean, focused card layouts without commitment clutter
-**Depends on**: Phase 10
-**Requirements**: PATH-01, TABS-01, TABS-02, TABS-03
-**Success Criteria** (what must be TRUE):
-  1. Connecting lines between journey path nodes are curved (Bezier) rather than straight segments
-  2. Each action plan card in the Actions tab shows the plan title, progress indicator, and a clean committed-action preview — not a to-do-style circle
-  3. The committed action preview expands to show the full title and description when tapped
-  4. The Actions tab streak section has no "commitment" button visible
-**Plans:** 2/2 plans complete
-Plans:
-- [x] 12-01-PLAN.md — Bezier S-curves for path lines + remove commitment section from MomentumDashboard
-- [x] 12-02-PLAN.md — Bolt icon committed action preview with expand/collapse in ideaCards
-
-### Phase 13: All-Actions View and Unified Switching
-**Goal**: Users can open a full list of all micro-actions from the journey path header and select any incomplete action as their next, with the path updating immediately regardless of which surface triggered the switch
-**Depends on**: Phase 11
-**Requirements**: LIST-01, LIST-02, SWAP-02
-**Success Criteria** (what must be TRUE):
-  1. A button in the journey path header opens a full-screen list showing all micro-actions with descriptions, templates, and action buttons (copy, select as next)
-  2. Tapping "Select as next" on any incomplete action in the all-actions view updates which node is active on the journey path immediately
-  3. Switching next action from either the tooltip (Phase 11) or the all-actions view produces identical journey path state — both surfaces stay in sync
-**Plans:** 1/1 plans complete
-Plans:
-- [x] 13-01-PLAN.md — Enhance ActionPickerSheet with expand/collapse detail cards + header button + unified switching
+- [ ] 14-01-PLAN.md — Build CustomTabBar, replace TabView, rename Notes to Ideas
+- [ ] 14-02-PLAN.md — On-device visual and haptic verification (checkpoint)
 
 ## Progress
 
@@ -101,6 +82,7 @@ Plans:
 | 8. Two-Step Completion Sheet and Full Wiring | v1.1 | 2/2 | Complete | 2026-03-20 |
 | 9. Recording Flow Polish | v1.2 | 1/1 | Complete | 2026-03-21 |
 | 10. SWOT and Action Plan Flow | v1.2 | 2/2 | Complete | 2026-03-21 |
-| 11. Tooltip Overhaul and Action Switching | v1.3 | 1/1 | Complete    | 2026-03-21 |
-| 12. Path Curves and Actions Tab Cleanup | v1.3 | 2/2 | Complete    | 2026-03-21 |
-| 13. All-Actions View and Unified Switching | v1.3 | 1/1 | Complete   | 2026-03-21 |
+| 11. Tooltip Overhaul and Action Switching | v1.3 | 1/1 | Complete | 2026-03-21 |
+| 12. Path Curves and Actions Tab Cleanup | v1.3 | 2/2 | Complete | 2026-03-21 |
+| 13. All-Actions View and Unified Switching | v1.3 | 1/1 | Complete | 2026-03-21 |
+| 14. Custom Tab Bar | v1.4 | 0/2 | Not started | - |
