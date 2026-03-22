@@ -35,6 +35,14 @@ struct NoteDetailView: View {
         _noteTitle = State(initialValue: note.title)
     }
 
+    /// Testable logic for whether the transcribing placeholder card should be visible.
+    static func shouldShowTranscribingPlaceholder(
+        isLoadingTranscription: Bool,
+        transcription: Transcription?
+    ) -> Bool {
+        isLoadingTranscription && transcription == nil
+    }
+
     var body: some View {
         ZStack {
             Color.appBg.ignoresSafeArea()
@@ -315,14 +323,16 @@ struct NoteDetailView: View {
                     .animation(.spring(response: 0.38, dampingFraction: 0.75), value: isTranscriptionExpanded)
                     .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isEditingTranscript)
 
-                    // Cards shown when transcription exists and not editing
-                    if transcription != nil && !isEditingTranscript {
+                    // Transcription loading placeholder — visible when transcribing and no content yet
+                    if Self.shouldShowTranscribingPlaceholder(isLoadingTranscription: isLoadingTranscription, transcription: transcription) {
+                        transcribingPlaceholderCard
+                            .transition(.opacity)
+                    } else if transcription != nil && !isEditingTranscript {
                         // Action plan card — top priority
                         if swotAnalysis != nil {
                             actionPlanCard
                                 .transition(.opacity)
                         }
-
                         // Lab Results card
                         analysisActionCard
                             .transition(.opacity)
@@ -344,6 +354,7 @@ struct NoteDetailView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .frame(maxWidth: .infinity)
+                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isLoadingTranscription)
             }
             .scrollBounceBehavior(.basedOnSize)
             .clipped()
@@ -355,7 +366,7 @@ struct NoteDetailView: View {
             // Force scroll state cleanup after sheet dismissal
         }) {
             if let transcription = transcription {
-                SWOTAnalysisView(transcription: transcription, preloadedAnalysis: swotAnalysis)
+                SWOTAnalysisView(transcription: transcription, preloadedAnalysis: swotAnalysis, noteTitle: noteTitle)
             }
         }
         .task {
@@ -368,6 +379,35 @@ struct NoteDetailView: View {
             }
         }
         .onDisappear { audioPlayer.stop() }
+    }
+
+    // MARK: - Transcribing Placeholder Card
+
+    @ViewBuilder
+    private var transcribingPlaceholderCard: some View {
+        VStack(spacing: 18) {
+            ZStack {
+                Circle()
+                    .fill(Color.brand.opacity(0.1))
+                    .frame(width: 64, height: 64)
+                ProgressView()
+                    .tint(.brand)
+                    .scaleEffect(1.2)
+            }
+
+            VStack(spacing: 6) {
+                Text("Transcribing your idea...")
+                    .font(.system(size: 19, weight: .bold, design: .rounded))
+                    .foregroundColor(.textPri)
+                Text("We're turning your recording\ninto text right now")
+                    .font(.system(size: 14))
+                    .foregroundColor(.textSec)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .cardStyle()
     }
 
     // MARK: - Analysis Action Card

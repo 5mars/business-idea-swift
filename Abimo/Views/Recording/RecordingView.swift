@@ -6,6 +6,7 @@
 import SwiftUI
 
 struct RecordingView: View {
+    @EnvironmentObject var coordinator: NavigationCoordinator
     @StateObject private var viewModel = RecordingViewModel()
     @State private var showingSaveDialog = false
     @State private var recordingTitle = ""
@@ -212,10 +213,12 @@ struct RecordingView: View {
             TextField("Title", text: $recordingTitle)
             Button("Save") {
                 Task {
-                    _ = await viewModel.saveRecording(
+                    if let note = await viewModel.saveRecording(
                         title: recordingTitle.isEmpty ? "Untitled Recording" : recordingTitle
-                    )
-                    recordingTitle = ""
+                    ) {
+                        recordingTitle = ""
+                        coordinator.navigateToNote(note)
+                    }
                 }
             }
             Button("Cancel", role: .cancel) { recordingTitle = "" }
@@ -247,4 +250,5 @@ struct RecordingView: View {
     NavigationStack {
         RecordingView()
     }
+    .environmentObject(NavigationCoordinator())
 }

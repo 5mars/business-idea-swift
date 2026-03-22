@@ -8,17 +8,26 @@ import Charts
 
 struct SWOTAnalysisView: View {
     let transcription: Transcription
+    let noteTitle: String
 
     @StateObject private var viewModel: AnalysisViewModel
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var coordinator: NavigationCoordinator
 
-    init(transcription: Transcription, preloadedAnalysis: SWOTAnalysis? = nil) {
+    init(transcription: Transcription, preloadedAnalysis: SWOTAnalysis? = nil, noteTitle: String = "") {
         self.transcription = transcription
+        self.noteTitle = noteTitle
         if let existing = preloadedAnalysis {
             _viewModel = StateObject(wrappedValue: AnalysisViewModel(preloadedAnalysis: existing))
         } else {
             _viewModel = StateObject(wrappedValue: AnalysisViewModel())
         }
+    }
+
+    /// Returns true when SWOT generation should start automatically on appear.
+    /// Auto-generates only when there is no existing analysis and no prior error.
+    static func shouldAutoGenerate(analysis: SWOTAnalysis?, errorMessage: String?) -> Bool {
+        return analysis == nil && errorMessage == nil
     }
 
     var body: some View {
@@ -31,8 +40,6 @@ struct SWOTAnalysisView: View {
                         analysisContent(analysis)
                     } else if viewModel.errorMessage != nil {
                         errorView
-                    } else {
-                        readyView
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -51,7 +58,12 @@ struct SWOTAnalysisView: View {
                         .buttonStyle(PlayfulButtonStyle())
                 }
             }
-            .task { await viewModel.loadAnalysis(transcriptionId: transcription.id) }
+            .task {
+                await viewModel.loadAnalysis(transcriptionId: transcription.id)
+                if Self.shouldAutoGenerate(analysis: viewModel.analysis, errorMessage: viewModel.errorMessage) {
+                    await viewModel.generateAnalysis(transcription: transcription)
+                }
+            }
         }
     }
 
@@ -149,44 +161,6 @@ struct SWOTAnalysisView: View {
         )
     }
 
-    private var readyView: some View {
-        VStack(spacing: 20) {
-            Spacer().frame(height: 40)
-
-            ZStack {
-                Circle()
-                    .fill(Color.brand.opacity(0.08))
-                    .frame(width: 100, height: 100)
-
-                Image(systemName: "sparkles")
-                    .font(.system(size: 38))
-                    .foregroundStyle(LinearGradient(
-                        colors: [.brand, .brandLight],
-                        startPoint: .top, endPoint: .bottom
-                    ))
-                    .symbolEffect(.pulse)
-            }
-
-            Text("Let's stress-test this")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
-                .foregroundColor(.textPri)
-
-            Text("Drop your idea in The Lab and\nwe'll break it down for you")
-                .font(.system(size: 15))
-                .foregroundColor(.textSec)
-                .multilineTextAlignment(.center)
-                .lineSpacing(3)
-
-            GradientButton(title: "Run the numbers") {
-                Task { await viewModel.generateAnalysis(transcription: transcription) }
-            }
-            .padding(.horizontal, 32)
-            .padding(.top, 8)
-
-            Spacer().frame(height: 40)
-        }
-    }
-
     private var errorView: some View {
         VStack(spacing: 20) {
             Spacer().frame(height: 40)
@@ -246,7 +220,33 @@ struct SWOTAnalysisView: View {
             }
 
             Button {
+                // Capture all values before dismiss
+                let capturedAnalysis = analysis
+                let capturedTranscriptionText = transcription.text
+                let capturedTitle = noteTitle
+
+                // Signal loading state to Actions tab
+                coordinator.pendingPlanGeneration = true
+                // Navigate to Actions tab
+                coordinator.selectedTab = .actions
+                // Dismiss SWOT sheet
                 dismiss()
+
+                // Fire-and-forget: generate plan in background
+                // Using AIAnalysisService directly (not viewModel) to survive sheet dismissal
+                Task { @MainActor in
+                    let service = AIAnalysisService()
+                    do {
+                        _ = try await service.generateAndSaveActionPlan(
+                            analysis: capturedAnalysis,
+                            transcriptionText: capturedTranscriptionText,
+                            noteTitle: capturedTitle
+                        )
+                    } catch {
+                        // Silent failure — plan won't appear; user can retry from NoteDetailView
+                    }
+                    coordinator.pendingPlanGeneration = false
+                }
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "bolt.fill")

@@ -58,7 +58,13 @@ class AIAnalysisService: ObservableObject {
 
     // MARK: - Action Plan Generation
 
-    func generateAndSaveActionPlan(analysis: SWOTAnalysis, transcriptionText: String) async throws -> (ActionPlan, [MicroAction]) {
+    /// Returns the action plan title, using "{noteTitle}'s action plan" format when noteTitle is
+    /// non-empty, otherwise falling back to the AI-generated title.
+    static func planTitle(noteTitle: String, responseTitle: String) -> String {
+        noteTitle.trimmingCharacters(in: .whitespaces).isEmpty ? responseTitle : "\(noteTitle)'s action plan"
+    }
+
+    func generateAndSaveActionPlan(analysis: SWOTAnalysis, transcriptionText: String, noteTitle: String = "") async throws -> (ActionPlan, [MicroAction]) {
         guard let userId = try await supabase.getCurrentUser()?.id else {
             throw NSError(domain: "AIAnalysisService", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
@@ -109,7 +115,7 @@ class AIAnalysisService: ObservableObject {
             id: planId,
             analysisId: analysis.id,
             userId: userId,
-            title: response.title,
+            title: Self.planTitle(noteTitle: noteTitle, responseTitle: response.title),
             summary: response.summary,
             totalEstimateMinutes: totalMinutes,
             createdAt: now
